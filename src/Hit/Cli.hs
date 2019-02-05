@@ -14,7 +14,7 @@ import Options.Applicative (Parser, ParserInfo, argument, auto, command, execPar
                             subparser)
 
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
-import Hit.Git (runCommit, runFresh, runHop, runNew, runPush)
+import Hit.Git (runCommit, runFresh, runHop, runNew, runPush, runSync)
 import Hit.Issue (runIssue)
 
 import qualified Data.Text as T
@@ -29,6 +29,7 @@ hit = execParser cliParser >>= \case
     Issue issueNum -> runIssue issueNum
     Commit message -> runCommit message
     Push -> runPush
+    Sync -> runSync
 
 ----------------------------------------------------------------------------
 -- Parsers
@@ -44,9 +45,10 @@ data HitCommand
     = Hop (Maybe Text)
     | Fresh (Maybe Text)
     | New Int
-    | Commit Text
     | Issue (Maybe Int)
+    | Commit Text
     | Push
+    | Sync
 
 -- | Commands parser.
 hitP :: Parser HitCommand
@@ -57,6 +59,7 @@ hitP = subparser
    <> command "commit" (info (helper <*> commitP) $ progDesc "Commit all local changes and prepend issue number")
    <> command "issue"  (info (helper <*> issueP)  $ progDesc "Show the information about the issue")
    <> command "push"   (info (helper <*> pushP)   $ progDesc "Push the current branch")
+   <> command "sync"   (info (helper <*> syncP)   $ progDesc "Sync local branch with its remote")
 
 hopP :: Parser HitCommand
 hopP = Hop <$> maybeBranchP
@@ -75,6 +78,9 @@ commitP = Commit <$> strArgument (metavar "COMMIT_MESSAGE")
 
 pushP :: Parser HitCommand
 pushP = pure Push
+
+syncP :: Parser HitCommand
+syncP = pure Sync
 
 -- | Parse optional branch name as an argument.
 maybeBranchP :: Parser (Maybe Text)
