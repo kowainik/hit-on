@@ -43,18 +43,21 @@ runNew issueNum = do
             "git" ["checkout", "-b", branchName]
 
 -- | @hit commit@ command.
-runCommit :: Text -> IO ()
-runCommit (T.strip -> msg)
+runCommit :: Text -> Bool -> IO ()
+runCommit (T.strip -> msg) (not -> hasIssue)
     | msg == "" = errorMessage "Commit message cannot be empty"
     | otherwise = do
         branch <- getCurrentBranch
         let issueNum = issueFromBranch branch
-        let prefix = maybe "" showIssueNum issueNum
         "git" ["add", "."]
-        "git" ["commit", "-m", prefix <> msg]
+        "git" ["commit", "-m", showMsg $ guard hasIssue *> issueNum]
   where
-    showIssueNum :: Int -> Text
-    showIssueNum n = "[#" <> show n <> "] "
+    showMsg :: Maybe Int -> Text
+    showMsg = \case
+       Nothing -> msg
+       Just n  ->
+           let issue = "#" <> show n
+           in "[" <> issue <> "] " <> msg <> "\n\nResolves " <> issue
 
 -- | @hit push@ command.
 runPush :: IO ()
