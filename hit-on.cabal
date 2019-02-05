@@ -26,6 +26,7 @@ library
                          Hit.Cli
                          Hit.ColorTerminal
                          Hit.Git
+                         Hit.Issue
                          Hit.Shell
 
   autogen-modules:     Paths_hit_on
@@ -34,10 +35,12 @@ library
 
   build-depends:       base-noprelude ^>= 4.12.0.0
                      , ansi-terminal >= 0.8
+                     , github ^>= 0.20
                      , gitrev ^>= 1.3
                      , optparse-applicative ^>= 0.14
-                     , relude ^>= 0.4
                      , process ^>= 1.6.3
+                     , relude ^>= 0.4
+                     , text
 
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns
