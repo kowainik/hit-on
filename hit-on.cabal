@@ -31,10 +31,10 @@ library
                        Prelude
 
   build-depends:       base-noprelude ^>= 4.12.0.0
-                     , ansi-terminal ^>= 0.9
+                     , ansi-terminal >= 0.8
                      , gitrev ^>= 1.3
                      , optparse-applicative ^>= 0.14
-                     , relude
+                     , relude ^>= 0.4
 
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns
