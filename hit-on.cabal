@@ -25,6 +25,7 @@ library
   exposed-modules:     Hit
                          Hit.Cli
                          Hit.ColorTerminal
+                         Hit.Shell
 
   autogen-modules:     Paths_hit_on
   other-modules:       Paths_hit_on
@@ -35,6 +36,7 @@ library
                      , gitrev ^>= 1.3
                      , optparse-applicative ^>= 0.14
                      , relude ^>= 0.4
+                     , process ^>= 1.6.3
 
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns
