@@ -1,7 +1,9 @@
 module Main (main) where
 
-import HitOn (someFunc)
 
+import System.IO (hSetEncoding, stdout, utf8)
+
+import Hit (hit)
 
 main :: IO ()
-main = someFunc
+main = hSetEncoding stdout utf8 >> hit

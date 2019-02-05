@@ -4,7 +4,7 @@ language: haskell
 git:
   depth: 5
 
-cabal: "2.0"
+cabal: "head"
 
 cache:
   directories:
@@ -15,7 +15,7 @@ cache:
 matrix:
   include:
   - ghc: 8.6.3
-  
+
   - ghc: 8.6.3
     env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
 

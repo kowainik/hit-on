@@ -1,6 +1,4 @@
-resolver: lts-13.0
-
-extra-deps: [base-noprelude-4.12.0.0]
+resolver: lts-13.6
 
 ghc-options:
   "$locals": -fhide-source-paths
