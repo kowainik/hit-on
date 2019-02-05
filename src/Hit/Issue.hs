@@ -1,8 +1,12 @@
 module Hit.Issue
        ( runIssue
+
+         -- * Internal helpers
+       , mkIssueId
+       , getIssueTitle
        ) where
 
-import GitHub (Id, Issue (..), IssueState (..), getUrl, mkId)
+import GitHub (Error, Id, Issue (..), IssueState (..), getUrl, mkId)
 import GitHub.Data.Options (stateOpen)
 import GitHub.Endpoints.Issues (issue, issuesForRepo)
 
@@ -14,7 +18,7 @@ import qualified Data.Text as T
 -- | Run the @issue@ command.
 runIssue :: Maybe Int -> IO ()
 runIssue = \case
-    Just num -> getIssue $ mkId (Proxy @Issue) num
+    Just num -> getIssue $ mkIssueId num
     Nothing -> getAllIssues
 
 -- | Get the list of the opened issues for the current project.
@@ -25,7 +29,7 @@ getAllIssues = issuesForRepo "kowainik" "hit-on" stateOpen >>= \case
 
 -- | Get the 'Issue' by given issue number.
 getIssue :: Id Issue -> IO ()
-getIssue num = issue "kowainik" "hit-on" num >>= \case
+getIssue num = fetchIssue num >>= \case
     Left err -> errorMessage $ show err
     Right is -> putTextLn $ showIssueFull is
 
@@ -43,3 +47,14 @@ showIssueFull i@Issue{..} = T.intercalate "\n" $
     statusToCode = \case
         StateOpen -> blueCode
         StateClosed -> redCode
+
+mkIssueId :: Int -> Id Issue
+mkIssueId = mkId $ Proxy @Issue
+
+fetchIssue :: Id Issue -> IO (Either Error Issue)
+fetchIssue = issue "kowainik" "hit-on"
+
+getIssueTitle :: Id Issue -> IO Text
+getIssueTitle num = fetchIssue num >>= \case
+    Left err -> errorMessage (show err) >> exitFailure
+    Right Issue{..} -> pure issueTitle
