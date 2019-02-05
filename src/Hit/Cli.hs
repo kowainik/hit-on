@@ -32,7 +32,7 @@ cliParser = info ( helper <*> versionP <*> hitP )
     $ fullDesc <> progDesc "Haskell Git Helper Tool"
 
 -- | Commands for
-data HitCommand
+newtype HitCommand
     = Hop (Maybe Text)
 
 -- | Commands parser.
