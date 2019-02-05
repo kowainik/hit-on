@@ -7,3 +7,11 @@
 [![Build status](https://secure.travis-ci.org/kowainik/hit-on.svg)](https://travis-ci.org/kowainik/hit-on)
 
 Haskell Git Helper Tool
+
+## Configure
+
+Specify your login:
+
+```
+git config --global user.login <your_login>
+```
