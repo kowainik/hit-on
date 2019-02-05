@@ -29,7 +29,7 @@ hit = execParser cliParser >>= \case
     Issue issueNum -> runIssue issueNum
     Commit message noIssue -> runCommit message noIssue
     Resolve branchName -> runResolve branchName
-    Push -> runPush
+    Push isForce -> runPush isForce
     Sync -> runSync
     Current -> runCurrent >>= flip whenJust (runIssue . Just)
 
@@ -50,7 +50,7 @@ data HitCommand
     | Issue (Maybe Int)
     | Commit Text Bool
     | Resolve (Maybe Text)
-    | Push
+    | Push Bool
     | Sync
     | Current
 
@@ -89,7 +89,11 @@ commitP = do
     pure $ Commit msg noIssue
 
 pushP :: Parser HitCommand
-pushP = pure Push
+pushP = Push <$> switch
+    ( long "force"
+   <> short 'f'
+   <> help "Force push"
+    )
 
 syncP :: Parser HitCommand
 syncP = pure Sync
