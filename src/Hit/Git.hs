@@ -7,6 +7,7 @@ module Hit.Git
        , runFresh
        , runNew
        , runPush
+       , runResolve
        , runCommit
        , runSync
        ) where
@@ -62,6 +63,13 @@ runPush = getCurrentBranch >>= \branch -> "git" ["push", "-u", "origin", branch]
 -- | @hit sync@ command.
 runSync :: IO ()
 runSync = getCurrentBranch >>= \branch -> "git" ["pull", "--rebase", "origin", branch]
+
+-- | @hit resolve@ command.
+runResolve :: Maybe Text -> IO ()
+runResolve (nameOrMaster -> master)= do
+    curBranch <- getCurrentBranch
+    runHop $ Just master
+    when (curBranch /= master) $ "git" ["branch", "-D", curBranch]
 
 ----------------------------------------------------------------------------
 -- Internal helpers
