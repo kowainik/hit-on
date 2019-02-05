@@ -65,11 +65,11 @@ runSync :: IO ()
 runSync = getCurrentBranch >>= \branch -> "git" ["pull", "--rebase", "origin", branch]
 
 -- | @hit resolve@ command.
-runResolve :: IO ()
-runResolve = do
-    branch <- getCurrentBranch
-    runHop $ Just "master"
-    when (branch /= "master") $ "git" ["branch", "-D", branch]
+runResolve :: Maybe Text -> IO ()
+runResolve (nameOrMaster -> master)= do
+    curBranch <- getCurrentBranch
+    runHop $ Just master
+    when (curBranch /= master) $ "git" ["branch", "-D", curBranch]
 
 ----------------------------------------------------------------------------
 -- Internal helpers

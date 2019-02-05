@@ -28,9 +28,9 @@ hit = execParser cliParser >>= \case
     New issueNum -> runNew issueNum
     Issue issueNum -> runIssue issueNum
     Commit message -> runCommit message
+    Resolve branchName -> runResolve branchName
     Push -> runPush
     Sync -> runSync
-    Resolve -> runResolve
 
 ----------------------------------------------------------------------------
 -- Parsers
@@ -48,9 +48,9 @@ data HitCommand
     | New Int
     | Issue (Maybe Int)
     | Commit Text
+    | Resolve (Maybe Text)
     | Push
     | Sync
-    | Resolve
 
 -- | Commands parser.
 hitP :: Parser HitCommand
@@ -86,7 +86,7 @@ syncP :: Parser HitCommand
 syncP = pure Sync
 
 resolveP :: Parser HitCommand
-resolveP = pure Resolve
+resolveP = Resolve <$> maybeBranchP
 
 -- | Parse optional branch name as an argument.
 maybeBranchP :: Parser (Maybe Text)
