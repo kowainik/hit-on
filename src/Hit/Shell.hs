@@ -13,6 +13,8 @@ module Hit.Shell
 
 import System.Process (callCommand, readProcess, showCommandForUser)
 
+import qualified Data.Text as T
+
 
 -- | This is needed to be able to call commands by writing strings.
 instance (a ~ Text, b ~ ()) => IsString ([a] -> IO b) where
@@ -25,4 +27,4 @@ instance (a ~ Text, b ~ ()) => IsString ([a] -> IO b) where
 -- | Run shell command with given options and return stdout of executed command.
 infix 5 $|
 ($|) :: FilePath -> [Text] -> IO Text
-cmd $| args = toText <$> readProcess cmd (map toString args) ""
+cmd $| args = T.strip . toText <$> readProcess cmd (map toString args) ""
