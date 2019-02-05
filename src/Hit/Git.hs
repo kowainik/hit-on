@@ -7,10 +7,15 @@ module Hit.Git
        , runFresh
        , runNew
        , runPush
+       , runCommit
        ) where
+
+import Data.Char (isDigit)
 
 import Hit.ColorTerminal (errorMessage)
 import Hit.Shell (($|))
+
+import qualified Data.Text as T
 
 
 -- | @hit hop@ command.
@@ -35,6 +40,20 @@ runNew issueNum = do
             let branchName = login <> "/" <> show issueNum
             "git" ["checkout", "-b", branchName]
 
+-- | @hit commit@ command.
+runCommit :: Text -> IO ()
+runCommit (T.strip -> msg)
+    | msg == "" = errorMessage "Commit message cannot be empty"
+    | otherwise = do
+        branch <- getCurrentBranch
+        let issueNum = issueFromBranch branch
+        let prefix = maybe "" showIssueNum issueNum
+        "git" ["add", "."]
+        "git" ["commit", "-m", prefix <> msg]
+  where
+    showIssueNum :: Int -> Text
+    showIssueNum n = "[#" <> show n <> "] "
+
 -- | @hit push@ command.
 runPush :: IO ()
 runPush = getCurrentBranch >>= \branch -> "git" ["push", "-u", "origin", branch]
@@ -45,3 +64,17 @@ nameOrMaster = fromMaybe "master"
 -- | Get the name of the current branch.
 getCurrentBranch :: IO Text
 getCurrentBranch = "git" $| ["rev-parse", "--abbrev-ref", "HEAD"]
+
+{- | Extracts issue number from the branch in form like:
+
+@
+kowainik/<n>-short-description
+@
+-}
+issueFromBranch :: Text -> Maybe Int
+issueFromBranch =
+      readMaybe
+    . toString
+    . T.takeWhile isDigit
+    . T.drop 1
+    . T.dropWhile (/= '/')
