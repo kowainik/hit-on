@@ -14,7 +14,8 @@ import Options.Applicative (Parser, ParserInfo, argument, auto, command, execPar
                             subparser, switch)
 
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
-import Hit.Git (runCommit, runCurrent, runFresh, runHop, runNew, runPush, runResolve, runSync)
+import Hit.Git (runCommit, runCurrent, runFix, runFresh, runHop, runNew, runPush, runResolve,
+                runSync)
 import Hit.Issue (runIssue)
 
 import qualified Data.Text as T
@@ -28,6 +29,7 @@ hit = execParser cliParser >>= \case
     New issueNum -> runNew issueNum
     Issue issueNum -> runIssue issueNum
     Commit message noIssue -> runCommit message noIssue
+    Fix -> runFix
     Resolve branchName -> runResolve branchName
     Push isForce -> runPush isForce
     Sync -> runSync
@@ -49,6 +51,7 @@ data HitCommand
     | New Int
     | Issue (Maybe Int)
     | Commit Text Bool
+    | Fix
     | Resolve (Maybe Text)
     | Push Bool
     | Sync
@@ -61,6 +64,7 @@ hitP = subparser
    <> command "fresh"   (info (helper <*> freshP)   $ progDesc "Rebase current branch on remote one")
    <> command "new"     (info (helper <*> newP)     $ progDesc "Create new branch from current one")
    <> command "commit"  (info (helper <*> commitP)  $ progDesc "Commit all local changes and prepend issue number")
+   <> command "fix"     (info (helper <*> fixP)     $ progDesc "Ammend changes to the last commit and force push")
    <> command "issue"   (info (helper <*> issueP)   $ progDesc "Show the information about the issue")
    <> command "push"    (info (helper <*> pushP)    $ progDesc "Push the current branch")
    <> command "sync"    (info (helper <*> syncP)    $ progDesc "Sync local branch with its remote")
@@ -87,6 +91,9 @@ commitP = do
        <> short 'n'
        <> help "Do not add [#ISSUE_NUMBER] prefix when specified"
     pure $ Commit msg noIssue
+
+fixP :: Parser HitCommand
+fixP = pure Fix
 
 pushP :: Parser HitCommand
 pushP = Push <$> switch
