@@ -9,6 +9,7 @@ module Hit.ColorTerminal
        , bold
        , boldText
        , boldDefault
+       , greenCode
        , italic
        , redCode
        , reset
@@ -76,9 +77,10 @@ successMessage = colorMessage Green
 infoMessage    = colorMessage Blue
 skipMessage    = colorMessage Cyan
 
-blueCode, boldCode, redCode, resetCode :: Text
+blueCode, greenCode, boldCode, redCode, resetCode :: Text
 redCode   = toText $ setSGRCode [SetColor Foreground Vivid Red]
 blueCode  = toText $ setSGRCode [SetColor Foreground Vivid Blue]
+greenCode  = toText $ setSGRCode [SetColor Foreground Vivid Green]
 boldCode  = toText $ setSGRCode [SetConsoleIntensity BoldIntensity]
 resetCode = toText $ setSGRCode [Reset]
 

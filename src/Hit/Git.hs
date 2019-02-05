@@ -10,11 +10,12 @@ module Hit.Git
        , runResolve
        , runCommit
        , runSync
+       , runCurrent
        ) where
 
 import Data.Char (isDigit)
 
-import Hit.ColorTerminal (errorMessage)
+import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode)
 import Hit.Shell (($|))
 
 import qualified Data.Text as T
@@ -73,6 +74,15 @@ runResolve (nameOrMaster -> master)= do
     curBranch <- getCurrentBranch
     runHop $ Just master
     when (curBranch /= master) $ "git" ["branch", "-D", curBranch]
+
+{- | Part of the @hit current@ command. Prints the current branch and returns
+the current issue number if possible.
+-}
+runCurrent :: IO (Maybe Int)
+runCurrent = do
+    branchName <- getCurrentBranch
+    putTextLn $ arrow <> "Current branch: " <> greenCode <> branchName <> resetCode
+    pure $ issueFromBranch branchName
 
 ----------------------------------------------------------------------------
 -- Internal helpers
