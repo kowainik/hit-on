@@ -19,6 +19,8 @@ module Hit.ColorTerminal
        , errorMessage
        , infoMessage
        , skipMessage
+
+       , arrow
        ) where
 
 import System.Console.ANSI (Color (..), ColorIntensity (Vivid), ConsoleIntensity (BoldIntensity),
@@ -74,8 +76,12 @@ successMessage = colorMessage Green
 infoMessage    = colorMessage Blue
 skipMessage    = colorMessage Cyan
 
-blueCode, boldCode, redCode, resetCode :: String
-redCode   = setSGRCode [SetColor Foreground Vivid Red]
-blueCode  = setSGRCode [SetColor Foreground Vivid Blue]
-boldCode  = setSGRCode [SetConsoleIntensity BoldIntensity]
-resetCode = setSGRCode [Reset]
+blueCode, boldCode, redCode, resetCode :: Text
+redCode   = toText $ setSGRCode [SetColor Foreground Vivid Red]
+blueCode  = toText $ setSGRCode [SetColor Foreground Vivid Blue]
+boldCode  = toText $ setSGRCode [SetConsoleIntensity BoldIntensity]
+resetCode = toText $ setSGRCode [Reset]
+
+-- | Arrow symbol
+arrow :: Text
+arrow = " ➤ "
