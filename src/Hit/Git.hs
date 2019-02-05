@@ -61,8 +61,10 @@ runCommit (T.strip -> msg) (not -> hasIssue)
            in "[" <> issue <> "] " <> msg <> "\n\nResolves " <> issue
 
 -- | @hit push@ command.
-runPush :: IO ()
-runPush = getCurrentBranch >>= \branch -> "git" ["push", "-u", "origin", branch]
+runPush :: Bool -> IO ()
+runPush isForce = getCurrentBranch >>= \branch ->
+    "git" $ ["push", "--set-upstream", "origin", branch]
+         ++ ["--force" | isForce]
 
 -- | @hit sync@ command.
 runSync :: IO ()
