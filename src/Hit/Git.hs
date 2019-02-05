@@ -5,9 +5,13 @@
 module Hit.Git
        ( runHop
        , runFresh
+       , runNew
        ) where
 
-import Hit.Shell ()
+import Hit.ColorTerminal (errorMessage)
+import Hit.Shell (($|))
+
+import qualified Data.Text as T
 
 
 -- | @hit hop@ command.
@@ -21,6 +25,16 @@ runFresh :: Maybe Text -> IO ()
 runFresh (nameOrMaster -> branch) = do
     "git" ["fetch", "origin", branch]
     "git" ["rebase", "origin/" <> branch]
+
+-- | @hit new@ command.
+runNew :: Int -> IO ()
+runNew issueNum = do
+    login <- "git" $| ["config", "user.login"]
+    if login == ""
+        then errorMessage "user.login is not specified"
+        else do
+            let branchName = T.strip login <> "/" <> show issueNum
+            "git" ["checkout", "-b", branchName]
 
 nameOrMaster :: Maybe Text -> Text
 nameOrMaster = fromMaybe "master"
