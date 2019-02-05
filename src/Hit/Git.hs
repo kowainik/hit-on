@@ -8,6 +8,7 @@ module Hit.Git
        , runNew
        , runPush
        , runCommit
+       , runSync
        ) where
 
 import Data.Char (isDigit)
@@ -22,7 +23,7 @@ import qualified Data.Text as T
 runHop :: Maybe Text -> IO ()
 runHop (nameOrMaster -> branch) = do
     "git" ["checkout",  branch]
-    "git" ["pull", "--rebase", "--prune"]
+    "git" ["pull", "--rebase", "--prune", "origin", branch]
 
 -- | @hit fresh@ command.
 runFresh :: Maybe Text -> IO ()
@@ -57,6 +58,14 @@ runCommit (T.strip -> msg)
 -- | @hit push@ command.
 runPush :: IO ()
 runPush = getCurrentBranch >>= \branch -> "git" ["push", "-u", "origin", branch]
+
+-- | @hit sync@ command.
+runSync :: IO ()
+runSync = getCurrentBranch >>= \branch -> "git" ["pull", "--rebase", "origin", branch]
+
+----------------------------------------------------------------------------
+-- Internal helpers
+----------------------------------------------------------------------------
 
 nameOrMaster :: Maybe Text -> Text
 nameOrMaster = fromMaybe "master"
