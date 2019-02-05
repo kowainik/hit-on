@@ -14,7 +14,7 @@ import Options.Applicative (Parser, ParserInfo, argument, auto, command, execPar
                             subparser)
 
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
-import Hit.Git (runFresh, runHop)
+import Hit.Git (runFresh, runHop, runNew)
 import Hit.Issue (runIssue)
 
 import qualified Data.Text as T
@@ -25,6 +25,7 @@ hit :: IO ()
 hit = execParser cliParser >>= \case
     Hop branchName -> runHop branchName
     Fresh branchName -> runFresh branchName
+    New issueNum -> runNew issueNum
     Issue issueNum -> runIssue issueNum
 
 ----------------------------------------------------------------------------
@@ -40,6 +41,7 @@ cliParser = info ( helper <*> versionP <*> hitP )
 data HitCommand
     = Hop (Maybe Text)
     | Fresh (Maybe Text)
+    | New Int
     | Issue (Maybe Int)
 
 -- | Commands parser.
@@ -47,20 +49,29 @@ hitP :: Parser HitCommand
 hitP = subparser
     $ command "hop"   (info (helper <*> hopP)   $ progDesc "Switch to branch and sync it")
    <> command "fresh" (info (helper <*> freshP) $ progDesc "Rebase current branch on remote one")
+   <> command "new"   (info (helper <*> newP)   $ progDesc "Create new branch from current one")
    <> command "issue" (info (helper <*> issueP) $ progDesc "Show the information about the issue")
 
 hopP :: Parser HitCommand
 hopP = Hop <$> maybeBranchP
 
+
 freshP :: Parser HitCommand
 freshP = Fresh <$> maybeBranchP
+
+newP :: Parser HitCommand
+newP = New <$> issueNumP
+
+issueP :: Parser HitCommand
+issueP = Issue <$> optional issueNumP
 
 -- | Parse optional branch name as an argument.
 maybeBranchP :: Parser (Maybe Text)
 maybeBranchP = optional $ strArgument (metavar "BRANCH_NAME")
 
-issueP :: Parser HitCommand
-issueP = Issue <$> optional (argument auto (metavar "ISSUE_NUMBER"))
+-- | Parse issue number as an argument.
+issueNumP :: Parser Int
+issueNumP = argument auto $ metavar "ISSUE_NUMBER"
 
 -- | Show the version of the tool.
 versionP :: Parser (a -> a)
