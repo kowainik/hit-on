@@ -6,12 +6,11 @@ module Hit.Git
        ( runHop
        , runFresh
        , runNew
+       , runPush
        ) where
 
 import Hit.ColorTerminal (errorMessage)
 import Hit.Shell (($|))
-
-import qualified Data.Text as T
 
 
 -- | @hit hop@ command.
@@ -33,8 +32,16 @@ runNew issueNum = do
     if login == ""
         then errorMessage "user.login is not specified"
         else do
-            let branchName = T.strip login <> "/" <> show issueNum
+            let branchName = login <> "/" <> show issueNum
             "git" ["checkout", "-b", branchName]
+
+-- | @hit push@ command.
+runPush :: IO ()
+runPush = getCurrentBranch >>= \branch -> "git" ["push", "-u", "origin", branch]
 
 nameOrMaster :: Maybe Text -> Text
 nameOrMaster = fromMaybe "master"
+
+-- | Get the name of the current branch.
+getCurrentBranch :: IO Text
+getCurrentBranch = "git" $| ["rev-parse", "--abbrev-ref", "HEAD"]

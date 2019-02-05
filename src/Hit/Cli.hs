@@ -14,7 +14,7 @@ import Options.Applicative (Parser, ParserInfo, argument, auto, command, execPar
                             subparser)
 
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
-import Hit.Git (runFresh, runHop, runNew)
+import Hit.Git (runFresh, runHop, runNew, runPush)
 import Hit.Issue (runIssue)
 
 import qualified Data.Text as T
@@ -27,6 +27,7 @@ hit = execParser cliParser >>= \case
     Fresh branchName -> runFresh branchName
     New issueNum -> runNew issueNum
     Issue issueNum -> runIssue issueNum
+    Push -> runPush
 
 ----------------------------------------------------------------------------
 -- Parsers
@@ -43,6 +44,7 @@ data HitCommand
     | Fresh (Maybe Text)
     | New Int
     | Issue (Maybe Int)
+    | Push
 
 -- | Commands parser.
 hitP :: Parser HitCommand
@@ -51,6 +53,7 @@ hitP = subparser
    <> command "fresh" (info (helper <*> freshP) $ progDesc "Rebase current branch on remote one")
    <> command "new"   (info (helper <*> newP)   $ progDesc "Create new branch from current one")
    <> command "issue" (info (helper <*> issueP) $ progDesc "Show the information about the issue")
+   <> command "push"  (info (helper <*> pushP)  $ progDesc "Push the current branch")
 
 hopP :: Parser HitCommand
 hopP = Hop <$> maybeBranchP
@@ -64,6 +67,9 @@ newP = New <$> issueNumP
 
 issueP :: Parser HitCommand
 issueP = Issue <$> optional issueNumP
+
+pushP :: Parser HitCommand
+pushP = pure Push
 
 -- | Parse optional branch name as an argument.
 maybeBranchP :: Parser (Maybe Text)
