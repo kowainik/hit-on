@@ -13,9 +13,10 @@ module Hit.Git
        , runCurrent
        ) where
 
-import Data.Char (isDigit)
+import Data.Char (isAlphaNum, isDigit, isSpace)
 
 import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode)
+import Hit.Issue (getIssueTitle, mkIssueId)
 import Hit.Shell (($|))
 
 import qualified Data.Text as T
@@ -25,7 +26,7 @@ import qualified Data.Text as T
 runHop :: Maybe Text -> IO ()
 runHop (nameOrMaster -> branch) = do
     "git" ["checkout",  branch]
-    "git" ["pull", "--rebase", "--prune", "origin", branch]
+    "git" ["pull", "--rebase", "--prune"]
 
 -- | @hit fresh@ command.
 runFresh :: Maybe Text -> IO ()
@@ -40,8 +41,18 @@ runNew issueNum = do
     if login == ""
         then errorMessage "user.login is not specified"
         else do
-            let branchName = login <> "/" <> show issueNum
+            let issueId = mkIssueId issueNum
+            issueTitle <- getIssueTitle issueId
+            let shortDesc = mkShortDesc issueTitle
+            let branchName = login <> "/" <> show issueNum <> "-" <> shortDesc
             "git" ["checkout", "-b", branchName]
+  where
+    mkShortDesc :: Text -> Text
+    mkShortDesc =
+          T.intercalate "-"
+        . take 5
+        . words
+        . T.filter (\c -> isAlphaNum c || isDigit c || isSpace c)
 
 -- | @hit commit@ command.
 runCommit :: Text -> Bool -> IO ()
