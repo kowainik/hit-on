@@ -1,3 +1,4 @@
+{-# LANGUAGE ApplicativeDo   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 -- | Command line interface for @hit@ executable.
@@ -8,29 +9,41 @@ module Hit.Cli
 
 import Data.Version (showVersion)
 import Development.GitRev (gitCommitDate, gitDirty, gitHash)
-import Options.Applicative (Parser, ParserInfo, execParser, fullDesc, help, helper, info,
-                            infoOption, long, progDesc, short)
+import Options.Applicative (Parser, ParserInfo, command, execParser, fullDesc, help, helper, info,
+                            infoOption, long, metavar, progDesc, short, strArgument, subparser)
 
 import Hit.ColorTerminal (blueCode, boldCode, redCode, resetCode)
+import Hit.Git (runHop)
 
 import qualified Paths_hit_on as Meta (version)
 
 
 hit :: IO ()
-hit = execParser cliParser
+hit = execParser cliParser >>= \case
+    Hop branchName -> runHop branchName
 
 ----------------------------------------------------------------------------
 -- Parsers
 ----------------------------------------------------------------------------
 
 -- | Main parser of the app.
-cliParser :: ParserInfo ()
+cliParser :: ParserInfo HitCommand
 cliParser = info ( helper <*> versionP <*> hitP )
     $ fullDesc <> progDesc "Haskell Git Helper Tool"
 
+-- | Commands for
+data HitCommand
+    = Hop (Maybe Text)
+
 -- | Commands parser.
-hitP :: Parser ()
-hitP = pass
+hitP :: Parser HitCommand
+hitP = subparser
+    $ command "hop" (info (helper <*> hopP) $ progDesc "Switch to branch and sync it")
+
+hopP :: Parser HitCommand
+hopP = do
+    branchName <- optional $ strArgument (metavar "BRANCH_NAME")
+    pure $ Hop branchName
 
 -- | Show the version of the tool.
 versionP :: Parser (a -> a)
