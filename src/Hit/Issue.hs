@@ -35,7 +35,7 @@ showIssueName colorCode Issue{..} =
 
 showIssueFull :: Issue -> Text
 showIssueFull i@Issue{..} = T.intercalate "\n" $
-     ( showIssueName (statusToCode issueState) i)
+       showIssueName (statusToCode issueState) i
      : [ "    URL: " <> getUrl url | Just url <- [issueHtmlUrl]]
     ++ [ "    " <> desc | Just (T.strip -> desc) <- [issueBody], desc /= ""]
   where

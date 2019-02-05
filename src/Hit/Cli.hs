@@ -60,7 +60,7 @@ maybeBranchP :: Parser (Maybe Text)
 maybeBranchP = optional $ strArgument (metavar "BRANCH_NAME")
 
 issueP :: Parser HitCommand
-issueP = Issue <$> (optional $ argument auto (metavar "ISSUE_NUMBER"))
+issueP = Issue <$> optional (argument auto (metavar "ISSUE_NUMBER"))
 
 -- | Show the version of the tool.
 versionP :: Parser (a -> a)
