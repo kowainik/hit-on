@@ -14,7 +14,7 @@ import Options.Applicative (Parser, ParserInfo, argument, auto, command, execPar
                             subparser)
 
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
-import Hit.Git (runCommit, runFresh, runHop, runNew, runPush, runSync)
+import Hit.Git (runCommit, runFresh, runHop, runNew, runPush, runResolve, runSync)
 import Hit.Issue (runIssue)
 
 import qualified Data.Text as T
@@ -30,6 +30,7 @@ hit = execParser cliParser >>= \case
     Commit message -> runCommit message
     Push -> runPush
     Sync -> runSync
+    Resolve -> runResolve
 
 ----------------------------------------------------------------------------
 -- Parsers
@@ -49,17 +50,19 @@ data HitCommand
     | Commit Text
     | Push
     | Sync
+    | Resolve
 
 -- | Commands parser.
 hitP :: Parser HitCommand
 hitP = subparser
-    $ command "hop"    (info (helper <*> hopP)    $ progDesc "Switch to branch and sync it")
-   <> command "fresh"  (info (helper <*> freshP)  $ progDesc "Rebase current branch on remote one")
-   <> command "new"    (info (helper <*> newP)    $ progDesc "Create new branch from current one")
-   <> command "commit" (info (helper <*> commitP) $ progDesc "Commit all local changes and prepend issue number")
-   <> command "issue"  (info (helper <*> issueP)  $ progDesc "Show the information about the issue")
-   <> command "push"   (info (helper <*> pushP)   $ progDesc "Push the current branch")
-   <> command "sync"   (info (helper <*> syncP)   $ progDesc "Sync local branch with its remote")
+    $ command "hop"     (info (helper <*> hopP)     $ progDesc "Switch to branch and sync it")
+   <> command "fresh"   (info (helper <*> freshP)   $ progDesc "Rebase current branch on remote one")
+   <> command "new"     (info (helper <*> newP)     $ progDesc "Create new branch from current one")
+   <> command "commit"  (info (helper <*> commitP)  $ progDesc "Commit all local changes and prepend issue number")
+   <> command "issue"   (info (helper <*> issueP)   $ progDesc "Show the information about the issue")
+   <> command "push"    (info (helper <*> pushP)    $ progDesc "Push the current branch")
+   <> command "sync"    (info (helper <*> syncP)    $ progDesc "Sync local branch with its remote")
+   <> command "resolve" (info (helper <*> resolveP) $ progDesc "Switch to master, sync and delete the branch")
 
 hopP :: Parser HitCommand
 hopP = Hop <$> maybeBranchP
@@ -81,6 +84,9 @@ pushP = pure Push
 
 syncP :: Parser HitCommand
 syncP = pure Sync
+
+resolveP :: Parser HitCommand
+resolveP = pure Resolve
 
 -- | Parse optional branch name as an argument.
 maybeBranchP :: Parser (Maybe Text)
