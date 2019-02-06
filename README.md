@@ -59,13 +59,13 @@ You need to follow these steps:
 3. Install the project with one of the build tools
   * [Cabal](https://www.haskell.org/cabal/users-guide/)
      ```shell
-        cabal new-install hit
-     ``` 
+        cabal new-install hit-on
+     ```
     **Note:** make sure you have `~/.cabal/bin` in the $PATH
   * [Stack](https://docs.haskellstack.org/en/stable/README/)
      ```shell
-        stack install hit
-     ``` 
+        stack install hit-on
+     ```
 4. Make sure the `hit` is installed:
 
     ```shell
@@ -88,7 +88,7 @@ Follow the steps below to configure `hit` :
 ```shell
 git config --global user.login <your_login>
 ```
-2. **This step is only required if you want to use `hit` with private repositories**. 
+2. **This step is only required if you want to use `hit` with private repositories**.
     1. [Create OAuth token on GitHub.](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)
     2. Copy the generated token.
     3. Export token as the environment variable
@@ -164,7 +164,7 @@ Note that you don't need to keep in mind the current issue number. However, if y
 
 ### hit push
 
-After committing your changes locally, you need to push them to the remote repository. It's usually a good practice only to push the current branch. 
+After committing your changes locally, you need to push them to the remote repository. It's usually a good practice only to push the current branch.
 
 `git` command for this is a little bit verbose:
 
@@ -176,11 +176,11 @@ git push -u origin my-login/42-short-desc
 
 ```shell
 hit push
-``` 
+```
 
 ### hit sync
 
-After opening the pull request, some of the reviewers suggested changes that you applied as commits to the remote branch via GitHub interface. Now you need to sync your local branch with the remote one. 
+After opening the pull request, some of the reviewers suggested changes that you applied as commits to the remote branch via GitHub interface. Now you need to sync your local branch with the remote one.
 
 With `git` you can do the following:
 
@@ -231,7 +231,7 @@ hit fix
 
 ### hit amend
 
-Oops, you've just realised that you have made a typo in your work! Now you want to fix this problem but without creating new unnecessary commit. 
+Oops, you've just realised that you have made a typo in your work! Now you want to fix this problem but without creating new unnecessary commit.
 
 With `git` you can do the following:
 
