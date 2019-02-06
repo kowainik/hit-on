@@ -9,7 +9,7 @@ module Hit.Git
        , runPush
        , runResolve
        , runCommit
-       , runFix
+       , runAmend
        , runSync
        , runCurrent
        ) where
@@ -72,9 +72,9 @@ runCommit (T.strip -> msg) (not -> hasIssue)
            let issue = "#" <> show n
            in "[" <> issue <> "] " <> msg <> "\n\nResolves " <> issue
 
--- | @hit fix@ command.
-runFix :: IO ()
-runFix = do
+-- | @hit amned@ command.
+runAmend :: IO ()
+runAmend = do
     "git" ["add", "."]
     "git" ["commit", "--amend", "--no-edit"]
     runPush True
