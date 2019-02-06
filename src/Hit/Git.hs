@@ -72,7 +72,7 @@ runCommit (T.strip -> msg) (not -> hasIssue)
            let issue = "#" <> show n
            in "[" <> issue <> "] " <> msg <> "\n\nResolves " <> issue
 
--- | @hit amned@ command.
+-- | @hit amend@ command.
 runAmend :: IO ()
 runAmend = do
     "git" ["add", "."]
