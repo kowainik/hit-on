@@ -9,8 +9,10 @@ module Hit.Issue
        ) where
 
 import GitHub (Error (..), Id, Issue (..), IssueState (..), Name, Owner, Repo, getUrl, mkId, mkName)
+import GitHub.Auth (Auth (OAuth))
 import GitHub.Data.Options (stateOpen)
-import GitHub.Endpoints.Issues (issue, issuesForRepo)
+import GitHub.Endpoints.Issues (issue', issuesForRepo')
+import System.Environment (lookupEnv)
 
 import Hit.ColorTerminal (arrow, blueCode, errorMessage, redCode, resetCode)
 import Hit.Shell (($|))
@@ -26,7 +28,7 @@ runIssue = \case
 
 -- | Get the list of the opened issues for the current project.
 getAllIssues :: IO ()
-getAllIssues = withOwnerRepo (\o r -> issuesForRepo o r stateOpen) >>= \case
+getAllIssues = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \case
     Left err -> errorMessage $ show err
     Right is -> for_ is (putTextLn . showIssueName blueCode)
 
@@ -58,16 +60,21 @@ makeName :: forall a . Text -> Name a
 makeName = mkName (Proxy @a)
 
 fetchIssue :: Id Issue -> IO (Either Error Issue)
-fetchIssue iNum = withOwnerRepo (\o r -> issue o r iNum)
+fetchIssue iNum = withOwnerRepo (\t o r -> issue' t o r iNum)
 
 getIssueTitle :: Id Issue -> IO Text
 getIssueTitle num = fetchIssue num >>= \case
     Left err -> errorMessage (show err) >> exitFailure
     Right Issue{..} -> pure issueTitle
 
-withOwnerRepo :: (Name Owner -> Name Repo -> IO (Either Error a)) -> IO (Either Error a)
+withOwnerRepo
+    :: (Maybe Auth -> Name Owner -> Name Repo -> IO (Either Error a))
+    -> IO (Either Error a)
 withOwnerRepo action = getOwnerRepo >>= \case
-    Just (owner, repo) -> action owner repo
+    Just (owner, repo) -> do
+        token <- lookupEnv "GITHUB_TOKEN"
+        let gitHubToken = OAuth . encodeUtf8 <$> token
+        action gitHubToken owner repo
     Nothing -> do
         let errTxt = "Can not get the owner/repo names"
         errorMessage errTxt
