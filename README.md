@@ -1,4 +1,4 @@
-# hit-on
+# Hit On
 
 [![Hackage](https://img.shields.io/hackage/v/hit-on.svg)](https://hackage.haskell.org/package/hit-on)
 [![MPL-2.0 license](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](LICENSE)
@@ -41,43 +41,44 @@ mv hit-linux ~/.local/bin/hit
 
 #### From the sources
 
-> **NOTE:** the project is written in Haskell, so you need to have one of the Haskell build tools installed. See this [blog post]() for installation and usage instructions.
+> **NOTE:** the project is written in Haskell, so you need to have one of the Haskell build tools installed. See this [blog post](https://kowainik.github.io/posts/2018-06-21-haskell-build-tools) for installation and usage instructions.
 
 You need to follow these steps:
 
 1. Clone the repository from GitHub
 
-```shell
-git clone https://github.com/kowainik/hit-on.git
-```
+    ```shell
+    git clone https://github.com/kowainik/hit-on.git
+    ```
 2. Step into the directory
 
-```shell
-cd hit-on
-```
+    ```shell
+    cd hit-on
+    ```
 
 3. Install the project with one of the build tools
-  * [Cabal]()
+  * [Cabal](https://www.haskell.org/cabal/users-guide/)
      ```shell
         cabal new-install hit
      ``` 
     **Note:** make sure you have `~/.cabal/bin` in the $PATH
-  * [Stack]()
+  * [Stack](https://docs.haskellstack.org/en/stable/README/)
      ```shell
         stack install hit
      ``` 
 4. Make sure the `hit` is installed:
 
-```shell
-hit --version
-```
+    ```shell
+    hit --version
+    ```
+
 #### macOS package manager
 
-Currently, this method of installation is not supported. See [this issue]() for more details or if you want to help.
+Currently, this method of installation is not supported. See [this issue](https://github.com/kowainik/hit-on/issues/41) for more details or if you want to help.
 
 #### Ubuntu package manager
 
-Currently, this method of installation is not supported. See [this issue]() for more details or if you want to help.
+Currently, this method of installation is not supported. See [this issue](https://github.com/kowainik/hit-on/issues/42) for more details or if you want to help.
 
 ### Setting up
 
@@ -88,16 +89,16 @@ Follow the steps below to configure `hit` :
 git config --global user.login <your_login>
 ```
 2. **This step is only required if you want to use `hit` with private repositories**. 
-    2.1. [Create OAuth token on GitHub.](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)
-    2.2. Copy the generated token.
-    2.3. Export token as the environment variable
+    1. [Create OAuth token on GitHub.](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)
+    2. Copy the generated token.
+    3. Export token as the environment variable
         ```shell
         export GITHUB_TOKEN=<paste_generated_token_here>
         ```
 
 ## Usage
 
-The best way to demonstrate the power of the `hit` tool on the day-to-day basis with our workflow is to go through the entire workflow step by step solving an ordinary problem of the typical `git` user.
+The best way to demonstrate the power of the `hit` tool on the day-to-day basis with our workflow is to go through the entire workflow step by step solving an ordinary problem of the typical [`git`][git] user.
 
 > Here we assume that you work with `origin` remote with the main branch set to `master`.
 
@@ -118,7 +119,7 @@ hit hop
 
 ### hit issue
 
-Now you need to decide which issue you should work at. You can use the `hit issue` command to see the full list of all open issues. After choosing the number `n` of the issue you want to resolve, call `hit issue n` to see the details of that issue.
+Now you need to decide which issue you should work at. You can use the `hit issue` command to see the full list of all open issues. After choosing the number of the issue, let's say 42, call `hit issue 42` to see the details of that issue.
 
 ### hit new
 
@@ -150,7 +151,7 @@ After finishing your work on that issue, you need to commit your changes. With `
 git add .
 git commit -m "[#42] Implement my feature
 
-Resolves #42
+Resolves #42"
 ```
 
 With `hit` you need only to specify the text of the commit to get the same result:
@@ -159,7 +160,7 @@ With `hit` you need only to specify the text of the commit to get the same resul
 hit commit "Implement my feature"
 ```
 
-With `hit` you don't need to keep in mind the current issue number. However, if you want to refresh the context about the issue, use `hit current` command.
+Note that you don't need to keep in mind the current issue number. However, if you want to refresh the context about the issue, use the `hit current` command.
 
 ### hit push
 
@@ -179,7 +180,7 @@ hit push
 
 ### hit sync
 
-After opening the pull request, some of the reviewers suggested changes that you applied as commits to the remote branch. Now you need to sync your local branch with the remote one. 
+After opening the pull request, some of the reviewers suggested changes that you applied as commits to the remote branch via GitHub interface. Now you need to sync your local branch with the remote one. 
 
 With `git` you can do the following:
 
