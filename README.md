@@ -231,7 +231,7 @@ hit fix
 
 ### hit amend
 
-Oops, you've just realised that you have made a typo in your work! So you fixed the typo. But now you want to update the remote branch without creating new unnecessary commit.
+Oops, you've just realised that you have made a typo in your work! So you fixed the typo. But now you want to update the remote branch without creating a new unnecessary commit.
 
 With `git` you can do the following:
 
