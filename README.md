@@ -61,7 +61,7 @@ You need to follow these steps:
      ```shell
         cabal new-install hit-on
      ```
-    **Note:** make sure you have `~/.cabal/bin` in the $PATH
+    **Note:** make sure you have `~/.cabal/bin` in your $PATH
   * [Stack](https://docs.haskellstack.org/en/stable/README/)
      ```shell
         stack install hit-on
