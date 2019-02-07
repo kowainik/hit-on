@@ -135,7 +135,7 @@ With `git` you can create a branch using the following command:
 git checkout -b my-login/42-short-desc
 ```
 
-`hit` allows to accomplish this task easier:
+`hit` allows you to accomplish this task in an easier manner:
 
 ```shell
 hit new 42
