@@ -32,7 +32,7 @@ You can download the `hit` binary directly from the GitHub releases:
 
 * [`hit` releases](https://github.com/kowainik/hit-on/releases)
 
-After downloading, make it executable and copy it under a convenient location, for example:
+After downloading, make it executable and copy it to a convenient location, for example:
 
 ```shell
 chmod +x hit-linux
