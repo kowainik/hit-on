@@ -91,7 +91,7 @@ git config --global user.login <your_login>
 2. **This step is only required if you want to use `hit` with private repositories**.
     1. [Create OAuth token on GitHub.](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)
     2. Copy the generated token.
-    3. Export token as the environment variable
+    3. Export token as an environment variable
         ```shell
         export GITHUB_TOKEN=<paste_generated_token_here>
         ```
