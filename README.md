@@ -66,7 +66,7 @@ You need to follow these steps:
      ```shell
         stack install hit-on
      ```
-4. Make sure the `hit` is installed:
+4. Make sure that `hit` is installed:
 
     ```shell
     hit --version
