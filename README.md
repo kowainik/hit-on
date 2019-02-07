@@ -119,7 +119,7 @@ hit hop
 
 ### hit issue
 
-Now you need to decide which issue you should work at. You can use the `hit issue` command to see the full list of all open issues. After choosing the number of the issue, let's say 42, call `hit issue 42` to see the details of that issue.
+Now you need to decide which issue you want to work on. You can use the `hit issue` command to see the full list of all open issues. After choosing the number of the issue, let's say 42, call `hit issue 42` to see the details of that issue.
 
 ### hit new
 
