@@ -104,7 +104,7 @@ The best way to demonstrate the power of the `hit` tool on a day-to-day basis wi
 
 ### hit hop
 
-When you want to start working on the new issue, make sure you're using the latest version of your project. As a `git` user you may use the following commands:
+When you want to start working on a new issue, you usually want to make sure you're using the latest version of your project. As a `git` user you may use the following commands:
 
 ```shell
 git checkout master
