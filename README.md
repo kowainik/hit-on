@@ -12,7 +12,7 @@ You can find the description of the workflow here:
 
 * [Kowainik Git Workflow](https://github.com/kowainik/org#workflow)
 
-`hit-on`  provides the `hit` binary with the convenient command-line interface to improve the interaction with [`git`][git] in a compatible way with the described working methods. It saves time for the people who use this workflow on a daily basis and helps beginners to expand the insight of the core VCS processes and ease the cooperation work with the team during development.
+`hit-on`  provides the `hit` binary with a convenient command-line interface to improve the interaction with [`git`][git] in a compatible way with the described working methods. It saves time for people who use this workflow on a daily basis, helps beginners expand their insight of the core VCS processes and makes collaboration between team members easier during development.
 
 ## Getting started
 
