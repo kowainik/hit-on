@@ -166,7 +166,7 @@ Note that you don't need to keep in mind the current issue number. However, if y
 
 After committing your changes locally, you need to push them to the remote repository. It's usually a good practice to push only the current branch.
 
-`git` command for this is a little bit verbose:
+The `git` command for this is a little bit verbose:
 
 ```shell
 git push -u origin my-login/42-short-desc
