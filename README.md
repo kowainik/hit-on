@@ -164,7 +164,7 @@ Note that you don't need to keep in mind the current issue number. However, if y
 
 ### hit push
 
-After committing your changes locally, you need to push them to the remote repository. It's usually a good practice only to push the current branch.
+After committing your changes locally, you need to push them to the remote repository. It's usually a good practice to push only the current branch.
 
 `git` command for this is a little bit verbose:
 
