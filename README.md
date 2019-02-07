@@ -196,7 +196,7 @@ hit sync
 
 ### hit fresh
 
-While you were waiting for the second review round, another pull request was merged to the `master` branch. Now you need to apply the new `master` changes to your local branch.
+While you were waiting for the second round of reviews, another pull request was merged to the `master` branch. Now you need to apply the new `master` changes to your local branch.
 
 With `git` you can do the following:
 
