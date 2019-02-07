@@ -24,7 +24,7 @@ To start using `hit` make sure that you have the following tools installed on yo
 
 ### Installation
 
-There are several methods to install `hit` tool. You can choose the one that you are most comfortable with.
+There are several methods to install the `hit` tool. You can choose the one that you are most comfortable with.
 
 #### Download from releases
 
