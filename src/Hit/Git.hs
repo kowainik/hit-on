@@ -75,15 +75,13 @@ runCommit (T.strip -> msg) (not -> hasIssue)
 
 -- / @hit fix@ command
 runFix :: Maybe Text -> IO ()
-runFix = \case
-    Nothing -> do
-        "git" ["add", "."]
-        "git" ["commit", "-m", "Fix after review"]
-        runPush False
-    Just msg -> do
-        "git" ["add", "."]
-        "git" $ ["commit", "-m "] ++ [msg]
-        runPush False
+runFix msg = do
+    "git" ["add", "."]
+    "git" ["commit", "-m", message]
+    runPush False
+    where
+        message = fromMaybe "Fix after review" msg
+    
 
 -- | @hit amend@ command.
 runAmend :: IO ()
