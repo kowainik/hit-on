@@ -98,7 +98,7 @@ git config --global user.login <your_login>
 
 ## Usage
 
-The best way to demonstrate the power of the `hit` tool on the day-to-day basis with our workflow is to go through the entire workflow step by step solving an ordinary problem of the typical [`git`][git] user.
+The best way to demonstrate the power of the `hit` tool on a day-to-day basis with our workflow is to go through the entire workflow step by step, solving an ordinary problem of the typical [`git`][git] user.
 
 > Here we assume that you work with `origin` remote with the main branch set to `master`.
 
