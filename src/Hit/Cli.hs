@@ -14,7 +14,7 @@ import Options.Applicative (Parser, ParserInfo, argument, auto, command, execPar
                             subparser, switch)
 
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
-import Hit.Git (runCommit, runCurrent, runAmend, runFresh, runHop, runNew, runPush, runResolve,
+import Hit.Git (runCommit, runCurrent, runFix, runAmend, runFresh, runHop, runNew, runPush, runResolve,
                 runSync)
 import Hit.Issue (runIssue)
 
@@ -29,6 +29,7 @@ hit = execParser cliParser >>= \case
     New issueNum -> runNew issueNum
     Issue issueNum -> runIssue issueNum
     Commit message noIssue -> runCommit message noIssue
+    Fix message -> runFix message
     Amend -> runAmend
     Resolve branchName -> runResolve branchName
     Push isForce -> runPush isForce
@@ -51,6 +52,7 @@ data HitCommand
     | New Int
     | Issue (Maybe Int)
     | Commit Text Bool
+    | Fix (Maybe Text)
     | Amend
     | Resolve (Maybe Text)
     | Push Bool
@@ -64,6 +66,7 @@ hitP = subparser
    <> command "fresh"   (info (helper <*> freshP)   $ progDesc "Rebase current branch on remote one")
    <> command "new"     (info (helper <*> newP)     $ progDesc "Create new branch from current one")
    <> command "commit"  (info (helper <*> commitP)  $ progDesc "Commit all local changes and prepend issue number")
+   <> command "fix"     (info (helper <*> fixP)     $ progDesc "Fix requested changes to the last commit")
    <> command "amend"   (info (helper <*> amendP)   $ progDesc "Amend changes to the last commit and force push")
    <> command "issue"   (info (helper <*> issueP)   $ progDesc "Show the information about the issue")
    <> command "push"    (info (helper <*> pushP)    $ progDesc "Push the current branch")
@@ -92,6 +95,9 @@ commitP = do
        <> help "Do not add [#ISSUE_NUMBER] prefix when specified"
     pure $ Commit msg noIssue
 
+fixP :: Parser HitCommand
+fixP = Fix <$> commitMessageP
+
 amendP :: Parser HitCommand
 amendP = pure Amend
 
@@ -114,6 +120,10 @@ resolveP = Resolve <$> maybeBranchP
 -- | Parse optional branch name as an argument.
 maybeBranchP :: Parser (Maybe Text)
 maybeBranchP = optional $ strArgument (metavar "BRANCH_NAME")
+
+-- / Parse optional commit message as an argument
+commitMessageP :: Parser (Maybe Text)
+commitMessageP = optional $ strArgument (metavar "COMMIT_MESSAGE")
 
 -- | Parse issue number as an argument.
 issueNumP :: Parser Int

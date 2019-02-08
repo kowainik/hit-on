@@ -9,6 +9,7 @@ module Hit.Git
        , runPush
        , runResolve
        , runCommit
+       , runFix
        , runAmend
        , runSync
        , runCurrent
@@ -71,6 +72,16 @@ runCommit (T.strip -> msg) (not -> hasIssue)
        Just n  ->
            let issue = "#" <> show n
            in "[" <> issue <> "] " <> msg <> "\n\nResolves " <> issue
+
+-- / @hit fix@ command
+runFix :: Maybe Text -> IO ()
+runFix msg = do
+    "git" ["add", "."]
+    "git" ["commit", "-m", message]
+    runPush False
+    where
+        message = fromMaybe "Fix after review" msg
+    
 
 -- | @hit amend@ command.
 runAmend :: IO ()
