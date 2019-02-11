@@ -17,7 +17,7 @@ matrix:
   - ghc: 8.6.3
 
   - ghc: 8.6.3
-    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
+    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml" DEPLOY=yes
 
 install:
   - |
@@ -27,7 +27,7 @@ install:
     else
       curl -sSL https://get.haskellstack.org/ | sh
       stack --version
-      stack build --system-ghc --test --no-run-tests
+      stack build --system-ghc --test --no-run-tests --bench --no-run-benchmarks
     fi
 
 script:
@@ -35,13 +35,33 @@ script:
     if [ -z "$STACK_YAML" ]; then
        echo 'No tests'
     else
-      stack build --system-ghc --test --bench --no-run-benchmarks --no-terminal --ghc-options=-Werror
+      stack test --system-ghc --no-terminal
     fi
 
   # HLint check
   - curl https://raw.githubusercontent.com/kowainik/relude/988bbdd3a09df1159917012933780523644880e5/.hlint.yaml -o .hlint-relude.yaml
   - curl -sSL https://raw.github.com/ndmitchell/neil/master/misc/travis.sh | sh -s -- hlint -h .hlint-relude.yaml src/
 
+after_success:
+  - |
+    if [ "$DEPLOY" = "yes" ]; then
+      echo "hit deploy triggered!"
+      mv "$(stack path --system-ghc --local-install-root)/bin/hit" "hit-${TRAVIS_OS_NAME}"
+      chmod +x "hit-${TRAVIS_OS_NAME}"
+      git tag "$(date +'%Y%m%d%H%M%S')"
+    fi
+
+deploy:
+  - skip_cleanup: true
+    provider: releases
+    api_key:
+      secure: y8CIkYwh4NF9VzaRrmHWeDZwad+lcb54zSHq67hYnMCnR1w0Xba+wUK4lfTea22ndt/H4zqM0XygD1iB5qH2veA9DMUWuppUaN685zqPak79xx0yo4ml+um0UwrM5w9GITceYTtz8Rb0pTc9iGH4AWIBKJJHRuxp8Ln1xezXEmFJcV5o9p4BuFrSkcIjRokmFhrFWkK8cXrZpEZh4XhVLMHNcvkkmF1IBYjbZN6E+vxNMuX+PHoBL2eAp5kw7JwAG9/FKRk6TaiMc104idv9JHgi7ujoQrzkJq5fMBfALqfIehwq3KHXc2Lem3Uz0lXM6yKtPNe17fsCS5x/g5uBQlUGikX41lXkm0wFNboJtLm8W9o4rwEx5pOhgb/YfO7x33L/vIvktj/Ife2gDuF5G+67/+thYqF4YA1A4X9J3Bjl49Cb2g84Gwgu6Lw4gaXCvhmhzB6t+mf2O69YutBkY2+ugzdCgZ73BKamIiAP1t9klzlfdrcIjfiBiAHyP9GTjxsWTnAbRlGkTJJ3VbWU1hItt1cYs/qko2FgbH7dJlO4XS4uPUIAb+eddl8rUXY5Kn9MonNPq9p9ReoADmRQG3esZZji/b52HKg+RNC41GzvwY9oFthMHw7Rhm5lTJWABunet1zrmu7DMDAKALaEI9T5BPBBxriGNJlPz07WC68=
+    file:
+      - "hit-${TRAVIS_OS_NAME}"
+    on:
+      repo: kowainik/hit-on
+      tags: true
+      condition: $DEPLOY = yes
 
 notifications:
   email: false
