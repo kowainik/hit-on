@@ -102,6 +102,30 @@ The best way to demonstrate the power of the `hit` tool on a day-to-day basis wi
 
 > Here we assume that you work with `origin` remote with the main branch set to `master`.
 
+### hit clone
+
+If you don't have the repository locally, you need to clone it. With the `git`
+tool you would need to specify the full URL which you can get from the
+repository GitHub page.
+
+```shell
+git clone git@github.com:username/project-name.git
+```
+
+`hit` can simplify this process a bit. If you want to clone the project which is
+under your GitHub username you can write:
+
+```shell
+hit clone my-project
+```
+
+If this is not your personal repository then you can use `clone` command in the
+following way:
+
+```shell
+hit clone owner-name/project-name
+```
+
 ### hit hop
 
 When you want to start working on a new issue, you usually want to make sure you're using the latest version of your project. As a `git` user you may use the following commands:
