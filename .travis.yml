@@ -19,6 +19,9 @@ matrix:
   - ghc: 8.6.3
     env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml" DEPLOY=yes
 
+  - os: osx
+    env: GHC=8.6.3 STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml" DEPLOY=yes
+
 install:
   - |
     if [ -z "$STACK_YAML" ]; then
@@ -27,7 +30,11 @@ install:
     else
       curl -sSL https://get.haskellstack.org/ | sh
       stack --version
-      stack build --system-ghc --test --no-run-tests --bench --no-run-benchmarks
+      if [ "$TRAVIS_OS_NAME" = osx ]; then
+        stack build --test --no-run-tests --bench --no-run-benchmarks
+      else
+        stack build --system-ghc --test --no-run-tests --bench --no-run-benchmarks
+      fi
     fi
 
 script:
@@ -35,7 +42,11 @@ script:
     if [ -z "$STACK_YAML" ]; then
        echo 'No tests'
     else
-      stack test --system-ghc --no-terminal
+      if [ "$TRAVIS_OS_NAME" = osx ]; then
+        stack test --no-terminal
+      else
+        stack test --system-ghc --no-terminal
+      fi
     fi
 
   # HLint check
