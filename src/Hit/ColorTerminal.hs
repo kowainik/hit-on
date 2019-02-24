@@ -6,6 +6,7 @@ module Hit.ColorTerminal
        , beautyPrint
        , boldCode
        , blueCode
+       , blueBg
        , bold
        , boldText
        , boldDefault
@@ -24,8 +25,9 @@ module Hit.ColorTerminal
        , arrow
        ) where
 
-import System.Console.ANSI (Color (..), ColorIntensity (Vivid), ConsoleIntensity (BoldIntensity),
-                            ConsoleLayer (Foreground), SGR (..), setSGR, setSGRCode)
+import System.Console.ANSI (Color (..), ColorIntensity (Dull, Vivid),
+                            ConsoleIntensity (BoldIntensity), ConsoleLayer (Background, Foreground),
+                            SGR (..), setSGR, setSGRCode)
 import System.IO (hFlush)
 
 
@@ -77,12 +79,13 @@ successMessage = colorMessage Green
 infoMessage    = colorMessage Blue
 skipMessage    = colorMessage Cyan
 
-blueCode, greenCode, boldCode, redCode, resetCode :: Text
+blueCode, greenCode, boldCode, redCode, resetCode, blueBg :: Text
 redCode   = toText $ setSGRCode [SetColor Foreground Vivid Red]
 blueCode  = toText $ setSGRCode [SetColor Foreground Vivid Blue]
-greenCode  = toText $ setSGRCode [SetColor Foreground Vivid Green]
+greenCode = toText $ setSGRCode [SetColor Foreground Vivid Green]
 boldCode  = toText $ setSGRCode [SetConsoleIntensity BoldIntensity]
 resetCode = toText $ setSGRCode [Reset]
+blueBg    = toText $ setSGRCode [SetColor Foreground Dull White, SetColor Background Dull Blue]
 
 -- | Arrow symbol
 arrow :: Text

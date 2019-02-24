@@ -8,14 +8,16 @@ module Hit.Issue
        , parseOwnerRepo
        ) where
 
-import GitHub (Error (..), Id, Issue (..), IssueState (..), Name, Owner, Repo, getUrl, mkId, mkName)
+import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Name, Owner, Repo,
+               SimpleUser (..), getUrl, mkId, mkName, untagName)
 import GitHub.Auth (Auth (OAuth))
 import GitHub.Data.Options (stateOpen)
 import GitHub.Endpoints.Issues (issue', issuesForRepo')
 import Shellmet (($|))
 import System.Environment (lookupEnv)
 
-import Hit.ColorTerminal (arrow, blueCode, errorMessage, redCode, resetCode)
+import Hit.ColorTerminal (arrow, blueBg, blueCode, boldCode, errorMessage, greenCode, redCode,
+                          resetCode)
 
 import qualified Data.Text as T
 
@@ -40,18 +42,42 @@ getIssue num = fetchIssue num >>= \case
 
 showIssueName :: Text -> Issue -> Text
 showIssueName colorCode Issue{..} =
-    arrow <> colorCode <> "[#" <> show @Text issueNumber <> "] " <> resetCode <> issueTitle
+    arrow <> colorCode <> " [#" <> show @Text issueNumber <> "] " <> resetCode <> issueTitle
 
 showIssueFull :: Issue -> Text
 showIssueFull i@Issue{..} = T.intercalate "\n" $
        showIssueName (statusToCode issueState) i
-     : [ "    URL: " <> getUrl url | Just url <- [issueHtmlUrl]]
-    ++ [ "    " <> desc | Just (T.strip -> desc) <- [issueBody], desc /= ""]
+     : [ highlight "    Assignees: " <> assignees | not $ null issueAssignees]
+    ++ [ highlight "    Labels: " <> labels | not $ null issueLabels]
+    ++ [ highlight "    URL: " <> getUrl url | Just url <- [issueHtmlUrl]]
+    ++ [ indentDesc desc | Just (T.strip -> desc) <- [issueBody], desc /= ""]
   where
     statusToCode :: IssueState -> Text
     statusToCode = \case
         StateOpen -> blueCode
         StateClosed -> redCode
+
+    indentDesc :: Text -> Text
+    indentDesc = unlines
+        . map ("    " <> )
+        . (highlight "Description:" :)
+        . lines
+
+    assignees :: Text
+    assignees = T.intercalate ", "
+        $ map (untagName . simpleUserLogin)
+        $ toList issueAssignees
+
+    labels :: Text
+    labels = T.intercalate " "
+        $ map (putLabel . untagName . labelName)
+        $ toList issueLabels
+
+    putLabel :: Text -> Text
+    putLabel x = blueBg <> x <> resetCode
+
+    highlight :: Text -> Text
+    highlight x = boldCode <> greenCode <> x <> resetCode
 
 mkIssueId :: Int -> Id Issue
 mkIssueId = mkId $ Proxy @Issue
