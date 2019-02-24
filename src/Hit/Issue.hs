@@ -114,7 +114,7 @@ getOwnerRepo = parseOwnerRepo <$> "git" $| ["remote", "get-url", "origin"]
 {- |
 __Note:__ this works with GitHub projects!
 
-This function supports two kinds of the URLs:
+This function supports four kinds of the URLs:
 
 SSH one:
 
@@ -122,19 +122,34 @@ SSH one:
 git@github.com:kowainik/hit-on.git
 @
 
+or
+
+@
+git@github.com:kowainik/hit-on
+@
+
 And HTTPS one:
 
 @
 https://github.com/kowainik/hit-on.git
+@
+
+or
+
+@
+https://github.com/kowainik/hit-on
 @
 -}
 parseOwnerRepo :: Text -> Maybe (Name Owner, Name Repo)
 parseOwnerRepo url =
     ( T.stripPrefix "git@github.com:"     url
   <|> T.stripPrefix "https://github.com/" url
-    ) >>= T.stripSuffix ".git" >>= separateName
+    ) >>= stripGitSuffix >>= separateName
   where
     separateName :: Text -> Maybe (Name Owner, Name Repo)
     separateName nm =
         let (owner, T.drop 1 -> repo) = T.breakOn "/" nm in
         guard (owner /= "" && repo /= "") *> Just (makeName owner, makeName repo)
+
+    stripGitSuffix :: Text -> Maybe Text
+    stripGitSuffix x = whenNothing (T.stripSuffix ".git" x) (Just x)
