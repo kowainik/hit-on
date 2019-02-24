@@ -27,7 +27,6 @@ library
                          Hit.ColorTerminal
                          Hit.Git
                          Hit.Issue
-                         Hit.Shell
 
   autogen-modules:     Paths_hit_on
   other-modules:       Paths_hit_on
@@ -38,8 +37,8 @@ library
                      , github ^>= 0.20
                      , gitrev ^>= 1.3
                      , optparse-applicative ^>= 0.14
-                     , process ^>= 1.6.3
                      , relude ^>= 0.4
+                     , shellmet >= 0.0.0
                      , text
 
   ghc-options:         -Wall

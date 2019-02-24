@@ -1,4 +1,7 @@
 resolver: nightly-2019-02-04
 
+extra-deps:
+  - shellmet-0.0.0
+
 ghc-options:
   "$locals": -fhide-source-paths
