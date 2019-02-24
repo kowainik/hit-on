@@ -17,10 +17,10 @@ module Hit.Git
        ) where
 
 import Data.Char (isAlphaNum, isDigit, isSpace)
+import Shellmet (($|))
 
 import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode)
 import Hit.Issue (getIssueTitle, mkIssueId)
-import Hit.Shell (($|))
 
 import qualified Data.Text as T
 

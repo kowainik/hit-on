@@ -12,10 +12,10 @@ import GitHub (Error (..), Id, Issue (..), IssueState (..), Name, Owner, Repo, g
 import GitHub.Auth (Auth (OAuth))
 import GitHub.Data.Options (stateOpen)
 import GitHub.Endpoints.Issues (issue', issuesForRepo')
+import Shellmet (($|))
 import System.Environment (lookupEnv)
 
 import Hit.ColorTerminal (arrow, blueCode, errorMessage, redCode, resetCode)
-import Hit.Shell (($|))
 
 import qualified Data.Text as T
 
