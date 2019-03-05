@@ -1,5 +1,6 @@
 # Hit On
 
+![hit-on logo](https://user-images.githubusercontent.com/4276606/53816638-d86e4a00-3f9e-11e9-83ab-74032363292f.png)
 [![Hackage](https://img.shields.io/hackage/v/hit-on.svg)](https://hackage.haskell.org/package/hit-on)
 [![MPL-2.0 license](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](LICENSE)
 [![Stackage Lts](http://stackage.org/package/hit-on/badge/lts)](http://stackage.org/lts/package/hit-on)
@@ -289,3 +290,9 @@ hit resolve
 ```
 
 [git]: https://git-scm.com/
+
+## Acknowledgement
+
+Icons made by [Freepik](http://www.freepik.com) from
+[www.flaticon.com](https://www.flaticon.com/) is licensed by
+[CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/).
