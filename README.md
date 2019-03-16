@@ -15,6 +15,10 @@ You can find the description of the workflow here:
 
 `hit-on`  provides the `hit` binary with a convenient command-line interface to improve the interaction with [`git`][git] in a compatible way with the described working methods. It saves time for people who use this workflow on a daily basis, helps beginners expand their insight of the core VCS processes and makes collaboration between team members easier during development.
 
+Here is an example of how you can see the list of issues and the issue description with `hit`:
+
+![Screenshot from 2019-03-17 00-21-23](https://user-images.githubusercontent.com/8126674/54478225-cae07c00-484a-11e9-86b3-c4c54e281274.png)
+
 ## Getting started
 
 ### Prerequisites
