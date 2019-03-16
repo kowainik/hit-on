@@ -14,6 +14,8 @@ module Hit.Git
        , runSync
        , runCurrent
        , runClone
+
+       , getUsername
        ) where
 
 import Data.Char (isAlphaNum, isDigit, isSpace)

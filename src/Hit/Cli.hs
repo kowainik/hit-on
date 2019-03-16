@@ -14,8 +14,8 @@ import Options.Applicative (Parser, ParserInfo, argument, auto, command, execPar
                             subparser, switch)
 
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
-import Hit.Git (runAmend, runClone, runCommit, runCurrent, runFix, runFresh, runHop, runNew,
-                runPush, runResolve, runSync)
+import Hit.Git (getUsername, runAmend, runClone, runCommit, runCurrent, runFix, runFresh, runHop,
+                runNew, runPush, runResolve, runSync)
 import Hit.Issue (runIssue)
 
 import qualified Data.Text as T
@@ -27,14 +27,16 @@ hit = execParser cliParser >>= \case
     Hop branchName -> runHop branchName
     Fresh branchName -> runFresh branchName
     New issueNum -> runNew issueNum
-    Issue issueNum -> runIssue issueNum
+    Issue issueNum me -> if me
+        then getUsername >>= runIssue issueNum . Just
+        else runIssue issueNum Nothing
     Commit message noIssue -> runCommit message noIssue
     Fix message -> runFix message
     Amend -> runAmend
     Resolve branchName -> runResolve branchName
     Push isForce -> runPush isForce
     Sync -> runSync
-    Current -> runCurrent >>= flip whenJust (runIssue . Just)
+    Current -> runCurrent >>= flip whenJust (flip runIssue Nothing . Just)
     Clone name -> runClone name
 
 ----------------------------------------------------------------------------
@@ -51,7 +53,7 @@ data HitCommand
     = Hop (Maybe Text)
     | Fresh (Maybe Text)
     | New Int
-    | Issue (Maybe Int)
+    | Issue (Maybe Int) Bool
     | Commit Text Bool
     | Fix (Maybe Text)
     | Amend
@@ -87,7 +89,13 @@ newP :: Parser HitCommand
 newP = New <$> issueNumP
 
 issueP :: Parser HitCommand
-issueP = Issue <$> optional issueNumP
+issueP = do
+    num <- optional issueNumP
+    me <- switch
+        $ long "me"
+       <> short 'm'
+       <> help "Assigned to me"
+    pure $ Issue num me
 
 commitP :: Parser HitCommand
 commitP = do
