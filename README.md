@@ -90,7 +90,9 @@ Follow the steps below to configure `hit` :
 git config --global user.login <your_login>
 ```
 2. **This step is only required if you want to use `hit` with private repositories**.
-    1. [Create OAuth token on GitHub.](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)
+    1. [Create OAuth token on GitHub.](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/) The following scopes for the token should be specified:
+    ![Screenshot from 2019-03-16 22-34-57](https://user-images.githubusercontent.com/4276606/54476778-30793c00-483c-11e9-9625-a4f6ced40820.png)
+
     2. Copy the generated token.
     3. Export token as an environment variable
         ```shell
