@@ -8,8 +8,9 @@ module Hit.Issue
        , parseOwnerRepo
        ) where
 
+import Data.Vector (Vector)
 import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Name, Owner, Repo,
-               SimpleUser (..), getUrl, mkId, mkName, untagName)
+               SimpleUser (..), User, getUrl, mkId, mkName, untagName)
 import GitHub.Auth (Auth (OAuth))
 import GitHub.Data.Options (stateOpen)
 import GitHub.Endpoints.Issues (issue', issuesForRepo')
@@ -20,19 +21,29 @@ import Hit.ColorTerminal (arrow, blueBg, blueCode, boldCode, errorMessage, green
                           resetCode)
 
 import qualified Data.Text as T
+import qualified Data.Vector as V
 
 
 -- | Run the @issue@ command.
-runIssue :: Maybe Int -> IO ()
-runIssue = \case
+runIssue :: Maybe Int -> Maybe Text -> IO ()
+runIssue issue me = case issue of
     Just num -> getIssue $ mkIssueId num
-    Nothing -> getAllIssues
+    Nothing  -> getAllIssues me
 
 -- | Get the list of the opened issues for the current project.
-getAllIssues :: IO ()
-getAllIssues = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \case
+getAllIssues :: Maybe Text -> IO ()
+getAllIssues me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \case
     Left err -> errorMessage $ show err
-    Right is -> for_ is (putTextLn . showIssueName blueCode)
+    Right is -> for_ (my is) (putTextLn . showIssueName blueCode)
+  where
+    my :: Vector Issue -> Vector Issue
+    my issues = case me of
+        Just (makeName -> username) -> V.filter (assignedTo username . issueAssignees) issues
+        Nothing                     -> issues
+
+    -- Is the username an element of assignees vector?
+    assignedTo :: Name User -> Vector SimpleUser -> Bool
+    assignedTo user = isJust . V.find ((user ==) . simpleUserLogin)
 
 -- | Get the 'Issue' by given issue number.
 getIssue :: Id Issue -> IO ()
