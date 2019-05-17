@@ -1,7 +1,6 @@
-resolver: nightly-2019-02-04
+resolver: lts-13.21
 
 extra-deps:
-  - shellmet-0.0.0
-
-ghc-options:
-  "$locals": -fhide-source-paths
+  - github-0.20
+  - relude-0.5.0
+  - shellmet-0.0.1

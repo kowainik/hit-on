@@ -1,4 +1,4 @@
-cabal-version:       2.0
+cabal-version:       2.4
 name:                hit-on
 version:             0.0.0
 synopsis:            Haskell Git Helper Tool
@@ -7,20 +7,47 @@ homepage:            https://github.com/kowainik/hit-on
 bug-reports:         https://github.com/kowainik/hit-on/issues
 license:             MPL-2.0
 license-file:        LICENSE
-author:              Kowainik
-maintainer:          xrom.xkov@gmail.com
+author:              Veronika Romashkina, Dmitrii Kovanikov
+maintainer:          Kowainik <xrom.xkov@gmail.com>
 copyright:           2019 Kowainik
 category:            Git, CLI Tool
 build-type:          Simple
 extra-doc-files:     README.md
                    , CHANGELOG.md
-tested-with:         GHC == 8.6.3
+tested-with:         GHC == 8.6.5
 
 source-repository head
   type:                git
   location:            https://github.com/kowainik/hit-on.git
 
+common common-options
+  ghc-options:         -Wall
+                       -Wincomplete-uni-patterns
+                       -Wincomplete-record-updates
+                       -Wcompat
+                       -Widentities
+                       -Wredundant-constraints
+                       -fhide-source-paths
+                       -Wmissing-export-lists
+                       -Wpartial-fields
+
+  default-language:    Haskell2010
+  default-extensions:  ConstraintKinds
+                       DeriveGeneric
+                       GeneralizedNewtypeDeriving
+                       InstanceSigs
+                       KindSignatures
+                       LambdaCase
+                       OverloadedStrings
+                       RecordWildCards
+                       ScopedTypeVariables
+                       StandaloneDeriving
+                       TupleSections
+                       TypeApplications
+                       ViewPatterns
+
 library
+  import:              common-options
   hs-source-dirs:      src
   exposed-modules:     Hit
                          Hit.Cli
@@ -37,37 +64,13 @@ library
                      , github ^>= 0.20
                      , gitrev ^>= 1.3
                      , optparse-applicative ^>= 0.14
-                     , relude ^>= 0.4
+                     , relude ^>= 0.5
                      , shellmet >= 0.0.0
                      , text
                      , vector ^>= 0.12
 
-  ghc-options:         -Wall
-                       -Wincomplete-uni-patterns
-                       -Wincomplete-record-updates
-                       -Wcompat
-                       -Widentities
-                       -Wredundant-constraints
-                       -fhide-source-paths
-                       -Wmissing-export-lists
-                       -Wpartial-fields
-
-  default-language:    Haskell2010
-  default-extensions:  ConstraintKinds
-                       DeriveGeneric
-                       GeneralizedNewtypeDeriving
-                       InstanceSigs
-                       KindSignatures
-                       LambdaCase
-                       OverloadedStrings
-                       RecordWildCards
-                       ScopedTypeVariables
-                       StandaloneDeriving
-                       TupleSections
-                       TypeApplications
-                       ViewPatterns
-
 executable hit
+  import:              common-options
   hs-source-dirs:      app
   main-is:             Main.hs
 
@@ -78,26 +81,3 @@ executable hit
                        -threaded
                        -rtsopts
                        -with-rtsopts=-N
-                       -Wincomplete-uni-patterns
-                       -Wincomplete-record-updates
-                       -Wcompat
-                       -Widentities
-                       -Wredundant-constraints
-                       -fhide-source-paths
-                       -Wmissing-export-lists
-                       -Wpartial-fields
-
-  default-language:    Haskell2010
-  default-extensions:  ConstraintKinds
-                       DeriveGeneric
-                       GeneralizedNewtypeDeriving
-                       InstanceSigs
-                       KindSignatures
-                       LambdaCase
-                       OverloadedStrings
-                       RecordWildCards
-                       ScopedTypeVariables
-                       StandaloneDeriving
-                       TupleSections
-                       TypeApplications
-                       ViewPatterns
