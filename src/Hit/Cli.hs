@@ -79,7 +79,7 @@ hitP = subparser
    <> command "sync"    (info (helper <*> syncP)    $ progDesc "Sync local branch with its remote")
    <> command "resolve" (info (helper <*> resolveP) $ progDesc "Switch to master, sync and delete the branch")
    <> command "current" (info (helper <*> currentP) $ progDesc "Show info about current branch and issue (if applicable)")
-   <> command "status"  (info (helper <*> statusP)  $ progDesc "Show current branch and beatiful diff")
+   <> command "status"  (info (helper <*> statusP)  $ progDesc "Show current branch and beautiful diff with HEAD")
    <> command "clone"   (info (helper <*> cloneP)   $ progDesc "Clone the repo. Use 'reponame' or 'username/reponame' formats")
 
 hopP :: Parser HitCommand
