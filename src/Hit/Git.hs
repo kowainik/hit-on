@@ -13,6 +13,7 @@ module Hit.Git
        , runAmend
        , runSync
        , runCurrent
+       , runStatus
        , runClone
 
        , getUsername
@@ -22,6 +23,7 @@ import Data.Char (isAlphaNum, isDigit, isSpace)
 import Shellmet (($|))
 
 import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode)
+import Hit.Git.Status (showPrettyDiff)
 import Hit.Issue (getIssueTitle, mkIssueId)
 
 import qualified Data.Text as T
@@ -115,6 +117,20 @@ runCurrent = do
     branchName <- getCurrentBranch
     putTextLn $ arrow <> "Current branch: " <> greenCode <> branchName <> resetCode
     pure $ issueFromBranch branchName
+
+{- | Show diff from the given commit. If commit is not specified, uses HEAD.
+-}
+runStatus :: Maybe Text -> IO ()
+runStatus (fromMaybe "HEAD" -> commit) = do
+    -- 1. Add all untracked file to index so they will appear in diff
+    untrackedFiles <- lines <$> "git" $| ["ls-files", "--others", "--exclude-standard"]
+    for_ untrackedFiles $ \file -> void $ "git" $| ["add", file]
+
+    -- 2. Show pretty diff
+    showPrettyDiff commit
+
+    -- 3. Returns untracked files back to not spoil git state and have unexpected behavior
+    for_ untrackedFiles $ \file -> void $ "git" $| ["reset", file]
 
 {- | @hit clone@ command receives the name of the repo in the following
 formats:

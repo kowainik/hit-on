@@ -1,6 +1,6 @@
 cabal-version:       2.4
 name:                hit-on
-version:             0.0.0
+version:             0.1.0.0
 synopsis:            Haskell Git Helper Tool
 description:         Haskell Git Helper Tool
 homepage:            https://github.com/kowainik/hit-on
@@ -53,6 +53,7 @@ library
                          Hit.Cli
                          Hit.ColorTerminal
                          Hit.Git
+                           Hit.Git.Status
                          Hit.Issue
 
   autogen-modules:     Paths_hit_on

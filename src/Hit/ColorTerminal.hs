@@ -4,23 +4,30 @@ module Hit.ColorTerminal
        ( Color (..)
        , putStrFlush
        , beautyPrint
-       , boldCode
-       , blueCode
-       , blueBg
        , bold
        , boldText
        , boldDefault
-       , greenCode
        , italic
-       , redCode
        , reset
-       , resetCode
        , setColor
        , successMessage
        , warningMessage
        , errorMessage
        , infoMessage
        , skipMessage
+
+         -- * Colors
+       , redCode
+       , blueCode
+       , greenCode
+       , yellowCode
+       , cyanCode
+       , magentaCode
+
+         -- * Other formatters
+       , boldCode
+       , resetCode
+       , blueBg
 
        , arrow
        ) where
@@ -79,14 +86,22 @@ successMessage = colorMessage Green
 infoMessage    = colorMessage Blue
 skipMessage    = colorMessage Cyan
 
-blueCode, greenCode, boldCode, redCode, resetCode, blueBg :: Text
-redCode   = toText $ setSGRCode [SetColor Foreground Vivid Red]
-blueCode  = toText $ setSGRCode [SetColor Foreground Vivid Blue]
-greenCode = toText $ setSGRCode [SetColor Foreground Vivid Green]
-boldCode  = toText $ setSGRCode [SetConsoleIntensity BoldIntensity]
-resetCode = toText $ setSGRCode [Reset]
-blueBg    = toText $ setSGRCode [SetColor Foreground Dull White, SetColor Background Dull Blue]
+redCode, blueCode, greenCode, yellowCode, cyanCode, magentaCode :: Text
+redCode     = mkColor Red
+blueCode    = mkColor Blue
+greenCode   = mkColor Green
+yellowCode  = mkColor Yellow
+cyanCode    = mkColor Cyan
+magentaCode = mkColor Magenta
+
+boldCode, resetCode, blueBg :: Text
+boldCode   = toText $ setSGRCode [SetConsoleIntensity BoldIntensity]
+resetCode  = toText $ setSGRCode [Reset]
+blueBg     = toText $ setSGRCode [SetColor Foreground Dull White, SetColor Background Dull Blue]
+
+mkColor :: Color -> Text
+mkColor color = toText $ setSGRCode [SetColor Foreground Vivid color]
 
 -- | Arrow symbol
 arrow :: Text
-arrow = " ➤ "
+arrow = " ➤  "
