@@ -82,3 +82,19 @@ executable hit
                        -threaded
                        -rtsopts
                        -with-rtsopts=-N
+
+
+test-suite hit-on-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Main.hs
+  build-depends:       base
+                     , text
+                     , hspec
+                     , github
+                     , hit-on
+  other-modules:       
+  ghc-options:        -Wall
+                      -threaded
+                      -rtsopts
+                      -with-rtsopts=-N
