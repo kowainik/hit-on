@@ -82,3 +82,20 @@ executable hit
                        -threaded
                        -rtsopts
                        -with-rtsopts=-N
+
+
+test-suite hit-on-test
+  import:              common-options
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Main.hs
+  
+  build-depends:       base
+                     , text
+                     , hspec
+                     , github
+                     , hit-on
+
+  ghc-options:        -threaded
+                      -rtsopts
+                      -with-rtsopts=-N
