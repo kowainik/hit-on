@@ -1,6 +1,9 @@
-resolver: lts-13.21
+resolver: lts-13.27
 
 extra-deps:
-  - github-0.20
+  - binary-instances-1
+  - binary-orphans-1.0.1
+  - github-0.22
   - relude-0.5.0
   - shellmet-0.0.1
+  - time-compat-1.9.2.2
