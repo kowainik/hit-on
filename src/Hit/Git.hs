@@ -22,9 +22,9 @@ module Hit.Git
 import Data.Char (isAlphaNum, isDigit, isSpace)
 import Shellmet (($|))
 
-import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode)
+import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode, successMessage)
 import Hit.Git.Status (showPrettyDiff)
-import Hit.Issue (getIssueTitle, mkIssueId)
+import Hit.Issue (mkIssueId, issueTitle, fetchIssueStrict, Issue, assignToIssue)
 
 import qualified Data.Text as T
 
@@ -42,14 +42,15 @@ runFresh (nameOrMaster -> branch) = do
     "git" ["rebase", "origin/" <> branch]
 
 -- | @hit new@ command.
-runNew :: Int -> IO ()
-runNew issueNum = do
+runNew :: Int -> Bool -> IO ()
+runNew issueNum assignOwner = do
     login <- getUsername
     let issueId = mkIssueId issueNum
-    issueTitle <- getIssueTitle issueId
-    let shortDesc = mkShortDesc issueTitle
+    issue <- fetchIssueStrict issueId
+    let shortDesc = mkShortDesc (issueTitle issue)
     let branchName = login <> "/" <> show issueNum <> "-" <> shortDesc
     "git" ["checkout", "-b", branchName]
+    when assignOwner (attemptAssignment issue)
   where
     mkShortDesc :: Text -> Text
     mkShortDesc =
@@ -57,6 +58,12 @@ runNew issueNum = do
         . take 5
         . words
         . T.filter (\c -> isAlphaNum c || isDigit c || isSpace c)
+    attemptAssignment :: Issue -> IO ()
+    attemptAssignment = either printError finish <=< assignToIssue
+    printError :: Show a => a -> IO ()
+    printError = errorMessage . T.pack . show
+    finish :: a -> IO ()
+    finish _ = successMessage "Successfully assigned to issue"
 
 -- | @hit commit@ command.
 runCommit :: Text -> Bool -> IO ()

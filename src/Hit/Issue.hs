@@ -6,14 +6,18 @@ module Hit.Issue
        , getIssueTitle
        , getOwnerRepo
        , parseOwnerRepo
+       , issueTitle
+       , fetchIssueStrict
+       , assignToIssue
+       , Issue
        ) where
 
 import Data.Vector (Vector)
 import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Name, Owner, Repo,
-               SimpleUser (..), User, getUrl, mkId, mkName, untagName)
+               SimpleUser (..), User, getUrl, mkId, mkName, untagName, editIssueAssignees)
 import GitHub.Auth (Auth (OAuth))
 import GitHub.Data.Options (stateOpen)
-import GitHub.Endpoints.Issues (issue', issuesForRepo')
+import GitHub.Endpoints.Issues (issue', issuesForRepo', editOfIssue, editIssue, unIssueNumber)
 import Shellmet (($|))
 import System.Environment (lookupEnv)
 
@@ -164,3 +168,18 @@ parseOwnerRepo url =
 
     stripGitSuffix :: Text -> Maybe Text
     stripGitSuffix x = whenNothing (T.stripSuffix ".git" x) (Just x)
+
+fetchIssueStrict :: Id Issue -> IO Issue
+fetchIssueStrict iNum = fetchIssue iNum >>= \case
+    Left err -> errorMessage (show err) >> exitFailure
+    Right issue -> pure issue
+
+assignToIssue :: Issue -> IO (Either Error Issue)
+assignToIssue issue = withOwnerRepo action
+  where action Nothing _ _ = pure $ Left $ UserError "GITHUB_TOKEN lookup failed"
+        action (Just t) o r = do
+          let currentAssignees = simpleUserLogin <$> issueAssignees issue
+              newAssignee = makeName $ untagName o
+              newAssignees = V.cons newAssignee currentAssignees
+              isn = mkIssueId $ unIssueNumber $ issueNumber $ issue
+          editIssue t o r isn editOfIssue {editIssueAssignees = Just newAssignees}
