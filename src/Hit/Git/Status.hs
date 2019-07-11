@@ -71,13 +71,15 @@ parseDiffName _         = Nothing
 
 -- | Output of the @git diff --stat@ command.
 data DiffStat = DiffStat
-    { diffStatFile :: !Text  -- ^ file name
-    , diffStatInfo :: !Text  -- ^ short statistics about changes
+    { diffStatFile  :: !Text  -- ^ file name
+    , diffStatCount :: !Text  -- ^ number of changed lines
+    , diffStatSigns :: !Text  -- ^ + and - stats
     }
 
 parseDiffStat :: [Text] -> Maybe DiffStat
-parseDiffStat [diffStatFile, diffStatInfo] = Just DiffStat{..}
-parseDiffStat _                            = Nothing
+parseDiffStat = \case
+    [diffStatFile, diffStatCount, diffStatSigns] -> Just DiffStat{..}
+    _ -> Nothing
 
 showPrettyDiff :: Text -> IO ()
 showPrettyDiff commit = do
@@ -89,29 +91,35 @@ showPrettyDiff commit = do
     putText $ formatTableAligned rows
   where
     toStats :: Text -> [Text]
-    toStats = map T.strip . T.split (== '|')
+    toStats = foldMap words . T.split (== '|')
 
-    joinDiffs :: DiffName -> DiffStat -> (Text, Text, Text)
+    joinDiffs :: DiffName -> DiffStat -> (Text, Text, Text, Text)
     joinDiffs DiffName{..} DiffStat{..} =
-        (displayPatchType diffNameType, diffNameFile, diffStatInfo)
+        (displayPatchType diffNameType, diffNameFile, diffStatCount, diffStatSigns)
 
-    formatTableAligned :: [(Text, Text, Text)] -> Text
+    formatTableAligned :: [(Text, Text, Text, Text)] -> Text
     formatTableAligned rows = unlines $ map formatRow rows
       where
-        formatRow :: (Text, Text, Text) -> Text
-        formatRow (fileType, fileName, fileInfo) =
+        formatRow :: (Text, Text, Text, Text) -> Text
+        formatRow (fileType, fileName, fileCount, fileSigns) =
             padRight typeSize fileType
             <> "  "
             <> padRight nameSize fileName
             <> " | "
-            <> fileInfo
+            <> padLeft countSize fileCount
+            <> " "
+            <> fileSigns
 
         padRight :: Int -> Text -> Text
         padRight n t = t <> T.replicate (n - T.length t) " "
 
+        padLeft :: Int -> Text -> Text
+        padLeft n t = T.replicate (n - T.length t) " " <> t
+
         typeSize, nameSize :: Int
-        typeSize = maxOn (\(a, _, _) -> a) rows
-        nameSize = maxOn (\(_, b, _) -> b) rows
+        typeSize  = maxOn (\(a, _, _, _) -> a) rows
+        nameSize  = maxOn (\(_, b, _, _) -> b) rows
+        countSize = maxOn (\(_, _, c, _) -> c) rows
 
         maxOn :: (a -> Text) -> [a] -> Int
         maxOn f = foldl' (\acc a -> max acc $ T.length $ f a) 0
