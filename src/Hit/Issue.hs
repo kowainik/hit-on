@@ -7,7 +7,7 @@ module Hit.Issue
        , getOwnerRepo
        , parseOwnerRepo
        , issueTitle
-       , fetchIssueStrict
+       , fetchIssue
        , assignToIssue
        , Issue
        ) where
@@ -31,7 +31,7 @@ import qualified Data.Vector as V
 -- | Run the @issue@ command.
 runIssue :: Maybe Int -> Maybe Text -> IO ()
 runIssue issue me = case issue of
-    Just num -> getIssue $ mkIssueId num
+    Just num -> printFullIssue $ mkIssueId num
     Nothing  -> getAllIssues me
 
 -- | Get the list of the opened issues for the current project.
@@ -50,10 +50,8 @@ getAllIssues me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \
     assignedTo user = isJust . V.find ((user ==) . simpleUserLogin)
 
 -- | Get the 'Issue' by given issue number.
-getIssue :: Id Issue -> IO ()
-getIssue num = fetchIssue num >>= \case
-    Left err -> errorMessage $ show err
-    Right is -> putTextLn $ showIssueFull is
+printFullIssue :: Id Issue -> IO ()
+printFullIssue num = fetchIssue num >>= putTextLn . showIssueFull
 
 showIssueName :: Text -> Issue -> Text
 showIssueName colorCode Issue{..} =
@@ -100,13 +98,13 @@ mkIssueId = mkId $ Proxy @Issue
 makeName :: forall a . Text -> Name a
 makeName = mkName (Proxy @a)
 
-fetchIssue :: Id Issue -> IO (Either Error Issue)
-fetchIssue iNum = withOwnerRepo (\t o r -> issue' t o r iNum)
+fetchIssue :: Id Issue -> IO Issue
+fetchIssue iNum = withOwnerRepo (\t o r -> issue' t o r iNum) >>= \case
+    Left err -> errorMessage (show err) >> exitFailure
+    Right issue -> pure issue
 
 getIssueTitle :: Id Issue -> IO Text
-getIssueTitle num = fetchIssue num >>= \case
-    Left err -> errorMessage (show err) >> exitFailure
-    Right Issue{..} -> pure issueTitle
+getIssueTitle num = issueTitle <$> fetchIssue num
 
 withOwnerRepo
     :: (Maybe Auth -> Name Owner -> Name Repo -> IO (Either Error a))
@@ -168,11 +166,6 @@ parseOwnerRepo url =
 
     stripGitSuffix :: Text -> Maybe Text
     stripGitSuffix x = whenNothing (T.stripSuffix ".git" x) (Just x)
-
-fetchIssueStrict :: Id Issue -> IO Issue
-fetchIssueStrict iNum = fetchIssue iNum >>= \case
-    Left err -> errorMessage (show err) >> exitFailure
-    Right issue -> pure issue
 
 assignToIssue :: Issue -> IO (Either Error Issue)
 assignToIssue issue = withOwnerRepo action

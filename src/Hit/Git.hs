@@ -24,7 +24,7 @@ import Shellmet (($|))
 
 import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode, successMessage)
 import Hit.Git.Status (showPrettyDiff)
-import Hit.Issue (mkIssueId, issueTitle, fetchIssueStrict, Issue, assignToIssue)
+import Hit.Issue (mkIssueId, issueTitle, fetchIssue, Issue, assignToIssue)
 
 import qualified Data.Text as T
 
@@ -46,7 +46,7 @@ runNew :: Int -> Bool -> IO ()
 runNew issueNum assignOwner = do
     login <- getUsername
     let issueId = mkIssueId issueNum
-    issue <- fetchIssueStrict issueId
+    issue <- fetchIssue issueId
     let shortDesc = mkShortDesc (issueTitle issue)
     let branchName = login <> "/" <> show issueNum <> "-" <> shortDesc
     "git" ["checkout", "-b", branchName]
