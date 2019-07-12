@@ -3,7 +3,6 @@ module Hit.Issue
 
          -- * Internal helpers
        , mkIssueId
-       , getIssueTitle
        , getOwnerRepo
        , parseOwnerRepo
        , issueTitle
@@ -102,9 +101,6 @@ fetchIssue :: Id Issue -> IO Issue
 fetchIssue iNum = withOwnerRepo (\t o r -> issue' t o r iNum) >>= \case
     Left err -> errorMessage (show err) >> exitFailure
     Right issue -> pure issue
-
-getIssueTitle :: Id Issue -> IO Text
-getIssueTitle num = issueTitle <$> fetchIssue num
 
 withOwnerRepo
     :: (Maybe Auth -> Name Owner -> Name Repo -> IO (Either Error a))
