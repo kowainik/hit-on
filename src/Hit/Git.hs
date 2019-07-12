@@ -58,10 +58,13 @@ runNew issueNum assignOwner = do
         . take 5
         . words
         . T.filter (\c -> isAlphaNum c || isDigit c || isSpace c)
+
     attemptAssignment :: Issue -> IO ()
     attemptAssignment = either printError finish <=< assignToIssue
+
     printError :: Show a => a -> IO ()
     printError = errorMessage . T.pack . show
+
     finish :: a -> IO ()
     finish _ = successMessage "Successfully assigned to issue"
 

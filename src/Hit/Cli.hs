@@ -93,7 +93,7 @@ newP = New <$> issueNumP <*> assignOwnerP
 
 assignOwnerP :: Parser Bool
 assignOwnerP = switch
-  $ long "assign" <> short 'a' <> help "Assign yourself to issue"
+    $ long "assign" <> short 'a' <> help "Assign yourself to issue"
 
 issueP :: Parser HitCommand
 issueP = do

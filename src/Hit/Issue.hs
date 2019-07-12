@@ -168,11 +168,12 @@ parseOwnerRepo url =
     stripGitSuffix x = whenNothing (T.stripSuffix ".git" x) (Just x)
 
 assignToIssue :: Issue -> IO (Either Error Issue)
-assignToIssue issue = withOwnerRepo action
-  where action Nothing _ _ = pure $ Left $ UserError "GITHUB_TOKEN lookup failed"
-        action (Just t) o r = do
-          let currentAssignees = simpleUserLogin <$> issueAssignees issue
-              newAssignee = makeName $ untagName o
-              newAssignees = V.cons newAssignee currentAssignees
-              isn = mkIssueId $ unIssueNumber $ issueNumber $ issue
-          editIssue t o r isn editOfIssue {editIssueAssignees = Just newAssignees}
+assignToIssue issue = withOwnerRepo assignAction
+  where
+    assignAction Nothing _ _ = pure $ Left $ UserError "GITHUB_TOKEN lookup failed"
+    assignAction (Just t) o r = do
+        let currentAssignees = simpleUserLogin <$> issueAssignees issue
+            newAssignee = makeName $ untagName o
+            newAssignees = V.cons newAssignee currentAssignees
+            isn = mkIssueId $ unIssueNumber $ issueNumber $ issue
+        editIssue t o r isn editOfIssue {editIssueAssignees = Just newAssignees}
