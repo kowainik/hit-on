@@ -21,7 +21,7 @@ import Shellmet (($|))
 import System.Environment (lookupEnv)
 
 import Hit.ColorTerminal (arrow, blueBg, blueCode, boldCode, errorMessage, greenCode, redCode,
-                          resetCode)
+                          resetCode, successMessage)
 
 import qualified Data.Text as T
 import qualified Data.Vector as V
@@ -163,13 +163,24 @@ parseOwnerRepo url =
     stripGitSuffix :: Text -> Maybe Text
     stripGitSuffix x = whenNothing (T.stripSuffix ".git" x) (Just x)
 
-assignToIssue :: Issue -> IO (Either Error Issue)
-assignToIssue issue = withOwnerRepo assignAction
+data AssignSuccess = AlreadyAssigned | NewlyAssigned
+
+assignToIssue :: Issue -> IO ()
+assignToIssue issue = withOwnerRepo assignAction >>= \case
+    Left err              -> errorMessage (show err) >> exitFailure
+    Right AlreadyAssigned -> successMessage "Already assigned to issue"
+    Right NewlyAssigned   -> successMessage "Assigned to issue"
   where
-    assignAction Nothing _ _ = pure $ Left $ UserError "GITHUB_TOKEN lookup failed"
+    assignAction :: Maybe Auth -> Name Owner -> Name Repo -> IO (Either Error AssignSuccess)
+    assignAction Nothing _ _ = pure $ Left $ UserError "GITHUB_TOKEN failed"
     assignAction (Just t) o r = do
         let currentAssignees = simpleUserLogin <$> issueAssignees issue
             newAssignee = makeName $ untagName o
-            newAssignees = V.cons newAssignee currentAssignees
-            isn = mkIssueId $ unIssueNumber $ issueNumber $ issue
-        editIssue t o r isn editOfIssue {editIssueAssignees = Just newAssignees}
+        if newAssignee `V.elem` currentAssignees
+        then pure $ Right AlreadyAssigned
+        else do
+            let newAssignees = V.cons newAssignee currentAssignees
+                isn = mkIssueId $ unIssueNumber $ issueNumber issue
+            editIssue t o r isn editOfIssue {editIssueAssignees = Just newAssignees} >>= \case
+              Left err -> pure $ Left err
+              Right _  -> pure $ Right NewlyAssigned

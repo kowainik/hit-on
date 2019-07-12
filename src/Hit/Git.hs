@@ -22,9 +22,9 @@ module Hit.Git
 import Data.Char (isAlphaNum, isDigit, isSpace)
 import Shellmet (($|))
 
-import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode, successMessage)
+import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode)
 import Hit.Git.Status (showPrettyDiff)
-import Hit.Issue (mkIssueId, issueTitle, fetchIssue, Issue, assignToIssue)
+import Hit.Issue (mkIssueId, issueTitle, fetchIssue, assignToIssue)
 
 import qualified Data.Text as T
 
@@ -50,7 +50,7 @@ runNew issueNum assignOwner = do
     let shortDesc = mkShortDesc (issueTitle issue)
     let branchName = login <> "/" <> show issueNum <> "-" <> shortDesc
     "git" ["checkout", "-b", branchName]
-    when assignOwner (attemptAssignment issue)
+    when assignOwner (assignToIssue issue)
   where
     mkShortDesc :: Text -> Text
     mkShortDesc =
@@ -58,15 +58,6 @@ runNew issueNum assignOwner = do
         . take 5
         . words
         . T.filter (\c -> isAlphaNum c || isDigit c || isSpace c)
-
-    attemptAssignment :: Issue -> IO ()
-    attemptAssignment = either printError finish <=< assignToIssue
-
-    printError :: Show a => a -> IO ()
-    printError = errorMessage . T.pack . show
-
-    finish :: a -> IO ()
-    finish _ = successMessage "Successfully assigned to issue"
 
 -- | @hit commit@ command.
 runCommit :: Text -> Bool -> IO ()
