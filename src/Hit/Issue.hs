@@ -21,7 +21,7 @@ import Shellmet (($|))
 import System.Environment (lookupEnv)
 
 import Hit.ColorTerminal (arrow, blueBg, blueCode, boldCode, errorMessage, greenCode, redCode,
-                          resetCode, successMessage)
+                          resetCode, successMessage, infoMessage)
 
 import qualified Data.Text as T
 import qualified Data.Vector as V
@@ -168,7 +168,7 @@ data AssignSuccess = AlreadyAssigned | NewlyAssigned
 assignToIssue :: Issue -> IO ()
 assignToIssue issue = withOwnerRepo assignAction >>= \case
     Left err              -> errorMessage (show err) >> exitFailure
-    Right AlreadyAssigned -> successMessage "Already assigned to issue"
+    Right AlreadyAssigned -> infoMessage "Already assigned to issue"
     Right NewlyAssigned   -> successMessage "Assigned to issue"
   where
     assignAction :: Maybe Auth -> Name Owner -> Name Repo -> IO (Either Error AssignSuccess)
