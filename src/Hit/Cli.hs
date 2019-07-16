@@ -91,9 +91,11 @@ freshP = Fresh <$> maybeBranchP
 newP :: Parser HitCommand
 newP = New <$> issueNumP <*> assignOwnerP
 
+-- | Whether to assign user to an issue when creating a new branch. FALSE by
+-- default.
 assignOwnerP :: Parser Bool
 assignOwnerP = switch
-    $ long "assign" <> short 'a' <> help "Assign yourself to issue"
+    $ long "assign" <> short 'a' <> help "Assign yourself to issue. FALSE by default."
 
 issueP :: Parser HitCommand
 issueP = do
