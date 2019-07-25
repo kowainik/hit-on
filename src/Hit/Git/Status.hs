@@ -6,7 +6,8 @@ module Hit.Git.Status
        ( showPrettyDiff
        ) where
 
-import Shellmet (($|))
+import Shellmet (($|), ($?))
+import System.Process (callCommand)
 
 import Hit.ColorTerminal (blueCode, boldCode, cyanCode, greenCode, magentaCode, redCode, resetCode,
                           yellowCode)
@@ -83,6 +84,10 @@ parseDiffStat = \case
 
 showPrettyDiff :: Text -> IO ()
 showPrettyDiff commit = do
+    -- 1. Check rebase in progress and tell about it
+    whenM isRebaseInProgress $ putTextLn gitRebaseHelp
+
+    -- 2. Output pretty diff
     diffName <- map words   . lines <$> "git" $| ["diff", commit, "--name-status"]
     diffStat <- map toStats . lines <$> "git" $| ["diff", commit, "--stat", "--color=always"]
     let fileTypes = sortWith diffNameFile $ mapMaybe parseDiffName diffName
@@ -123,3 +128,20 @@ showPrettyDiff commit = do
 
         maxOn :: (a -> Text) -> [a] -> Int
         maxOn f = foldl' (\acc a -> max acc $ T.length $ f a) 0
+
+{- | Returns 'True' if rebase is in progress. Calls magic comand and if this
+command exits with code 1 then there's no rebase in progress.
+-}
+isRebaseInProgress :: IO Bool
+isRebaseInProgress = do
+    let checkRebaseCmd = callCommand "ls `git rev-parse --git-dir` | grep rebase > /dev/null 2>&1"
+    True <$ checkRebaseCmd $? pure False
+
+gitRebaseHelp :: Text
+gitRebaseHelp = unlines
+    [ ""
+    , boldCode <> yellowCode <> "Rebase in progress! What you can do:" <> resetCode
+    , "    " <> cyanCode <> "git rebase --continue " <> resetCode <> ": after fixing conflicts"
+    , "    " <> cyanCode <> "git rebase --skip     " <> resetCode <> ": to skip this patch"
+    , "    " <> cyanCode <> "git rebase --abort    " <> resetCode <> ": to abort to the original branch"
+    ]
