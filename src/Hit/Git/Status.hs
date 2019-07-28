@@ -6,7 +6,7 @@ module Hit.Git.Status
        ( showPrettyDiff
        ) where
 
-import Shellmet (($|), ($?))
+import Shellmet (($?), ($|))
 import System.Process (callCommand)
 
 import Hit.ColorTerminal (blueCode, boldCode, cyanCode, greenCode, magentaCode, redCode, resetCode,
@@ -85,7 +85,9 @@ parseDiffStat = \case
 showPrettyDiff :: Text -> IO ()
 showPrettyDiff commit = do
     -- 1. Check rebase in progress and tell about it
-    whenM isRebaseInProgress $ putTextLn gitRebaseHelp
+    whenM isRebaseInProgress $ do
+        putTextLn gitRebaseHelp
+        showConlictFiles
 
     -- 2. Output pretty diff
     diffName <- map words   . lines <$> "git" $| ["diff", commit, "--name-status"]
@@ -145,3 +147,11 @@ gitRebaseHelp = unlines
     , "    " <> cyanCode <> "git rebase --skip     " <> resetCode <> ": to skip this patch"
     , "    " <> cyanCode <> "git rebase --abort    " <> resetCode <> ": to abort to the original branch"
     ]
+
+showConlictFiles :: IO ()
+showConlictFiles = do
+    conflictFiles <- lines <$> "git" $| ["diff", "--name-only", "--diff-filter=U"]
+    unless (null conflictFiles) $
+        putTextLn $ unlines $
+            ( boldCode <> redCode <> "Conflict files:" <> resetCode )
+            : map ("    " <>) conflictFiles
