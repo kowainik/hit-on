@@ -62,12 +62,9 @@ runNew issueNum = do
 -- | @hit commit@ command.
 runCommit :: Maybe Text -> Bool -> IO ()
 runCommit maybeMsg (not -> hasIssue) = case maybeMsg of
-    Just (T.strip -> msg) ->
-        if msg == ""
-        then errorMessage "Commit message cannot be empty"
-        else do
-            issueNum <- getCurrentIssue
-            commitCmds msg issueNum
+    Just (T.strip -> msg)
+        | msg == "" -> errorMessage "Commit message cannot be empty"
+        | otherwise -> getCurrentIssue >>= commitCmds msg
     {- if the commit name is not specified then check the branchName
     If this is issue-related branch, take the issue name as the commit name.
     Otherwise print errorMessage.
@@ -77,9 +74,7 @@ runCommit maybeMsg (not -> hasIssue) = case maybeMsg of
         case issueNum of
             Nothing -> errorMessage "Commit message cannot be empty: can not be taken from the context"
             Just n -> do
-                let issueId = mkIssueId n
-                -- TODO: which symbols are not allowed?
-                title <- getIssueTitle issueId
+                title <- getIssueTitle (mkIssueId n)
                 commitCmds title issueNum
   where
     commitCmds :: Text -> Maybe Int -> IO ()
