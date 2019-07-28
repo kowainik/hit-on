@@ -19,6 +19,8 @@ The changelog is available [on GitHub][2].
   Make `hit commit` command take the commit name from the corresponding issue
   name, if it is currently applicable (the branch name has the info about issue
   number).
+* [#89](https://github.com/kowainik/hit-on/issues/89):
+  Add `-p|push` and `-f|force` flags to `hit commit` command.
 * Bump up to GHC 8.6.5.
 * Bump up to `relude-0.5.0`.
 

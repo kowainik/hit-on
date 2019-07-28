@@ -14,7 +14,7 @@ import Options.Applicative (Parser, ParserInfo, argument, auto, command, execPar
                             strArgument, subparser, switch)
 
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
-import Hit.Core (PushBool (..))
+import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Git (getUsername, runAmend, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
                 runHop, runNew, runPush, runResolve, runStash, runStatus, runSync, runUnstash)
 import Hit.Issue (runIssue)
@@ -33,7 +33,7 @@ hit = execParser cliParser >>= \case
         else runIssue issueNum Nothing
     Stash -> runStash
     Unstash -> runUnstash
-    Commit message noIssue -> runCommit message noIssue
+    Commit opts -> runCommit opts
     Fix message pushBool -> runFix message pushBool
     Amend -> runAmend
     Resolve branchName -> runResolve branchName
@@ -61,13 +61,7 @@ data HitCommand
     | Issue (Maybe Int) Bool
     | Stash
     | Unstash
-    | Commit
-        {- | Commit name. If not specified use the issue name.
-        If issue number is not applicable do not perform any actions.
-        -}
-        (Maybe Text)
-        -- | Do not use the issue num in the commit name
-        Bool
+    | Commit CommitOptions
     | Fix
         (Maybe Text)  -- ^ Text of the fix commit
         PushBool      -- ^ Force push
@@ -126,12 +120,17 @@ unstashP = pure Unstash
 
 commitP :: Parser HitCommand
 commitP = do
-    msg <- optional $ strArgument (metavar "COMMIT_MESSAGE")
-    noIssue <- switch
+    coName <- optional $ strArgument (metavar "COMMIT_MESSAGE")
+    coNoIssueNumber <- switch
         $ long "no-issue"
        <> short 'n'
        <> help "Do not add [#ISSUE_NUMBER] prefix when specified"
-    pure $ Commit msg noIssue
+    coPush <- switch
+        $ long "push"
+       <> short 'p'
+       <> help "Push current branch with this commit"
+    coIsForcePush <- pushBoolP
+    pure $ Commit CommitOptions{..}
 
 {- HLINT ignore "Use <$>"-}
 fixP :: Parser HitCommand
