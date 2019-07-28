@@ -6,7 +6,8 @@ The changelog is available [on GitHub][2].
 ### Unreleased: 0.1.0.0
 
 * [#63](https://github.com/kowainik/hit-on/issues/63),
-  [#79](https://github.com/kowainik/hit-on/issues/79):
+  [#79](https://github.com/kowainik/hit-on/issues/79),
+  [#86](https://github.com/kowainik/hit-on/issues/86):
   Implement `hit status` command with pretty output.
 * [#67](https://github.com/kowainik/hit-on/issues/67):
   Implement `hit stash` and `hit unstash` commands.
