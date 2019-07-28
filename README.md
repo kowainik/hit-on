@@ -253,6 +253,12 @@ git push -u origin my-login/42-short-desc
 hit push
 ```
 
+> __Note:__ `hit push` command can be combined with the `hit commit` command
+> using `-p|push` flag in the latter command.
+> ```shell
+> hit commit --push
+> ```
+
 ### hit sync
 
 After opening the pull request, some of the reviewers suggested changes that you applied as commits to the remote branch via GitHub interface. Now you need to sync your local branch with the remote one.

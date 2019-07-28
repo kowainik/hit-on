@@ -29,7 +29,7 @@ import System.Directory (findExecutable)
 import System.Process (callCommand)
 
 import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode)
-import Hit.Core (PushBool (..))
+import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Git.Status (showPrettyDiff)
 import Hit.Issue (getIssueTitle, mkIssueId)
 
@@ -66,8 +66,8 @@ runNew issueNum = do
         . T.filter (\c -> isAlphaNum c || isDigit c || isSpace c)
 
 -- | @hit commit@ command.
-runCommit :: Maybe Text -> Bool -> IO ()
-runCommit maybeMsg (not -> hasIssue) = case maybeMsg of
+runCommit :: CommitOptions -> IO ()
+runCommit CommitOptions{..} = case coName of
     Just (T.strip -> msg)
         | msg == "" -> errorMessage "Commit message cannot be empty"
         | otherwise -> getCurrentIssue >>= commitCmds msg
@@ -87,6 +87,7 @@ runCommit maybeMsg (not -> hasIssue) = case maybeMsg of
     commitCmds msg issueNum = do
         "git" ["add", "."]
         "git" ["commit", "-m", showMsg msg $ guard hasIssue *> issueNum]
+        when (coPush || coIsForcePush == Force) $ runPush coIsForcePush
 
     getCurrentIssue :: IO (Maybe Int)
     getCurrentIssue = issueFromBranch <$> getCurrentBranch
@@ -97,6 +98,9 @@ runCommit maybeMsg (not -> hasIssue) = case maybeMsg of
        Just n  ->
            let issue = "#" <> show n
            in "[" <> issue <> "] " <> msg <> "\n\nResolves " <> issue
+
+    hasIssue :: Bool
+    hasIssue = not coNoIssueNumber
 
 -- | @hit fix@ command
 runFix :: Maybe Text -> PushBool -> IO ()
