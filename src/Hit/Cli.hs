@@ -56,7 +56,13 @@ data HitCommand
     | Fresh (Maybe Text)
     | New Int
     | Issue (Maybe Int) Bool
-    | Commit Text Bool
+    | Commit
+        {- | Commit name. If not specified use the issue name.
+        If issue number is not applicable do not perform any actions.
+        -}
+        (Maybe Text)
+        -- | Do not use the issue num in the commit name
+        Bool
     | Fix
         (Maybe Text)  -- ^ Text of the fix commit
         PushBool      -- ^ Force push
@@ -105,7 +111,7 @@ issueP = do
 
 commitP :: Parser HitCommand
 commitP = do
-    msg <- strArgument (metavar "COMMIT_MESSAGE")
+    msg <- optional $ strArgument (metavar "COMMIT_MESSAGE")
     noIssue <- switch
         $ long "no-issue"
        <> short 'n'
