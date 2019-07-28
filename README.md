@@ -34,7 +34,7 @@ To start using `hit` make sure that you have the following tools installed on yo
   + Linux installation instructions
     ```shell
     cd /usr/share/doc/git/contrib/diff-highlight/
-    make
+    sudo make
     sudo chmod +x diff-highlight
     sudo ln -s diff-highlight /usr/local/bin/diff-highlight
     ```
