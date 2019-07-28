@@ -9,11 +9,12 @@ module Hit.Cli
 
 import Data.Version (showVersion)
 import Development.GitRev (gitCommitDate, gitDirty, gitHash)
-import Options.Applicative (Parser, ParserInfo, argument, auto, command, execParser, fullDesc, help,
-                            helper, info, infoOption, long, metavar, progDesc, short, strArgument,
-                            subparser, switch)
+import Options.Applicative (Parser, ParserInfo, argument, auto, command, execParser, flag, fullDesc,
+                            help, helper, info, infoOption, long, metavar, progDesc, short,
+                            strArgument, subparser, switch)
 
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
+import Hit.Core (PushBool (..))
 import Hit.Git (getUsername, runAmend, runClone, runCommit, runCurrent, runFix, runFresh, runHop,
                 runNew, runPush, runResolve, runStatus, runSync)
 import Hit.Issue (runIssue)
@@ -31,7 +32,7 @@ hit = execParser cliParser >>= \case
         then getUsername >>= runIssue issueNum . Just
         else runIssue issueNum Nothing
     Commit message noIssue -> runCommit message noIssue
-    Fix message -> runFix message
+    Fix message pushBool -> runFix message pushBool
     Amend -> runAmend
     Resolve branchName -> runResolve branchName
     Push isForce -> runPush isForce
@@ -56,10 +57,12 @@ data HitCommand
     | New Int
     | Issue (Maybe Int) Bool
     | Commit Text Bool
-    | Fix (Maybe Text)
+    | Fix
+        (Maybe Text)  -- ^ Text of the fix commit
+        PushBool      -- ^ Force push
     | Amend
     | Resolve (Maybe Text)
-    | Push Bool
+    | Push PushBool
     | Sync
     | Current
     | Status (Maybe Text)
@@ -110,17 +113,16 @@ commitP = do
     pure $ Commit msg noIssue
 
 fixP :: Parser HitCommand
-fixP = Fix <$> commitMessageP
+fixP = do
+    commitMsg <- commitMessageP
+    isForce   <- pushBoolP
+    pure $ Fix commitMsg isForce
 
 amendP :: Parser HitCommand
 amendP = pure Amend
 
 pushP :: Parser HitCommand
-pushP = Push <$> switch
-    ( long "force"
-   <> short 'f'
-   <> help "Force push"
-    )
+pushP = Push <$> pushBoolP
 
 syncP :: Parser HitCommand
 syncP = pure Sync
@@ -141,9 +143,17 @@ cloneP = Clone <$> strArgument (metavar "REPOSITORY")
 maybeBranchP :: Parser (Maybe Text)
 maybeBranchP = optional $ strArgument (metavar "BRANCH_NAME")
 
--- / Parse optional commit message as an argument
+-- | Parse optional commit message as an argument
 commitMessageP :: Parser (Maybe Text)
 commitMessageP = optional $ strArgument (metavar "COMMIT_MESSAGE")
+
+-- | Parse flag of force push.
+pushBoolP :: Parser PushBool
+pushBoolP = flag Simple Force
+    ( long "force"
+   <> short 'f'
+   <> help "Force push"
+    )
 
 -- | Parse issue number as an argument.
 issueNumP :: Parser Int

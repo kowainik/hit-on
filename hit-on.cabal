@@ -52,6 +52,7 @@ library
   exposed-modules:     Hit
                          Hit.Cli
                          Hit.ColorTerminal
+                         Hit.Core
                          Hit.Git
                            Hit.Git.Status
                          Hit.Issue

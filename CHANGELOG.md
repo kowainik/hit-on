@@ -8,6 +8,8 @@ The changelog is available [on GitHub][2].
 * [#63](https://github.com/kowainik/hit-on/issues/63),
   [#79](https://github.com/kowainik/hit-on/issues/79):
   Implement `hit status` command with pretty output.
+* [#82](https://github.com/kowainik/hit-on/issues/82):
+  Add `--force` flag to `hit fix` command.
 * Bump up to GHC 8.6.5.
 * Bump up to `relude-0.5.0`.
 

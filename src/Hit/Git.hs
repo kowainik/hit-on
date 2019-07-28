@@ -23,6 +23,7 @@ import Data.Char (isAlphaNum, isDigit, isSpace)
 import Shellmet (($|))
 
 import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode)
+import Hit.Core (PushBool (..))
 import Hit.Git.Status (showPrettyDiff)
 import Hit.Issue (getIssueTitle, mkIssueId)
 
@@ -75,14 +76,15 @@ runCommit (T.strip -> msg) (not -> hasIssue)
            let issue = "#" <> show n
            in "[" <> issue <> "] " <> msg <> "\n\nResolves " <> issue
 
--- / @hit fix@ command
-runFix :: Maybe Text -> IO ()
-runFix msg = do
+-- | @hit fix@ command
+runFix :: Maybe Text -> PushBool -> IO ()
+runFix msg pushBool = do
     "git" ["add", "."]
     "git" ["commit", "-m", message]
-    runPush False
-    where
-        message = fromMaybe "Fix after review" msg
+    runPush pushBool
+  where
+    message :: Text
+    message = fromMaybe "Fix after review" msg
 
 
 -- | @hit amend@ command.
@@ -90,17 +92,18 @@ runAmend :: IO ()
 runAmend = do
     "git" ["add", "."]
     "git" ["commit", "--amend", "--no-edit"]
-    runPush True
+    runPush Force
 
 -- | @hit push@ command.
-runPush :: Bool -> IO ()
+runPush :: PushBool -> IO ()
 runPush isForce = getCurrentBranch >>= \branch ->
     "git" $ ["push", "--set-upstream", "origin", branch]
-         ++ ["--force" | isForce]
+         ++ ["--force" | isForce == Force]
 
 -- | @hit sync@ command.
 runSync :: IO ()
-runSync = getCurrentBranch >>= \branch -> "git" ["pull", "--rebase", "origin", branch]
+runSync = getCurrentBranch >>= \branch ->
+    "git" ["pull", "--rebase", "origin", branch]
 
 -- | @hit resolve@ command.
 runResolve :: Maybe Text -> IO ()
