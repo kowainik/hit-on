@@ -220,7 +220,7 @@ withUntrackedFiles :: IO a -> IO a
 withUntrackedFiles action = bracket
     addUntrackedFiles
     removeUntrackedFiles
-    (\_ -> action)
+    (const  action)
   where
     -- Add all untracked file to index so they will appear in diff
     addUntrackedFiles :: IO [Text]
