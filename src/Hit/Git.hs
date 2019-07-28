@@ -8,6 +8,8 @@ module Hit.Git
        , runNew
        , runPush
        , runResolve
+       , runStash
+       , runUnstash
        , runCommit
        , runFix
        , runAmend
@@ -106,6 +108,14 @@ runFix msg pushBool = do
     message :: Text
     message = fromMaybe "Fix" msg
 
+-- | @hit stash@ command: save all local changes to stash.
+runStash :: IO ()
+runStash = do
+    "git" ["add", "."]
+    "git" ["stash"]
+
+runUnstash :: IO ()
+runUnstash = "git" ["stash", "pop"]
 
 -- | @hit amend@ command.
 runAmend :: IO ()

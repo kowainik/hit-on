@@ -8,6 +8,8 @@ The changelog is available [on GitHub][2].
 * [#63](https://github.com/kowainik/hit-on/issues/63),
   [#79](https://github.com/kowainik/hit-on/issues/79):
   Implement `hit status` command with pretty output.
+* [#67](https://github.com/kowainik/hit-on/issues/67):
+  Implement `hit stash` and `hit unstash` commands.
 * [#81](https://github.com/kowainik/hit-on/issues/81):
   Implement `hit diff` command with pretty diff.
 * [#82](https://github.com/kowainik/hit-on/issues/82):

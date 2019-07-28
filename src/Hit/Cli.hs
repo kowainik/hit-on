@@ -16,7 +16,7 @@ import Options.Applicative (Parser, ParserInfo, argument, auto, command, execPar
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
 import Hit.Core (PushBool (..))
 import Hit.Git (getUsername, runAmend, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
-                runHop, runNew, runPush, runResolve, runStatus, runSync)
+                runHop, runNew, runPush, runResolve, runStash, runStatus, runSync, runUnstash)
 import Hit.Issue (runIssue)
 
 import qualified Data.Text as T
@@ -31,6 +31,8 @@ hit = execParser cliParser >>= \case
     Issue issueNum me -> if me
         then getUsername >>= runIssue issueNum . Just
         else runIssue issueNum Nothing
+    Stash -> runStash
+    Unstash -> runUnstash
     Commit message noIssue -> runCommit message noIssue
     Fix message pushBool -> runFix message pushBool
     Amend -> runAmend
@@ -57,6 +59,8 @@ data HitCommand
     | Fresh (Maybe Text)
     | New Int
     | Issue (Maybe Int) Bool
+    | Stash
+    | Unstash
     | Commit
         {- | Commit name. If not specified use the issue name.
         If issue number is not applicable do not perform any actions.
@@ -82,6 +86,8 @@ hitP = subparser
     $ command "hop"     (info (helper <*> hopP)     $ progDesc "Switch to branch and sync it")
    <> command "fresh"   (info (helper <*> freshP)   $ progDesc "Rebase current branch on remote one")
    <> command "new"     (info (helper <*> newP)     $ progDesc "Create new branch from current one")
+   <> command "stash"   (info (helper <*> stashP)   $ progDesc "Stash all local changes")
+   <> command "unstash" (info (helper <*> unstashP) $ progDesc "Unstash previously stashed changes")
    <> command "commit"  (info (helper <*> commitP)  $ progDesc "Commit all local changes and prepend issue number")
    <> command "fix"     (info (helper <*> fixP)     $ progDesc "Fix requested changes to the last commit")
    <> command "amend"   (info (helper <*> amendP)   $ progDesc "Amend changes to the last commit and force push")
@@ -111,6 +117,12 @@ issueP = do
        <> short 'm'
        <> help "Assigned to me"
     pure $ Issue num me
+
+stashP :: Parser HitCommand
+stashP = pure Stash
+
+unstashP :: Parser HitCommand
+unstashP = pure Unstash
 
 commitP :: Parser HitCommand
 commitP = do
