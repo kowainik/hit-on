@@ -77,9 +77,27 @@ data DiffStat = DiffStat
     , diffStatSigns :: !Text  -- ^ + and - stats
     }
 
+{- | This command parses diff stats in the following format:
+
+@
+<filename> | <n> <pluses-and-minuses>
+@
+
+It also handles special case of binary files. Typical raw text returned by @git@
+can look like this:
+
+@
+ .foo.un~  | Bin 0 -> 523 bytes
+ README.md |   4 ++++
+ foo       |   1 +
+@
+-}
 parseDiffStat :: [Text] -> Maybe DiffStat
 parseDiffStat = \case
-    [diffStatFile, diffStatCount, diffStatSigns] -> Just DiffStat{..}
+    diffStatFile:diffStatCount:rest -> Just DiffStat
+        { diffStatSigns = unwords rest
+        , ..
+        }
     _ -> Nothing
 
 showPrettyDiff :: Text -> IO ()

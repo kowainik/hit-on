@@ -114,6 +114,7 @@ runStash = do
     "git" ["add", "."]
     "git" ["stash"]
 
+-- | @hit unstash@ command: pop all saved changes.
 runUnstash :: IO ()
 runUnstash = "git" ["stash", "pop"]
 
