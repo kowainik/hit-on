@@ -15,8 +15,8 @@ import Options.Applicative (Parser, ParserInfo, argument, auto, command, execPar
 
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
 import Hit.Core (PushBool (..))
-import Hit.Git (getUsername, runAmend, runClone, runCommit, runCurrent, runFix, runFresh, runHop,
-                runNew, runPush, runResolve, runStatus, runSync)
+import Hit.Git (getUsername, runAmend, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
+                runHop, runNew, runPush, runResolve, runStatus, runSync)
 import Hit.Issue (runIssue)
 
 import qualified Data.Text as T
@@ -39,6 +39,7 @@ hit = execParser cliParser >>= \case
     Sync -> runSync
     Current -> runCurrent >>= flip whenJust (flip runIssue Nothing . Just)
     Status commit -> runCurrent >> runStatus commit
+    Diff commit -> runDiff commit
     Clone name -> runClone name
 
 ----------------------------------------------------------------------------
@@ -72,6 +73,7 @@ data HitCommand
     | Sync
     | Current
     | Status (Maybe Text)
+    | Diff (Maybe Text)
     | Clone Text
 
 -- | Commands parser.
@@ -88,7 +90,8 @@ hitP = subparser
    <> command "sync"    (info (helper <*> syncP)    $ progDesc "Sync local branch with its remote")
    <> command "resolve" (info (helper <*> resolveP) $ progDesc "Switch to master, sync and delete the branch")
    <> command "current" (info (helper <*> currentP) $ progDesc "Show info about current branch and issue (if applicable)")
-   <> command "status"  (info (helper <*> statusP)  $ progDesc "Show current branch and beautiful diff with COMMIT_HASH (by default HEAD)")
+   <> command "status"  (info (helper <*> statusP)  $ progDesc "Show current branch and beautiful stats with COMMIT_HASH (by default HEAD)")
+   <> command "diff"    (info (helper <*> diffP)    $ progDesc "Display beautiful diff with COMMIT_HASH (by default HEAD)")
    <> command "clone"   (info (helper <*> cloneP)   $ progDesc "Clone the repo. Use 'reponame' or 'username/reponame' formats")
 
 hopP :: Parser HitCommand
@@ -138,7 +141,10 @@ currentP :: Parser HitCommand
 currentP = pure Current
 
 statusP :: Parser HitCommand
-statusP = Status <$> optional (strArgument $ metavar "COMMIT_HASH")
+statusP = Status <$> maybeCommitP
+
+diffP :: Parser HitCommand
+diffP = Diff <$> maybeCommitP
 
 resolveP :: Parser HitCommand
 resolveP = Resolve <$> maybeBranchP
@@ -148,11 +154,15 @@ cloneP = Clone <$> strArgument (metavar "REPOSITORY")
 
 -- | Parse optional branch name as an argument.
 maybeBranchP :: Parser (Maybe Text)
-maybeBranchP = optional $ strArgument (metavar "BRANCH_NAME")
+maybeBranchP = optional $ strArgument $ metavar "BRANCH_NAME"
+
+-- | Parse optional commit hash as an argument.
+maybeCommitP :: Parser (Maybe Text)
+maybeCommitP = optional $ strArgument $ metavar "COMMIT_HASH"
 
 -- | Parse optional commit message as an argument
 commitMessageP :: Parser (Maybe Text)
-commitMessageP = optional $ strArgument (metavar "COMMIT_MESSAGE")
+commitMessageP = optional $ strArgument $ metavar "COMMIT_MESSAGE"
 
 -- | Parse flag of force push.
 pushBoolP :: Parser PushBool

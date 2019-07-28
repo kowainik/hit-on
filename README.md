@@ -26,6 +26,9 @@ Here is an example of how you can see the list of issues and the issue descripti
 To start using `hit` make sure that you have the following tools installed on your machine:
 
 * [ `git`][git] — `hit` is a wrapper around `git`
+* `diff-highlight` — for pretty output of the `hit diff` command
+  + [Linux installation instructions](https://qiita.com/SakaiYuki/items/2814d417d0bec59046bb)
+  + [macOS installation instructions](https://www.viget.com/articles/dress-up-your-git-diffs-with-word-level-highlights/)
 
 ### Installation
 
