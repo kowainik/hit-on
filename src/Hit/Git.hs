@@ -84,7 +84,7 @@ runFix msg pushBool = do
     runPush pushBool
   where
     message :: Text
-    message = fromMaybe "Fix after review" msg
+    message = fromMaybe "Fix" msg
 
 
 -- | @hit amend@ command.
