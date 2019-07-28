@@ -31,7 +31,13 @@ To start using `hit` make sure that you have the following tools installed on yo
 
 + [ `git`][git] — `hit` is a wrapper around `git`
 + **Optional:** `diff-highlight` — for pretty output of the `hit diff` command
-  + [Linux installation instructions](https://qiita.com/SakaiYuki/items/2814d417d0bec59046bb)
+  + Linux installation instructions
+    ```shell
+    cd /usr/share/doc/git/contrib/diff-highlight/
+    make
+    sudo chmod +x diff-highlight
+    sudo ln -s diff-highlight /usr/local/bin/diff-highlight
+    ```
   + [macOS installation instructions](https://www.viget.com/articles/dress-up-your-git-diffs-with-word-level-highlights/)
 
 ### Installation
