@@ -14,13 +14,17 @@ module Hit.Git
        , runSync
        , runCurrent
        , runStatus
+       , runDiff
        , runClone
 
        , getUsername
        ) where
 
+import Control.Exception (bracket)
 import Data.Char (isAlphaNum, isDigit, isSpace)
 import Shellmet (($|))
+import System.Directory (findExecutable)
+import System.Process (callCommand)
 
 import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode)
 import Hit.Core (PushBool (..))
@@ -137,19 +141,21 @@ runCurrent = do
     putTextLn $ arrow <> "Current branch: " <> greenCode <> branchName <> resetCode
     pure $ issueFromBranch branchName
 
-{- | Show diff from the given commit. If commit is not specified, uses HEAD.
+{- | Show stats from the given commit. If commit is not specified, uses HEAD.
 -}
 runStatus :: Maybe Text -> IO ()
-runStatus (fromMaybe "HEAD" -> commit) = do
-    -- 1. Add all untracked file to index so they will appear in diff
-    untrackedFiles <- lines <$> "git" $| ["ls-files", "--others", "--exclude-standard"]
-    for_ untrackedFiles $ \file -> void $ "git" $| ["add", file]
+runStatus (fromMaybe "HEAD" -> commit) = withUntrackedFiles $ showPrettyDiff commit
 
-    -- 2. Show pretty diff
-    showPrettyDiff commit
-
-    -- 3. Returns untracked files back to not spoil git state and have unexpected behavior
-    for_ untrackedFiles $ \file -> void $ "git" $| ["reset", file]
+{- | Show diff from the given commit. If commit is not specified, uses HEAD.
+This commands checks whether @diff-hightligh@ is on path and if not, just calls
+@git diff@.
+-}
+runDiff :: Maybe Text -> IO ()
+runDiff (fromMaybe "HEAD" -> commit) = withUntrackedFiles $
+    findExecutable "diff-highlight" >>= \case
+        Nothing -> "git" ["diff", commit]
+        Just _  -> callCommand $ toString $
+            "git diff " <> commit <> " --color=always | diff-highlight | less -rFX"
 
 {- | @hit clone@ command receives the name of the repo in the following
 formats:
@@ -186,7 +192,6 @@ getUsername = do
         then errorMessage "user.login is not specified" >> exitFailure
         else pure login
 
-
 nameOrMaster :: Maybe Text -> Text
 nameOrMaster = fromMaybe "master"
 
@@ -207,3 +212,23 @@ issueFromBranch =
     . T.takeWhile isDigit
     . T.drop 1
     . T.dropWhile (/= '/')
+
+{- | Perform given action by adding all untracked files to index and returning
+them back after action.
+-}
+withUntrackedFiles :: IO a -> IO a
+withUntrackedFiles action = bracket
+    addUntrackedFiles
+    removeUntrackedFiles
+    (const  action)
+  where
+    -- Add all untracked file to index so they will appear in diff
+    addUntrackedFiles :: IO [Text]
+    addUntrackedFiles = do
+        untrackedFiles <- lines <$> "git" $| ["ls-files", "--others", "--exclude-standard"]
+        for_ untrackedFiles $ \file -> void $ "git" $| ["add", file]
+        pure untrackedFiles
+
+    -- Return untracked files back to not spoil git state and have unexpected behavior
+    removeUntrackedFiles :: [Text] -> IO ()
+    removeUntrackedFiles = mapM_ $ \file -> void $ "git" $| ["reset", file]
