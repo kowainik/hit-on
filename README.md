@@ -191,6 +191,15 @@ With `hit` you need only to specify the text of the commit to get the same resul
 hit commit "Implement my feature"
 ```
 
+or even simplier:
+
+```shell
+hit commit
+```
+
+And the commit name would be the title of the corresponding issue at GitHub (if
+you are currently in the branch named as described above).
+
 Note that you don't need to keep in mind the current issue number. However, if you want to refresh the context about the issue, use the `hit current` command.
 
 ### hit push

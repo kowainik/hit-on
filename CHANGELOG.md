@@ -10,6 +10,10 @@ The changelog is available [on GitHub][2].
   Implement `hit status` command with pretty output.
 * [#82](https://github.com/kowainik/hit-on/issues/82):
   Add `--force` flag to `hit fix` command.
+* [#85](https://github.com/kowainik/hit-on/issues/85):
+  Make `hit commit` command take the commit name from the corresponding issue
+  name, if it is currently applicable (the branch name has the info about issue
+  number).
 * Bump up to GHC 8.6.5.
 * Bump up to `relude-0.5.0`.
 

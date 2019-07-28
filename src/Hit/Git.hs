@@ -60,17 +60,33 @@ runNew issueNum = do
         . T.filter (\c -> isAlphaNum c || isDigit c || isSpace c)
 
 -- | @hit commit@ command.
-runCommit :: Text -> Bool -> IO ()
-runCommit (T.strip -> msg) (not -> hasIssue)
-    | msg == "" = errorMessage "Commit message cannot be empty"
-    | otherwise = do
-        branch <- getCurrentBranch
-        let issueNum = issueFromBranch branch
-        "git" ["add", "."]
-        "git" ["commit", "-m", showMsg $ guard hasIssue *> issueNum]
+runCommit :: Maybe Text -> Bool -> IO ()
+runCommit maybeMsg (not -> hasIssue) = case maybeMsg of
+    Just (T.strip -> msg)
+        | msg == "" -> errorMessage "Commit message cannot be empty"
+        | otherwise -> getCurrentIssue >>= commitCmds msg
+    {- if the commit name is not specified then check the branchName
+    If this is issue-related branch, take the issue name as the commit name.
+    Otherwise print errorMessage.
+    -}
+    Nothing -> do
+        issueNum <- getCurrentIssue
+        case issueNum of
+            Nothing -> errorMessage "Commit message cannot be empty: can not be taken from the context"
+            Just n -> do
+                title <- getIssueTitle (mkIssueId n)
+                commitCmds title issueNum
   where
-    showMsg :: Maybe Int -> Text
-    showMsg = \case
+    commitCmds :: Text -> Maybe Int -> IO ()
+    commitCmds msg issueNum = do
+        "git" ["add", "."]
+        "git" ["commit", "-m", showMsg msg $ guard hasIssue *> issueNum]
+
+    getCurrentIssue :: IO (Maybe Int)
+    getCurrentIssue = issueFromBranch <$> getCurrentBranch
+
+    showMsg :: Text -> Maybe Int -> Text
+    showMsg msg = \case
        Nothing -> msg
        Just n  ->
            let issue = "#" <> show n
