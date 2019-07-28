@@ -112,6 +112,7 @@ commitP = do
        <> help "Do not add [#ISSUE_NUMBER] prefix when specified"
     pure $ Commit msg noIssue
 
+{- HLINT ignore "Use <$>"-}
 fixP :: Parser HitCommand
 fixP = do
     commitMsg <- commitMessageP
