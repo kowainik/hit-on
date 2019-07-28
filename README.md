@@ -17,7 +17,11 @@ You can find the description of the workflow here:
 
 Here is an example of how you can see the list of issues and the issue description with `hit`:
 
-![Screenshot from 2019-03-17 00-21-23](https://user-images.githubusercontent.com/8126674/54478225-cae07c00-484a-11e9-86b3-c4c54e281274.png)
+![hit issue](https://user-images.githubusercontent.com/8126674/54478225-cae07c00-484a-11e9-86b3-c4c54e281274.png)
+
+Or how you can see pretty short stats about your changes:
+
+![hit status example](https://user-images.githubusercontent.com/4276606/60981099-428d6600-a368-11e9-97aa-656a3dd38efa.png)
 
 ## Getting started
 
@@ -25,8 +29,8 @@ Here is an example of how you can see the list of issues and the issue descripti
 
 To start using `hit` make sure that you have the following tools installed on your machine:
 
-* [ `git`][git] — `hit` is a wrapper around `git`
-* `diff-highlight` — for pretty output of the `hit diff` command
++ [ `git`][git] — `hit` is a wrapper around `git`
++ **Optional:** `diff-highlight` — for pretty output of the `hit diff` command
   + [Linux installation instructions](https://qiita.com/SakaiYuki/items/2814d417d0bec59046bb)
   + [macOS installation instructions](https://www.viget.com/articles/dress-up-your-git-diffs-with-word-level-highlights/)
 
@@ -176,6 +180,28 @@ hit new 42
 ```
 
 It uses the issue title to generate a short description.
+
+### hit status
+
+Before commiting your changes, you may want to inspect short stats about your
+work. With `git` you usually call the following command:
+
+```shell
+git status
+```
+
+However, the same `hit` command produces better output:
+
+```shell
+hit status
+```
+
+![hit status example](https://user-images.githubusercontent.com/4276606/60981099-428d6600-a368-11e9-97aa-656a3dd38efa.png)
+
+### hit diff
+
+If you want to see detailed diff of your changes, use `hit diff` command. If you
+have `diff-hightlight` installed then `hit diff` outputs much nicer diffs.
 
 ### hit commit
 
