@@ -88,7 +88,7 @@ runCommit maybeMsg (not -> hasIssue) = case maybeMsg of
         "git" ["commit", "-m", showMsg msg $ guard hasIssue *> issueNum]
 
     getCurrentIssue :: IO (Maybe Int)
-    getCurrentIssue = getCurrentBranch >>= pure . issueFromBranch
+    getCurrentIssue = issueFromBranch <$> getCurrentBranch
 
     showMsg :: Text -> Maybe Int -> Text
     showMsg msg = \case
