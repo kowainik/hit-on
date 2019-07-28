@@ -153,5 +153,5 @@ showConlictFiles = do
     conflictFiles <- lines <$> "git" $| ["diff", "--name-only", "--diff-filter=U"]
     unless (null conflictFiles) $
         putTextLn $ unlines $
-            [ boldCode <> redCode <> "Conflict files:" <> resetCode ]
-            ++ map ("    " <>) conflictFiles
+            ( boldCode <> redCode <> "Conflict files:" <> resetCode )
+            : map ("    " <>) conflictFiles
