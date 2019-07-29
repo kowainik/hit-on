@@ -29,6 +29,10 @@ module Hit.ColorTerminal
        , resetCode
        , blueBg
 
+         -- * Input with prompt
+       , Answer (..)
+       , prompt
+
        , arrow
        ) where
 
@@ -36,6 +40,8 @@ import System.Console.ANSI (Color (..), ColorIntensity (Dull, Vivid),
                             ConsoleIntensity (BoldIntensity), ConsoleLayer (Background, Foreground),
                             SGR (..), setSGR, setSGRCode)
 import System.IO (hFlush)
+
+import qualified Data.Text as T
 
 
 -- | Explicit flush ensures prompt messages are in the correct order on all systems.
@@ -105,3 +111,23 @@ mkColor color = toText $ setSGRCode [SetColor Foreground Vivid color]
 -- | Arrow symbol
 arrow :: Text
 arrow = " ➤  "
+
+-- | Represents a user's answer
+data Answer = Y | N
+
+-- | Parse an answer to 'Answer'
+yesOrNo :: Text -> Maybe Answer
+yesOrNo (T.toLower -> answer )
+    | T.null answer = Just Y
+    | answer `elem` ["yes", "y", "ys"] = Just Y
+    | answer `elem` ["no", "n"]  = Just N
+    | otherwise = Nothing
+
+prompt :: IO Answer
+prompt = do
+    answer <- yesOrNo . T.strip <$> getLine
+    case answer of
+        Just ans -> pure ans
+        Nothing -> do
+           errorMessage "This wasn't a valid choice."
+           prompt

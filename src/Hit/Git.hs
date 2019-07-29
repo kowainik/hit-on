@@ -15,6 +15,7 @@ module Hit.Git
        , runFix
        , runAmend
        , runSync
+       , runClear
        , runCurrent
        , runStatus
        , runDiff
@@ -29,7 +30,8 @@ import Shellmet (($|))
 import System.Directory (findExecutable)
 import System.Process (callCommand)
 
-import Hit.ColorTerminal (arrow, errorMessage, greenCode, resetCode)
+import Hit.ColorTerminal (Answer (..), arrow, boldCode, errorMessage, greenCode, infoMessage,
+                          prompt, resetCode)
 import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Git.Status (showPrettyDiff)
 import Hit.Issue (getIssueTitle, mkIssueId)
@@ -151,6 +153,25 @@ runResolve (nameOrMaster -> master)= do
     curBranch <- getCurrentBranch
     runHop $ Just master
     when (curBranch /= master) $ "git" ["branch", "-D", curBranch]
+
+-- | Remove all local changes permanently.
+runClear :: PushBool -> IO ()
+runClear = \case
+    Force  -> clearChanges
+    Simple -> do
+        putText $ unlines
+            [ "This command permanently deletes all uncommited changes"
+            , "Hint: if you want to save changes, use 'hit stash' command."
+            , "Are you sure you want to delete changes? " <> boldCode <> "[y]" <> resetCode <> "/n"
+            ]
+        prompt >>= \case
+            N -> infoMessage "Aborting local clean up"
+            Y -> clearChanges
+  where
+    clearChanges :: IO ()
+    clearChanges = do
+        "git" ["add", "."]
+        "git" ["reset", "--hard"]
 
 {- | Part of the @hit current@ command. Prints the current branch and returns
 the current issue number if possible.
