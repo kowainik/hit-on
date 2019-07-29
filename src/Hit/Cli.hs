@@ -9,14 +9,15 @@ module Hit.Cli
 
 import Data.Version (showVersion)
 import Development.GitRev (gitCommitDate, gitDirty, gitHash)
-import Options.Applicative (Parser, ParserInfo, argument, auto, command, execParser, flag, fullDesc,
-                            help, helper, info, infoOption, long, metavar, progDesc, short,
-                            strArgument, subparser, switch)
+import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, auto, command,
+                            execParser, flag, fullDesc, help, helper, info, infoOption, long,
+                            metavar, progDesc, short, strArgument, subparser, switch)
 
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
 import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Git (getUsername, runAmend, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
-                runHop, runNew, runPush, runResolve, runStash, runStatus, runSync, runUnstash)
+                runHop, runNew, runPush, runResolve, runStash, runStatus, runSync, runUncommit,
+                runUnstash)
 import Hit.Issue (runIssue)
 
 import qualified Data.Text as T
@@ -34,6 +35,7 @@ hit = execParser cliParser >>= \case
     Stash -> runStash
     Unstash -> runUnstash
     Commit opts -> runCommit opts
+    Uncommit -> runUncommit
     Fix message pushBool -> runFix message pushBool
     Amend -> runAmend
     Resolve branchName -> runResolve branchName
@@ -62,6 +64,7 @@ data HitCommand
     | Stash
     | Unstash
     | Commit CommitOptions
+    | Uncommit
     | Fix
         (Maybe Text)  -- ^ Text of the fix commit
         PushBool      -- ^ Force push
@@ -77,22 +80,26 @@ data HitCommand
 -- | Commands parser.
 hitP :: Parser HitCommand
 hitP = subparser
-    $ command "hop"     (info (helper <*> hopP)     $ progDesc "Switch to branch and sync it")
-   <> command "fresh"   (info (helper <*> freshP)   $ progDesc "Rebase current branch on remote one")
-   <> command "new"     (info (helper <*> newP)     $ progDesc "Create new branch from current one")
-   <> command "stash"   (info (helper <*> stashP)   $ progDesc "Stash all local changes")
-   <> command "unstash" (info (helper <*> unstashP) $ progDesc "Unstash previously stashed changes")
-   <> command "commit"  (info (helper <*> commitP)  $ progDesc "Commit all local changes and prepend issue number")
-   <> command "fix"     (info (helper <*> fixP)     $ progDesc "Fix requested changes to the last commit")
-   <> command "amend"   (info (helper <*> amendP)   $ progDesc "Amend changes to the last commit and force push")
-   <> command "issue"   (info (helper <*> issueP)   $ progDesc "Show the information about the issue")
-   <> command "push"    (info (helper <*> pushP)    $ progDesc "Push the current branch")
-   <> command "sync"    (info (helper <*> syncP)    $ progDesc "Sync local branch with its remote")
-   <> command "resolve" (info (helper <*> resolveP) $ progDesc "Switch to master, sync and delete the branch")
-   <> command "current" (info (helper <*> currentP) $ progDesc "Show info about current branch and issue (if applicable)")
-   <> command "status"  (info (helper <*> statusP)  $ progDesc "Show current branch and beautiful stats with COMMIT_HASH (by default HEAD)")
-   <> command "diff"    (info (helper <*> diffP)    $ progDesc "Display beautiful diff with COMMIT_HASH (by default HEAD)")
-   <> command "clone"   (info (helper <*> cloneP)   $ progDesc "Clone the repo. Use 'reponame' or 'username/reponame' formats")
+    $ com "hop"      hopP      "Switch to branch and sync it"
+   <> com "fresh"    freshP    "Rebase current branch on remote one"
+   <> com "new"      newP      "Create new branch from current one"
+   <> com "stash"    stashP    "Stash all local changes"
+   <> com "unstash"  unstashP  "Unstash previously stashed changes"
+   <> com "commit"   commitP   "Commit all local changes and prepend issue number"
+   <> com "uncommit" uncommitP "Reset to the previous commit saving the changes"
+   <> com "fix"      fixP      "Fix requested changes to the last commit"
+   <> com "amend"    amendP    "Amend changes to the last commit and force push"
+   <> com "issue"    issueP    "Show the information about the issue"
+   <> com "push"     pushP     "Push the current branch"
+   <> com "sync"     syncP     "Sync local branch with its remote"
+   <> com "resolve"  resolveP  "Switch to master, sync and delete the branch"
+   <> com "current"  currentP  "Show info about current branch and issue (if applicable)"
+   <> com "status"   statusP   "Show current branch and beautiful stats with COMMIT_HASH (by default HEAD)"
+   <> com "diff"     diffP     "Display beautiful diff with COMMIT_HASH (by default HEAD)"
+   <> com "clone"    cloneP    "Clone the repo. Use 'reponame' or 'username/reponame' formats"
+  where
+    com :: String -> Parser HitCommand -> String -> Mod CommandFields HitCommand
+    com name p desc = command name (info (helper <*> p) $ progDesc desc)
 
 hopP :: Parser HitCommand
 hopP = Hop <$> maybeBranchP
@@ -131,6 +138,9 @@ commitP = do
        <> help "Push current branch with this commit"
     coIsForcePush <- pushBoolP
     pure $ Commit CommitOptions{..}
+
+uncommitP :: Parser HitCommand
+uncommitP = pure Uncommit
 
 {- HLINT ignore "Use <$>"-}
 fixP :: Parser HitCommand

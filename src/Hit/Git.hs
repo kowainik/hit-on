@@ -11,6 +11,7 @@ module Hit.Git
        , runStash
        , runUnstash
        , runCommit
+       , runUncommit
        , runFix
        , runAmend
        , runSync
@@ -101,6 +102,10 @@ runCommit CommitOptions{..} = case coName of
 
     hasIssue :: Bool
     hasIssue = not coNoIssueNumber
+
+-- | @hit uncommit@ command
+runUncommit :: IO ()
+runUncommit = "git" ["reset", "HEAD~1"]
 
 -- | @hit fix@ command
 runFix :: Maybe Text -> PushBool -> IO ()
