@@ -15,9 +15,9 @@ import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, au
 
 import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
 import Hit.Core (CommitOptions (..), PushBool (..))
-import Hit.Git (getUsername, runAmend, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
-                runHop, runNew, runPush, runResolve, runStash, runStatus, runSync, runUncommit,
-                runUnstash)
+import Hit.Git (getUsername, runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix,
+                runFresh, runHop, runNew, runPush, runResolve, runStash, runStatus, runSync,
+                runUncommit, runUnstash)
 import Hit.Issue (runIssue)
 
 import qualified Data.Text as T
@@ -41,6 +41,7 @@ hit = execParser cliParser >>= \case
     Resolve branchName -> runResolve branchName
     Push isForce -> runPush isForce
     Sync -> runSync
+    Clear isForce -> runClear isForce
     Current -> runCurrent >>= flip whenJust (flip runIssue Nothing . Just)
     Status commit -> runCurrent >> runStatus commit
     Diff commit -> runDiff commit
@@ -72,6 +73,7 @@ data HitCommand
     | Resolve (Maybe Text)
     | Push PushBool
     | Sync
+    | Clear PushBool
     | Current
     | Status (Maybe Text)
     | Diff (Maybe Text)
@@ -93,6 +95,7 @@ hitP = subparser
    <> com "push"     pushP     "Push the current branch"
    <> com "sync"     syncP     "Sync local branch with its remote"
    <> com "resolve"  resolveP  "Switch to master, sync and delete the branch"
+   <> com "clear"    clearP    "Remove all local changes permanently"
    <> com "current"  currentP  "Show info about current branch and issue (if applicable)"
    <> com "status"   statusP   "Show current branch and beautiful stats with COMMIT_HASH (by default HEAD)"
    <> com "diff"     diffP     "Display beautiful diff with COMMIT_HASH (by default HEAD)"
@@ -157,6 +160,9 @@ pushP = Push <$> pushBoolP
 
 syncP :: Parser HitCommand
 syncP = pure Sync
+
+clearP :: Parser HitCommand
+clearP = Clear <$> pushBoolP
 
 currentP :: Parser HitCommand
 currentP = pure Current

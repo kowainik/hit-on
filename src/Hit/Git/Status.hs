@@ -94,8 +94,10 @@ can look like this:
 -}
 parseDiffStat :: [Text] -> Maybe DiffStat
 parseDiffStat = \case
-    diffStatFile:diffStatCount:rest -> Just DiffStat
-        { diffStatSigns = unwords rest
+    [diffStatFile, diffStatCount, diffStatSigns] -> Just DiffStat{..}
+    diffStatFile:"Bin":rest -> Just DiffStat
+        { diffStatCount = "Bin"
+        , diffStatSigns = unwords rest
         , ..
         }
     _ -> Nothing
