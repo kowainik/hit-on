@@ -27,6 +27,8 @@ The changelog is available [on GitHub][2].
   Add `hit uncommit` command.
 * [#69](https://github.com/kowainik/hit-on/issues/69):
   Write autocompletion instructions.
+* [#72](https://github.com/kowainik/hit-on/issues/72):
+  Allow `hit new` command to receive branch names as long as issue numbers.
 * Bump up to GHC 8.6.5.
 * Bump up to `relude-0.5.0`.
 
