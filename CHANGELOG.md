@@ -25,6 +25,8 @@ The changelog is available [on GitHub][2].
   Add `-p|push` and `-f|force` flags to `hit commit` command.
 * [#80](https://github.com/kowainik/hit-on/issues/80):
   Add `hit uncommit` command.
+* [#69](https://github.com/kowainik/hit-on/issues/69):
+  Write autocompletion instructions.
 * Bump up to GHC 8.6.5.
 * Bump up to `relude-0.5.0`.
 

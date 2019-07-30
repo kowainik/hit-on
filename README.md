@@ -102,11 +102,16 @@ Currently, this method of installation is not supported. See [this issue](https:
 
 Follow the steps below to configure `hit` :
 
-1. Specify your GitHub login in the global `.gitconfig`
+1. Enable autocompletion by calling the following command:
+    ```shell
+    source <(hit --bash-completion-script `which hit`)
+    ```
+    Add it your personal config file (like `~/.bashrc`) to enable automatically.
+2. Specify your GitHub login in the global `.gitconfig`
 ```shell
 git config --global user.login <your_login>
 ```
-2. **This step is only required if you want to use `hit` with private repositories**.
+3. **This step is only required if you want to use `hit` with private repositories**.
     1. [Create OAuth token on GitHub.](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/) The following scopes for the token should be specified:
     ![Screenshot from 2019-03-16 22-34-57](https://user-images.githubusercontent.com/4276606/54476778-30793c00-483c-11e9-9625-a4f6ced40820.png)
 
