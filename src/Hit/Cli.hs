@@ -60,7 +60,7 @@ cliParser = info ( helper <*> versionP <*> hitP )
 data HitCommand
     = Hop (Maybe Text)
     | Fresh (Maybe Text)
-    | New Int
+    | New Text
     | Issue (Maybe Int) Bool
     | Stash
     | Unstash
@@ -84,7 +84,7 @@ hitP :: Parser HitCommand
 hitP = subparser
     $ com "hop"      hopP      "Switch to branch and sync it"
    <> com "fresh"    freshP    "Rebase current branch on remote one"
-   <> com "new"      newP      "Create new branch from current one"
+   <> com "new"      newP      "Create new branch from the current one"
    <> com "stash"    stashP    "Stash all local changes"
    <> com "unstash"  unstashP  "Unstash previously stashed changes"
    <> com "commit"   commitP   "Commit all local changes and prepend issue number"
@@ -111,7 +111,7 @@ freshP :: Parser HitCommand
 freshP = Fresh <$> maybeBranchP
 
 newP :: Parser HitCommand
-newP = New <$> issueNumP
+newP = New <$> strArgument (metavar "ISSUE_NUMBER_OR_BRANCH_NAME")
 
 issueP :: Parser HitCommand
 issueP = do

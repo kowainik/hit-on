@@ -52,13 +52,15 @@ runFresh (nameOrMaster -> branch) = do
     "git" ["rebase", "origin/" <> branch]
 
 -- | @hit new@ command.
-runNew :: Int -> IO ()
-runNew issueNum = do
+runNew :: Text -> IO ()
+runNew issueOrName = do
     login <- getUsername
-    let issueId = mkIssueId issueNum
-    issueTitle <- getIssueTitle issueId
-    let shortDesc = mkShortDesc issueTitle
-    let branchName = login <> "/" <> show issueNum <> "-" <> shortDesc
+    title <- case readMaybe @Int $ toString issueOrName of
+        Just issueNum -> do
+            issueTitle <- getIssueTitle $ mkIssueId issueNum
+            pure $ show issueNum <> "-" <> mkShortDesc issueTitle
+        Nothing -> pure $ mkShortDesc issueOrName
+    let branchName = login <> "/" <> title
     "git" ["checkout", "-b", branchName]
   where
     mkShortDesc :: Text -> Text
@@ -66,7 +68,11 @@ runNew issueNum = do
           T.intercalate "-"
         . take 5
         . words
-        . T.filter (\c -> isAlphaNum c || isDigit c || isSpace c)
+        . T.filter (\c -> isAlphaNum c
+                       || isDigit c
+                       || isSpace c
+                       || c `elem` ("_-./" :: String)
+                   )
 
 -- | @hit commit@ command.
 runCommit :: CommitOptions -> IO ()
