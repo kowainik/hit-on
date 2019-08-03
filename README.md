@@ -121,6 +121,29 @@ git config --global user.login <your_login>
         export GITHUB_TOKEN=<paste_generated_token_here>
         ```
 
+## Commands
+
+ | Command  | Description                                                                |
+ |----------|----------------------------------------------------------------------------|
+ | hop      | Switch to branch and sync it                                               |
+ | fresh    | Rebase current branch on remote one                                        |
+ | new      | Create new branch from the current one                                     |
+ | stash    | Stash all local changes                                                    |
+ | unstash  | Unstash previously stashed changes                                         |
+ | commit   | Commit all local changes and prepend issue number                          |
+ | uncommit | Reset to the previous commit saving the changes                            |
+ | fix      | Fix requested changes to the last commit                                   |
+ | amend    | Amend changes to the last commit and force push                            |
+ | issue    | Show the information about the issue                                       |
+ | push     | Push the current branch                                                    |
+ | sync     | Sync local branch with its remote                                          |
+ | resolve  | Switch to master, sync and delete the branch                               |
+ | clear    | Remove all local changes permanently                                       |
+ | current  | Show info about current branch and issue (if applicable)                   |
+ | status   | Show current branch and beautiful stats with COMMIT_HASH (by default HEAD) |
+ | diff     | Display beautiful diff with COMMIT_HASH (by default HEAD)                  |
+ | clone    | Clone the repo. Use 'reponame' or 'username/reponame' formats              |
+
 ## Usage
 
 The best way to demonstrate the power of the `hit` tool on a day-to-day basis with our workflow is to go through the entire workflow step by step, solving an ordinary problem of the typical [`git`][git] user.
