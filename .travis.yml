@@ -42,7 +42,6 @@ deploy:
     on:
       repo: kowainik/hit-on
       tags: true
-      condition: $DEPLOY = yes
 
 notifications:
   email: false
