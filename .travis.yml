@@ -4,7 +4,7 @@ language: haskell
 git:
   depth: 5
 
-cabal: "head"
+cabal: "2.4"
 
 cache:
   directories:
@@ -16,8 +16,11 @@ matrix:
   include:
   - ghc: 8.6.5
 
-  - ghc: 8.6.5
-    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml" DEPLOY=yes
+  - os: linux
+    env: GHC=8.6.5 STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml" DEPLOY=yes
+
+  - os: osx
+    env: GHC=8.6.5 STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml" DEPLOY=yes
 
 install:
   # HLint check
@@ -30,7 +33,7 @@ install:
     else
       curl -sSL https://get.haskellstack.org/ | sh
       stack --version
-      stack build --system-ghc --test --no-run-tests --bench --no-run-benchmarks
+      stack build --test --no-run-tests --bench --no-run-benchmarks
     fi
 
 script:
@@ -38,14 +41,14 @@ script:
     if [ -z "$STACK_YAML" ]; then
        cabal new-test --enable-tests
     else
-      stack test --system-ghc --no-terminal
+      stack test --no-terminal
     fi
 
 after_success:
   - |
     if [ "$DEPLOY" = "yes" ]; then
       echo "hit deploy triggered!"
-      mv "$(stack path --system-ghc --local-install-root)/bin/hit" "hit-${TRAVIS_OS_NAME}"
+      mv "$(stack path --local-install-root)/bin/hit" "hit-${TRAVIS_OS_NAME}"
       chmod +x "hit-${TRAVIS_OS_NAME}"
       git tag "$(date +'%Y%m%d%H%M%S')"
     fi
