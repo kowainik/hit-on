@@ -17,10 +17,10 @@ matrix:
   - ghc: 8.6.5
 
   - os: linux
-    env: GHC=8.6.5 STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml" DEPLOY=yes
+    env: GHCVER=8.6.5 STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml" DEPLOY=yes
 
   - os: osx
-    env: GHC=8.6.5 STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml" DEPLOY=yes
+    env: GHCVER=8.6.5 STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml" DEPLOY=yes
 
 install:
   # HLint check
