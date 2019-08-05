@@ -84,6 +84,11 @@ You need to follow these steps:
      ```shell
         stack install hit-on
      ```
+  * [Nix](https://nixos.org/nix/)
+    ```shell
+       nix-env -f . -i
+    ```
+
 4. Make sure that `hit` is installed:
 
     ```shell

@@ -69,7 +69,7 @@ library
                      , optparse-applicative ^>= 0.14
                      , process ^>= 1.6
                      , relude ^>= 0.5
-                     , shellmet >= 0.0.0
+                     , shellmet >= 0.0.1
                      , text
                      , vector ^>= 0.12
 
