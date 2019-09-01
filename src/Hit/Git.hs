@@ -27,7 +27,7 @@ module Hit.Git
 import Control.Exception (bracket)
 import Data.Char (isAlphaNum, isDigit, isSpace)
 import Shellmet (($|))
-import System.Directory (findExecutable)
+import System.Directory (doesDirectoryExist, findExecutable, makeAbsolute, setCurrentDirectory)
 import System.Process (callCommand)
 
 import Hit.ColorTerminal (Answer (..), arrow, boldCode, errorMessage, greenCode, infoMessage,
@@ -218,14 +218,19 @@ git clone git@github.com:username/project-name.git
 -}
 runClone :: Text -> IO ()
 runClone txt = do
-    name <- case T.splitOn "/" txt of
-        [reponame] -> getUsername >>= \u -> pure $ u <> "/" <> reponame
-        [username, reponame] -> pure $ username <> "/" <> reponame
+    (owner, repo) <- case T.splitOn "/" txt of
+        [reponame] -> getUsername >>= \u -> pure (u, reponame)
+        [username, reponame] -> pure (username, reponame)
         _ -> do
             errorMessage ("Incorrect name: " <> txt <> ". Use 'repo' or 'user/repo' formats")
             exitFailure
-    let gitLink = "git@github.com:" <> name <> ".git"
+    let gitLink = "git@github.com:" <> owner <> "/" <> repo <> ".git"
     "git" ["clone", gitLink]
+    putTextLn $ "⚙  cd " <> repo
+    let repoDir = toString repo
+    doesDirectoryExist repoDir >>= \case
+        True -> makeAbsolute repoDir >>= setCurrentDirectory
+        False -> errorMessage "Directory was not created, try again."
 
 ----------------------------------------------------------------------------
 -- Internal helpers

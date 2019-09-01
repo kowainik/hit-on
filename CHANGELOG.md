@@ -3,6 +3,11 @@
 `hit-on` uses [PVP Versioning][1].
 The changelog is available [on GitHub][2].
 
+### Unreleased
+
+* [#105](https://github.com/kowainik/hit-on/issues/105):
+  Step in into the created folder when clone the repository.
+
 ### 0.1.0.0 — Aug 3, 2019
 
 * [#85](https://github.com/kowainik/hit-on/issues/85):
