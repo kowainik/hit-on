@@ -57,6 +57,14 @@ chmod +x hit-linux
 mv hit-linux ~/.local/bin/hit
 ```
 
+#### Install with Scarf
+
+On Linux and MacOS, you can install with [Scarf](https://scarf.sh/):
+
+```
+scarf install hit-on
+```
+
 #### Build from source
 
 > **NOTE:** the project is written in Haskell, so you need to have one of the Haskell build tools installed. See this [blog post](https://kowainik.github.io/posts/2018-06-21-haskell-build-tools) for installation and usage instructions.
