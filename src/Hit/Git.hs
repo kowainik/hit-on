@@ -30,8 +30,8 @@ import Shellmet (($|))
 import System.Directory (findExecutable)
 import System.Process (callCommand)
 
-import Hit.ColorTerminal (Answer (..), arrow, boldCode, errorMessage, greenCode, infoMessage,
-                          prompt, resetCode)
+import Hit.ColorTerminal (Answer (..), arrow, errorMessage, greenCode, infoMessage,
+                          prompt, resetCode, yesOrNoText)
 import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Git.Status (showPrettyDiff)
 import Hit.Issue (getIssueTitle, mkIssueId)
@@ -168,9 +168,9 @@ runClear = \case
         putText $ unlines
             [ "This command permanently deletes all uncommited changes"
             , "Hint: if you want to save changes, use 'hit stash' command."
-            , "Are you sure you want to delete changes? " <> boldCode <> "[y]" <> resetCode <> "/n"
+            , "Are you sure you want to delete changes? " <> yesOrNoText N
             ]
-        prompt >>= \case
+        prompt N >>= \case
             N -> infoMessage "Aborting local clean up"
             Y -> clearChanges
   where

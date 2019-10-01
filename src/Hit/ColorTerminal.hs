@@ -31,6 +31,7 @@ module Hit.ColorTerminal
 
          -- * Input with prompt
        , Answer (..)
+       , yesOrNoText
        , prompt
 
        , arrow
@@ -115,19 +116,24 @@ arrow = " ➤  "
 -- | Represents a user's answer
 data Answer = Y | N
 
--- | Parse an answer to 'Answer'
-yesOrNo :: Text -> Maybe Answer
-yesOrNo (T.toLower -> answer )
-    | T.null answer = Just Y
+-- | Parse an answer to 'Answer'. Takes a default `Answer` to return in case of empty user input.
+yesOrNoWithDefault :: Answer -> Text -> Maybe Answer
+yesOrNoWithDefault def (T.toLower -> answer )
+    | T.null answer = Just def
     | answer `elem` ["yes", "y", "ys"] = Just Y
     | answer `elem` ["no", "n"]  = Just N
     | otherwise = Nothing
 
-prompt :: IO Answer
-prompt = do
-    answer <- yesOrNo . T.strip <$> getLine
+yesOrNoText :: Answer -> Text
+yesOrNoText N = "y/" <> boldCode <> "[n]" <> resetCode
+yesOrNoText Y = boldCode <> "[y]" <> resetCode <> "/n"
+
+-- | Prompt user for y/n input. Takes a default 'Answer' for the case of empty user input.
+prompt :: Answer -> IO Answer
+prompt def = do
+    answer <- yesOrNoWithDefault def . T.strip <$> getLine
     case answer of
         Just ans -> pure ans
         Nothing -> do
            errorMessage "This wasn't a valid choice."
-           prompt
+           prompt def
