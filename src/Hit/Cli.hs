@@ -37,7 +37,7 @@ hit = execParser cliParser >>= \case
     Commit opts -> runCommit opts
     Uncommit -> runUncommit
     Fix message pushBool -> runFix message pushBool
-    Amend -> runAmend
+    Amend localAmend -> runAmend localAmend
     Resolve branchName -> runResolve branchName
     Push isForce -> runPush isForce
     Sync -> runSync
@@ -69,7 +69,7 @@ data HitCommand
     | Fix
         (Maybe Text)  -- ^ Text of the fix commit
         PushBool      -- ^ Force push
-    | Amend
+    | Amend Bool
     | Resolve (Maybe Text)
     | Push PushBool
     | Sync
@@ -153,7 +153,12 @@ fixP = do
     pure $ Fix commitMsg isForce
 
 amendP :: Parser HitCommand
-amendP = pure Amend
+amendP = do
+    localAmend <- switch
+        $ long "local"
+       <> short 'l'
+       <> help "Whether to do a local amend only - without pushing"
+    pure $ Amend localAmend
 
 pushP :: Parser HitCommand
 pushP = Push <$> pushBoolP

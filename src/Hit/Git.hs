@@ -30,8 +30,8 @@ import Shellmet (($|))
 import System.Directory (findExecutable)
 import System.Process (callCommand)
 
-import Hit.ColorTerminal (Answer (..), arrow, errorMessage, greenCode, infoMessage,
-                          prompt, resetCode, yesOrNoText)
+import Hit.ColorTerminal (Answer (..), arrow, errorMessage, greenCode, infoMessage, prompt,
+                          resetCode, yesOrNoText)
 import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Git.Status (showPrettyDiff)
 import Hit.Issue (getIssueTitle, mkIssueId)
@@ -136,11 +136,11 @@ runUnstash :: IO ()
 runUnstash = "git" ["stash", "pop"]
 
 -- | @hit amend@ command.
-runAmend :: IO ()
-runAmend = do
+runAmend :: Bool -> IO ()
+runAmend localAmend = do
     "git" ["add", "."]
     "git" ["commit", "--amend", "--no-edit"]
-    runPush Force
+    unless localAmend $ runPush Force
 
 -- | @hit push@ command.
 runPush :: PushBool -> IO ()
