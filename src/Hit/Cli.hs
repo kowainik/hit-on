@@ -69,7 +69,8 @@ data HitCommand
     | Fix
         (Maybe Text)  -- ^ Text of the fix commit
         PushBool      -- ^ Force push
-    | Amend Bool
+    | Amend
+        Bool  -- ^ Local amend
     | Resolve (Maybe Text)
     | Push PushBool
     | Sync
