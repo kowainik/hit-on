@@ -28,7 +28,7 @@ hit :: IO ()
 hit = execParser cliParser >>= \case
     Hop branchName -> runHop branchName
     Fresh branchName -> runFresh branchName
-    New issueNum -> runNew issueNum
+    New createIssue issueNum -> runNew createIssue issueNum
     Issue issueNum me -> if me
         then getUsername >>= runIssue issueNum . Just
         else runIssue issueNum Nothing
@@ -60,7 +60,7 @@ cliParser = info ( helper <*> versionP <*> hitP )
 data HitCommand
     = Hop (Maybe Text)
     | Fresh (Maybe Text)
-    | New Text
+    | New Bool Text
     | Issue (Maybe Int) Bool
     | Stash
     | Unstash
@@ -112,7 +112,13 @@ freshP :: Parser HitCommand
 freshP = Fresh <$> maybeBranchP
 
 newP :: Parser HitCommand
-newP = New <$> strArgument (metavar "ISSUE_NUMBER_OR_BRANCH_NAME")
+newP = do
+  createIssue <- switch
+               $ long "issue"
+               <> short 'i'
+               <> help "Create new issue instead of branch"
+  issueNumOrBranch <- strArgument (metavar "ISSUE_NUMBER_OR_BRANCH_NAME")
+  pure $ New createIssue issueNumOrBranch
 
 issueP :: Parser HitCommand
 issueP = do

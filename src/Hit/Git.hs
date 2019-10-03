@@ -52,8 +52,8 @@ runFresh (nameOrMaster -> branch) = do
     "git" ["rebase", "origin/" <> branch]
 
 -- | @hit new@ command.
-runNew :: Text -> IO ()
-runNew issueOrName = do
+runNew :: Bool -> Text -> IO ()
+runNew False issueOrName = do
     login <- getUsername
     title <- case readMaybe @Int $ toString issueOrName of
         Just issueNum -> do
@@ -73,6 +73,8 @@ runNew issueOrName = do
                        || isSpace c
                        || c `elem` ("_-./" :: String)
                    )
+runNew _ issueOrName = do
+  "hub" ["issue", "create", "-m", issueOrName]
 
 -- | @hit commit@ command.
 runCommit :: CommitOptions -> IO ()
