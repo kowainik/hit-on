@@ -114,9 +114,8 @@ createIssue' title = getOwnerRepo >>= \case
                 errorMessage errTxt
                 pure $ Left $ ParseError errTxt
     Nothing -> do
-        let errTxt = "Can not get the owner/repo names"
-        errorMessage errTxt
-        pure $ Left $ ParseError errTxt
+        errorMessage noOwnerRepoError
+        pure $ Left $ ParseError noOwnerRepoError
 
 mkIssueId :: Int -> Id Issue
 mkIssueId = mkId $ Proxy @Issue
@@ -141,10 +140,11 @@ withOwnerRepo action = getOwnerRepo >>= \case
         let gitHubToken = OAuth . encodeUtf8 <$> token
         action gitHubToken owner repo
     Nothing -> do
-        let errTxt = "Can not get the owner/repo names"
-        errorMessage errTxt
-        pure $ Left $ ParseError errTxt
+        errorMessage noOwnerRepoError
+        pure $ Left $ ParseError noOwnerRepoError
 
+noOwnerRepoError :: Text
+noOwnerRepoError = "Cannot get the owner/repo names"
 
 -- | Get the owner and the repository name.
 getOwnerRepo :: IO (Maybe (Name Owner, Name Repo))
