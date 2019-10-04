@@ -113,12 +113,12 @@ freshP = Fresh <$> maybeBranchP
 
 newP :: Parser HitCommand
 newP = do
-  createIssue <- switch
-               $ long "issue"
-               <> short 'i'
-               <> help "Create new issue instead of branch"
-  issueNumOrBranch <- strArgument (metavar "ISSUE_NUMBER_OR_BRANCH_NAME")
-  pure $ New createIssue issueNumOrBranch
+    createIssue <- switch
+                 $ long "issue"
+                 <> short 'i'
+                 <> help "Create new issue instead of branch"
+    issueNumOrBranch <- strArgument (metavar "ISSUE_NUMBER_OR_BRANCH_NAME")
+    pure $ New createIssue issueNumOrBranch
 
 issueP :: Parser HitCommand
 issueP = do
