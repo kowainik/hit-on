@@ -73,10 +73,10 @@ runNew False issueOrName = do
                        || isSpace c
                        || c `elem` ("_-./" :: String)
                    )
-runNew _ title = do
-  createIssue' title >>= \case
-    Left err -> errorMessage $ show err
-    Right issue -> putTextLn . showIssueName blueCode $ issue
+runNew _ title =
+    createIssue' title >>= \case
+        Left err -> errorMessage $ show err
+        Right issue -> putTextLn . showIssueName blueCode $ issue
 
 -- | @hit commit@ command.
 runCommit :: CommitOptions -> IO ()
