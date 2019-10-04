@@ -30,11 +30,11 @@ import Shellmet (($|))
 import System.Directory (findExecutable)
 import System.Process (callCommand)
 
-import Hit.ColorTerminal (Answer (..), arrow, errorMessage, greenCode, infoMessage, prompt,
-                          resetCode, yesOrNoText)
+import Hit.ColorTerminal (Answer (..), arrow, blueCode, errorMessage, greenCode, infoMessage,
+                          prompt, resetCode, yesOrNoText)
 import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Git.Status (showPrettyDiff)
-import Hit.Issue (getIssueTitle, mkIssueId)
+import Hit.Issue (createIssue', getIssueTitle, mkIssueId, showIssueName)
 
 import qualified Data.Text as T
 
@@ -73,8 +73,10 @@ runNew False issueOrName = do
                        || isSpace c
                        || c `elem` ("_-./" :: String)
                    )
-runNew _ issueOrName = do
-  "hub" ["issue", "create", "-m", issueOrName]
+runNew _ title = do
+  createIssue' title >>= \case
+    Left err -> errorMessage $ show err
+    Right issue -> putTextLn . showIssueName blueCode $ issue
 
 -- | @hit commit@ command.
 runCommit :: CommitOptions -> IO ()
