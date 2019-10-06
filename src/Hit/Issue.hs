@@ -10,7 +10,7 @@ module Hit.Issue
 
 import Data.Vector (Vector)
 import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Name, Owner, Repo,
-               SimpleUser (..), User, getUrl, mkId, mkName, untagName)
+               SimpleUser (..), User, getUrl, mkId, mkName, unIssueNumber, untagName)
 import GitHub.Auth (Auth (OAuth))
 import GitHub.Data.Options (stateOpen)
 import GitHub.Endpoints.Issues (issue', issuesForRepo')
@@ -53,7 +53,7 @@ getIssue num = fetchIssue num >>= \case
 
 showIssueName :: Text -> Issue -> Text
 showIssueName colorCode Issue{..} =
-    arrow <> colorCode <> " [#" <> show @Text issueNumber <> "] " <> resetCode <> issueTitle
+    arrow <> colorCode <> " [#" <> show @Text (unIssueNumber issueNumber) <> "] " <> resetCode <> issueTitle
 
 showIssueFull :: Issue -> Text
 showIssueFull i@Issue{..} = T.intercalate "\n" $
