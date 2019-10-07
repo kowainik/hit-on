@@ -191,7 +191,8 @@ runCurrent = do
 {- | Show stats from the given commit. If commit is not specified, uses HEAD.
 -}
 runStatus :: Maybe Text -> IO ()
-runStatus (fromMaybe "HEAD" -> commit) = withUntrackedFiles $ showPrettyDiff commit
+runStatus (fromMaybe "HEAD" -> commit)
+    = withDeletedFiles $ withUntrackedFiles $ showPrettyDiff commit
 
 {- | Show diff from the given commit. If commit is not specified, uses HEAD.
 This commands checks whether @diff-hightligh@ is on path and if not, just calls
@@ -260,21 +261,47 @@ issueFromBranch =
     . T.drop 1
     . T.dropWhile (/= '/')
 
+
+{- | Perform the given action by first staging the given files and
+later removing them again after the action
+-}
+withFiles :: IO a -> IO [Text] -> ([Text] -> IO ()) -> IO a
+withFiles action whichFiles removeFiles = bracket
+    addFiles
+    removeFiles
+    (const action)
+  where
+    addFiles :: IO [Text]
+    addFiles = do
+        files <- whichFiles
+        for_ files $ \file -> void $ "git" $| ["add", file]
+        pure files
+
+{- | Perform given action by adding all deleted files to index and returning
+them back after action.
+-}
+withDeletedFiles :: IO a -> IO a
+withDeletedFiles action = withFiles action deletedFiles removeDeletedFiles
+  where
+    -- Find the deleted file to index so they will appear in diff
+    deletedFiles :: IO [Text]
+    deletedFiles = lines <$> "git" $| ["ls-files", "-d", "--exclude-standard"]
+
+    -- Return deleted files back to not spoil git state and have unexpected behavior
+    removeDeletedFiles :: [Text] -> IO ()
+    removeDeletedFiles = mapM_ $ \file -> void $ "git" $| ["reset", "--", file]
+
 {- | Perform given action by adding all untracked files to index and returning
 them back after action.
 -}
 withUntrackedFiles :: IO a -> IO a
-withUntrackedFiles action = bracket
-    addUntrackedFiles
+withUntrackedFiles action = withFiles action
+    untrackedFiles
     removeUntrackedFiles
-    (const  action)
   where
     -- Add all untracked file to index so they will appear in diff
-    addUntrackedFiles :: IO [Text]
-    addUntrackedFiles = do
-        untrackedFiles <- lines <$> "git" $| ["ls-files", "--others", "--exclude-standard"]
-        for_ untrackedFiles $ \file -> void $ "git" $| ["add", file]
-        pure untrackedFiles
+    untrackedFiles :: IO [Text]
+    untrackedFiles = lines <$> "git" $| ["ls-files", "--others", "--exclude-standard"]
 
     -- Return untracked files back to not spoil git state and have unexpected behavior
     removeUntrackedFiles :: [Text] -> IO ()
