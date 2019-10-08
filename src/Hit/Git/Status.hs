@@ -168,7 +168,7 @@ showPrettyDiff commit = do
         _ -> id
       where
         formatRename :: Text -> Text
-        formatRename = T.intercalate " -> " . T.words
+        formatRename = T.intercalate " -> " . words
 
     formatTableAligned :: [(Text, Text, Text, Text)] -> Text
     formatTableAligned rows = unlines $ map formatRow rows
