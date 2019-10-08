@@ -11,6 +11,7 @@ import System.Process (callCommand)
 
 import Hit.ColorTerminal (blueCode, boldCode, cyanCode, greenCode, magentaCode, redCode, resetCode,
                           yellowCode)
+import qualified Hit.Formatting as Fmt
 
 import qualified Data.Text as T
 
@@ -129,27 +130,18 @@ showPrettyDiff commit = do
       where
         formatRow :: (Text, Text, Text, Text) -> Text
         formatRow (fileType, fileName, fileCount, fileSigns) =
-            padRight typeSize fileType
+            Fmt.padRight typeSize fileType
             <> "  "
-            <> padRight nameSize fileName
+            <> Fmt.padRight nameSize fileName
             <> " | "
-            <> padLeft countSize fileCount
+            <> Fmt.padLeft countSize fileCount
             <> " "
             <> fileSigns
 
-        padRight :: Int -> Text -> Text
-        padRight n t = t <> T.replicate (n - T.length t) " "
-
-        padLeft :: Int -> Text -> Text
-        padLeft n t = T.replicate (n - T.length t) " " <> t
-
         typeSize, nameSize :: Int
-        typeSize  = maxOn (\(a, _, _, _) -> a) rows
-        nameSize  = maxOn (\(_, b, _, _) -> b) rows
-        countSize = maxOn (\(_, _, c, _) -> c) rows
-
-        maxOn :: (a -> Text) -> [a] -> Int
-        maxOn f = foldl' (\acc a -> max acc $ T.length $ f a) 0
+        typeSize  = Fmt.maxLenOn (\(a, _, _, _) -> a) rows
+        nameSize  = Fmt.maxLenOn (\(_, b, _, _) -> b) rows
+        countSize = Fmt.maxLenOn (\(_, _, c, _) -> c) rows
 
 {- | Returns 'True' if rebase is in progress. Calls magic comand and if this
 command exits with code 1 then there's no rebase in progress.
