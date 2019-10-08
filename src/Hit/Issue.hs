@@ -36,11 +36,11 @@ getAllIssues :: Maybe Text -> IO ()
 getAllIssues me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \case
     Left err -> errorMessage $ show err
     Right is -> do
-      let maxLen = Fmt.maxLenOn (show . issueNumber) is
-      for_ (my is) $ \i -> do
-        let thisLen = T.length $ show (issueNumber i)
-            padSize = maxLen - thisLen
-        putTextLn $ showIssueName blueCode padSize i
+        let maxLen = Fmt.maxLenOn (show . issueNumber) is
+        for_ (my is) $ \i -> do
+            let thisLen = T.length $ show (issueNumber i)
+                padSize = maxLen - thisLen
+            putTextLn $ showIssueName blueCode padSize i
   where
     my :: Vector Issue -> Vector Issue
     my issues = case me of
