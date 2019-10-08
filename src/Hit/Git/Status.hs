@@ -27,8 +27,15 @@ data PatchType
     | Unknown
     | BrokenPairing
 
--- | Map conventional characters to 'PatchType'.
--- Renames and copies are respectively C% and D% where % denotes a similarity percentage.
+{- | Parses the different change types.
+Renames and copies contain an additional similarity percentage between the two files.
+
+Potential values include:
+ 'A' for newly added files
+ 'M' for modified files
+ 'R100' for renamed files, where 100 denotes a similarity percentage
+ 'C75' for copied files, where 75 denotes a similarity percentage
+-}
 parsePatchType :: Text -> Maybe PatchType
 parsePatchType t = do
     (c, _) <- T.uncons t
@@ -69,6 +76,23 @@ data DiffName = DiffName
     , diffNameType :: !PatchType  -- ^ type of the changed file
     }
 
+{- | Parses a diff list of file names.
+When a file was renamed, both the previous and the new filename are given.
+These could be in the following formats:
+
+@
+<patch-type> <filename>
+<patch-type> <old-filename> <new-filename>
+@
+
+Typical raw text returned by @git@ can look like this:
+
+@
+ M     README.md
+ A     foo
+ R100  bar       baz
+@
+-}
 parseDiffName :: [Text] -> Maybe DiffName
 parseDiffName (t : xs)  = DiffName (unwords xs) <$> parsePatchType t
 parseDiffName _         = Nothing
@@ -90,10 +114,11 @@ It also handles special case of binary files. Typical raw text returned by @git@
 can look like this:
 
 @
- .foo.un~   | Bin 0 -> 523 bytes
- README.md  |   4 ++++
- foo        |   1 +
- bar => baz |   2 --
+ .foo.un~    | Bin 0 -> 523 bytes
+ README.md   |   4 ++++
+ foo         |   1 +
+ bar => baz  |   2 --
+ qux => quux |   0
 @
 -}
 parseDiffStat :: [Text] -> Maybe DiffStat
