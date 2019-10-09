@@ -19,6 +19,7 @@ import System.Environment (lookupEnv)
 
 import Hit.ColorTerminal (arrow, blueBg, blueCode, boldCode, errorMessage, greenCode, redCode,
                           resetCode)
+import qualified Hit.Formatting as Fmt
 
 import qualified Data.Text as T
 import qualified Data.Vector as V
@@ -34,7 +35,12 @@ runIssue issue me = case issue of
 getAllIssues :: Maybe Text -> IO ()
 getAllIssues me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \case
     Left err -> errorMessage $ show err
-    Right is -> for_ (my is) (putTextLn . showIssueName blueCode)
+    Right is -> do
+        let maxLen = Fmt.maxLenOn (show . issueNumber) is
+        for_ (my is) $ \i -> do
+            let thisLen = T.length $ show (issueNumber i)
+                padSize = maxLen - thisLen
+            putTextLn $ showIssueName blueCode padSize i
   where
     my :: Vector Issue -> Vector Issue
     my issues = case me of
@@ -51,13 +57,16 @@ getIssue num = fetchIssue num >>= \case
     Left err -> errorMessage $ show err
     Right is -> putTextLn $ showIssueFull is
 
-showIssueName :: Text -> Issue -> Text
-showIssueName colorCode Issue{..} =
-    arrow <> colorCode <> " [#" <> show @Text (unIssueNumber issueNumber) <> "] " <> resetCode <> issueTitle
+showIssueName :: Text -> Int -> Issue -> Text
+showIssueName colorCode padSize Issue{..} =
+    arrow <> colorCode <> " [#" <> show (unIssueNumber issueNumber) <> "] " <> padding <> resetCode <> issueTitle
+  where
+    padding :: Text
+    padding = T.replicate padSize " "
 
 showIssueFull :: Issue -> Text
 showIssueFull i@Issue{..} = T.intercalate "\n" $
-       showIssueName (statusToCode issueState) i
+       showIssueName (statusToCode issueState) 0 i
      : [ highlight "    Assignees: " <> assignees | not $ null issueAssignees]
     ++ [ highlight "    Labels: " <> labels | not $ null issueLabels]
     ++ [ highlight "    URL: " <> getUrl url | Just url <- [issueHtmlUrl]]
