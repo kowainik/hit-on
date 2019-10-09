@@ -27,19 +27,29 @@ data PatchType
     | Unknown
     | BrokenPairing
 
--- | Map conventional characters to 'PatchType'
+{- | Parses the different change types.
+Renames and copies contain an additional similarity percentage between the two files.
+
+Potential values include:
+ 'A' for newly added files
+ 'M' for modified files
+ 'R100' for renamed files, where 100 denotes a similarity percentage
+ 'C75' for copied files, where 75 denotes a similarity percentage
+-}
 parsePatchType :: Text -> Maybe PatchType
-parsePatchType = \case
-    "A" -> Just Added
-    "C" -> Just Copied
-    "D" -> Just Deleted
-    "M" -> Just Modified
-    "R" -> Just Renamed
-    "T" -> Just TypeChanged
-    "U" -> Just Unmerged
-    "X" -> Just Unknown
-    "B" -> Just BrokenPairing
-    _   -> Nothing
+parsePatchType t = do
+    (c, _) <- T.uncons t
+    case c of
+        'A' -> Just Added
+        'C' -> Just Copied
+        'D' -> Just Deleted
+        'M' -> Just Modified
+        'R' -> Just Renamed
+        'T' -> Just TypeChanged
+        'U' -> Just Unmerged
+        'X' -> Just Unknown
+        'B' -> Just BrokenPairing
+        _   -> Nothing
 
 -- | Display 'PatchType' in colorful and expanded text.
 displayPatchType :: PatchType -> Text
@@ -66,8 +76,25 @@ data DiffName = DiffName
     , diffNameType :: !PatchType  -- ^ type of the changed file
     }
 
+{- | Parses a diff list of file names.
+When a file was renamed, both the previous and the new filename are given.
+These could be in the following formats:
+
+@
+<patch-type> <filename>
+<patch-type> <old-filename> <new-filename>
+@
+
+Typical raw text returned by @git@ can look like this:
+
+@
+ M     README.md
+ A     foo
+ R100  bar       baz
+@
+-}
 parseDiffName :: [Text] -> Maybe DiffName
-parseDiffName [t, name] = DiffName name <$> parsePatchType t
+parseDiffName (t : xs)  = DiffName (unwords xs) <$> parsePatchType t
 parseDiffName _         = Nothing
 
 -- | Output of the @git diff --stat@ command.
@@ -87,14 +114,20 @@ It also handles special case of binary files. Typical raw text returned by @git@
 can look like this:
 
 @
- .foo.un~  | Bin 0 -> 523 bytes
- README.md |   4 ++++
- foo       |   1 +
+ .foo.un~    | Bin 0 -> 523 bytes
+ README.md   |   4 ++++
+ foo         |   1 +
+ bar => baz  |   2 --
+ qux => quux |   0
 @
 -}
 parseDiffStat :: [Text] -> Maybe DiffStat
 parseDiffStat = \case
     [diffStatFile, diffStatCount, diffStatSigns] -> Just DiffStat{..}
+    _:"=>":diffStatFile:diffStatCount:rest -> Just DiffStat
+        { diffStatSigns = unwords rest
+        , ..
+        }
     diffStatFile:"Bin":rest -> Just DiffStat
         { diffStatCount = "Bin"
         , diffStatSigns = unwords rest
@@ -122,7 +155,20 @@ showPrettyDiff commit = do
 
     joinDiffs :: DiffName -> DiffStat -> (Text, Text, Text, Text)
     joinDiffs DiffName{..} DiffStat{..} =
-        (displayPatchType diffNameType, diffNameFile, diffStatCount, diffStatSigns)
+        ( displayPatchType diffNameType
+        , formatName diffNameType diffNameFile
+        , diffStatCount
+        , diffStatSigns
+        )
+
+    formatName :: PatchType -> Text -> Text
+    formatName = \case
+        Renamed -> formatRename
+        Copied -> formatRename
+        _ -> id
+      where
+        formatRename :: Text -> Text
+        formatRename = T.intercalate " -> " . words
 
     formatTableAligned :: [(Text, Text, Text, Text)] -> Text
     formatTableAligned rows = unlines $ map formatRow rows
