@@ -115,18 +115,19 @@ It also handles special case of binary files. Typical raw text returned by @git@
 can look like this:
 
 @
- .foo.un~    | Bin 0 -> 523 bytes
- README.md   |   4 ++++
- foo         |   1 +
- bar => baz  |   2 --
- qux => quux |   0
+ .foo.un~               | Bin 0 -> 523 bytes
+ README.md              |   4 ++++
+ foo                    |   1 +
+ test/{bar => foo/baz}  |   2 --
+ qux => quux            |   0
 @
 -}
 parseDiffStat :: [Text] -> Maybe DiffStat
 parseDiffStat = \case
     [diffStatFile, diffStatCount, diffStatSigns] -> Just DiffStat{..}
-    _:"=>":diffStatFile:diffStatCount:rest -> Just DiffStat
+    prevFile:"=>":newFile:diffStatCount:rest -> Just DiffStat
         { diffStatSigns = unwords rest
+        , diffStatFile = expandFilePath (T.unwords [prevFile, "=>", newFile])
         , ..
         }
     diffStatFile:"Bin":rest -> Just DiffStat
@@ -135,6 +136,35 @@ parseDiffStat = \case
         , ..
         }
     _ -> Nothing
+
+{- | Attempts to expand shortened paths which can appear in `git diff --stat`.
+Examples of possible paths:
+
+@
+ a.in      => b.out
+ test/{bar => baz}
+ test/{bar => a1{/baz}
+ test/{ => bar}/baz
+@
+-}
+expandFilePath :: Text -> Text
+expandFilePath t = T.intercalate " => " $ map wrap pathDiffs
+  where
+    isBracket :: Char -> Bool
+    isBracket = c == '{' || c == '}'
+    splitBrackets :: Text -> (Text, Text, Text)
+    splitBrackets x = (l, T.dropAround isBracket mid, r)
+      where
+        (l, rest) = T.breakOn "{" x
+        (mid, r) = T.breakOnEnd "}" rest
+
+    wrap :: Text -> Text
+    wrap mid = T.unwords [pre, mid, suf]
+    pre, middle, suf :: Text
+    (pre, middle, suf) = splitBrackets t
+    pathDiffs :: [Text]
+    pathDiffs = T.splitOn " => " middle
+
 
 showPrettyDiff :: Text -> IO ()
 showPrettyDiff commit = do
