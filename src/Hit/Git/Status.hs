@@ -151,7 +151,7 @@ expandFilePath :: Text -> Text
 expandFilePath t = T.intercalate " => " $ map wrap pathDiffs
   where
     isBracket :: Char -> Bool
-    isBracket = c == '{' || c == '}'
+    isBracket c = c == '{' || c == '}'
     splitBrackets :: Text -> (Text, Text, Text)
     splitBrackets x = (l, T.dropAround isBracket mid, r)
       where
