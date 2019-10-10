@@ -165,7 +165,6 @@ expandFilePath t = T.intercalate " => " $ map wrap pathDiffs
     pathDiffs :: [Text]
     pathDiffs = T.splitOn " => " middle
 
-
 showPrettyDiff :: Text -> IO ()
 showPrettyDiff commit = do
     -- 1. Check rebase in progress and tell about it
