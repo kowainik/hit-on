@@ -127,7 +127,7 @@ parseDiffStat = \case
     [diffStatFile, diffStatCount, diffStatSigns] -> Just DiffStat{..}
     prevFile:"=>":newFile:diffStatCount:rest -> Just DiffStat
         { diffStatSigns = unwords rest
-        , diffStatFile = expandFilePath (T.unwords [prevFile, "=>", newFile])
+        , diffStatFile = expandFilePath (unwords [prevFile, "=>", newFile])
         , ..
         }
     diffStatFile:"Bin":rest -> Just DiffStat
@@ -159,7 +159,7 @@ expandFilePath t = T.intercalate " => " $ map wrap pathDiffs
         (mid, r) = T.breakOnEnd "}" rest
 
     wrap :: Text -> Text
-    wrap mid = T.unwords [pre, mid, suf]
+    wrap mid = unwords [pre, mid, suf]
     pre, middle, suf :: Text
     (pre, middle, suf) = splitBrackets t
     pathDiffs :: [Text]
