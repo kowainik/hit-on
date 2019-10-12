@@ -35,7 +35,7 @@ Potential values include:
  'A' for newly added files
  'M' for modified files
  'R100' for renamed files, where 100 denotes a similarity percentage
- 'C75' for copied files, where 75 denotes a similarity percentage
+ 'C075' for copied files, where 75 denotes a similarity percentage
 -}
 parsePatchType :: Text -> Maybe PatchType
 parsePatchType t = do
@@ -127,7 +127,7 @@ parseDiffStat = \case
     [diffStatFile, diffStatCount, diffStatSigns] -> Just DiffStat{..}
     prevFile:"=>":newFile:diffStatCount:rest -> Just DiffStat
         { diffStatSigns = unwords rest
-        , diffStatFile = expandFilePath (unwords [prevFile, "=>", newFile])
+        , diffStatFile = expandFilePath (prevFile, newFile)
         , ..
         }
     diffStatFile:"Bin":rest -> Just DiffStat
@@ -138,32 +138,32 @@ parseDiffStat = \case
     _ -> Nothing
 
 {- | Attempts to expand shortened paths which can appear in `git diff --stat`.
-Examples of possible paths:
+This function takes a tuple of the part before and after the arrow.
+Examples of possible paths and what they should expand to:
 
 @
- a.in      => b.out
- test/{bar => baz}
- test/{bar => a1{/baz}
- test/{ => bar}/baz
+ a.in      => b.out      | a.in     => b.out
+ test/{bar => baz}       | test/bar => test/baz
+ test/{bar => a1{/baz}   | test/bar => test/a1{/baz
+ test/{    => bar}/baz   | test/baz => test/bar/baz
 @
 -}
-expandFilePath :: Text -> Text
-expandFilePath t = T.intercalate " => " $ map wrap pathDiffs
+expandFilePath :: (Text, Text) -> Text
+expandFilePath (left, right) = T.intercalate " => " $ map wrap middle
   where
-    isBracket :: Char -> Bool
-    isBracket c = c == '{' || c == '}'
-    splitBrackets :: Text -> (Text, Text, Text)
-    splitBrackets x = (l, T.dropAround isBracket mid, r)
+    bracket :: Char -> Bool
+    bracket c = c == '{' || c == '}'
+    splitBrackets :: (Text, [Text], Text)
+    splitBrackets = (l, [lm, rm], r)
       where
-        (l, rest) = T.breakOn "{" x
-        (mid, r) = T.breakOnEnd "}" rest
+        (l, T.dropWhile bracket -> lm) = T.breakOn "{" left
+        (T.dropWhileEnd bracket -> rm, r) = T.breakOnEnd "}" right
 
     wrap :: Text -> Text
-    wrap mid = unwords [pre, mid, suf]
-    pre, middle, suf :: Text
-    (pre, middle, suf) = splitBrackets t
-    pathDiffs :: [Text]
-    pathDiffs = T.splitOn " => " middle
+    wrap mid = unwords [prefix, mid, suffix]
+    middle :: [Text]
+    prefix, suffix :: Text
+    (prefix, middle, suffix) = splitBrackets
 
 showPrettyDiff :: Text -> IO ()
 showPrettyDiff commit = do
