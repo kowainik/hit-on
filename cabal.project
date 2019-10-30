@@ -1,0 +1,8 @@
+packages: .
+
+tests: True
+
+source-repository-package
+    type: git
+    location: https://github.com/kowainik/relude
+    tag: 8b179dec16d13605a0fd007e56827cc369a4db14
