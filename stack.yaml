@@ -2,6 +2,6 @@ resolver: lts-14.7
 
 extra-deps:
   - github-0.23
-  - relude-0.5.0
+  - relude-0.6.0.0
   - shellmet-0.0.1
   - binary-instances-1@sha256:b17565598b8df3241f9b46fa8e3a3368ecc8e3f2eb175d7c28f319042a6f5c79,2613

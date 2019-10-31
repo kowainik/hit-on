@@ -3,6 +3,10 @@
 `hit-on` uses [PVP Versioning][1].
 The changelog is available [on GitHub][2].
 
+### Unreleased
+
+* Move to the newer `relude-0.6.0.0`.
+
 ### 0.1.0.0 — Aug 3, 2019
 
 * [#85](https://github.com/kowainik/hit-on/issues/85):
