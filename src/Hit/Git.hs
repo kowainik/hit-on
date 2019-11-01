@@ -76,7 +76,7 @@ runNew False issueOrName = do
 runNew _ title =
     createIssue' title >>= \case
         Left err -> errorMessage $ show err
-        Right issue -> putTextLn . showIssueName blueCode $ issue
+        Right issue -> putTextLn . showIssueName blueCode 0 $ issue
 
 -- | @hit commit@ command.
 runCommit :: CommitOptions -> IO ()

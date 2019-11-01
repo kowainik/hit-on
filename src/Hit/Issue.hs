@@ -105,9 +105,8 @@ showIssueFull i@Issue{..} = T.intercalate "\n" $
 createIssue' :: Text -> IO (Either Error Issue)
 createIssue' title = getOwnerRepo >>= \case
     Just (owner, repo) -> do
-        token <- lookupEnv "GITHUB_TOKEN"
-        let gitHubToken = OAuth . encodeUtf8 <$> token
-        case gitHubToken of
+        token <- gitHubToken
+        case token of
             Just oAuth -> createIssue oAuth owner repo (newIssue title)
             Nothing -> do
                 let errTxt = "Can not get GITHUB_TOKEN"
@@ -136,13 +135,19 @@ withOwnerRepo
     -> IO (Either Error a)
 withOwnerRepo action = getOwnerRepo >>= \case
     Just (owner, repo) -> do
-        token <- lookupEnv "GITHUB_TOKEN"
-        let gitHubToken = OAuth . encodeUtf8 <$> token
-        action gitHubToken owner repo
+        token <- gitHubToken
+        action token owner repo
     Nothing -> do
         errorMessage noOwnerRepoError
         pure $ Left $ ParseError noOwnerRepoError
 
+-- | Get GITHUB_TOKEN from environment variables
+gitHubToken :: IO (Maybe Auth)
+gitHubToken = do
+    token <- lookupEnv "GITHUB_TOKEN"
+    pure $ OAuth . encodeUtf8 <$> token
+
+-- | Error message when the owner/repo cannot be get
 noOwnerRepoError :: Text
 noOwnerRepoError = "Cannot get the owner/repo names"
 
