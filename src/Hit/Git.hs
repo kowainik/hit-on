@@ -34,7 +34,7 @@ import Hit.ColorTerminal (Answer (..), arrow, blueCode, errorMessage, greenCode,
                           prompt, resetCode, yesOrNoText)
 import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Git.Status (showPrettyDiff)
-import Hit.Issue (createIssue', getIssueTitle, mkIssueId, showIssueName)
+import Hit.Issue (createIssue', getIssueTitle, issueNumber, mkIssueId, showIssueName, unIssueNumber)
 
 import qualified Data.Text as T
 
@@ -76,7 +76,11 @@ runNew False issueOrName = do
 runNew _ title =
     createIssue' title >>= \case
         Left err -> errorMessage $ show err
-        Right issue -> putTextLn . showIssueName blueCode 0 $ issue
+        Right issue -> do
+          putTextLn . showIssueName blueCode 0 $ issue
+          runStash
+          "git" ["checkout", "master"]
+          runNew False $ show $ unIssueNumber . issueNumber $ issue
 
 -- | @hit commit@ command.
 runCommit :: CommitOptions -> IO ()

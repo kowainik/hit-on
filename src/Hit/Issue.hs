@@ -8,6 +8,8 @@ module Hit.Issue
        , getOwnerRepo
        , parseOwnerRepo
        , showIssueName
+       , issueNumber
+       , unIssueNumber
        ) where
 
 import Data.Vector (Vector)
