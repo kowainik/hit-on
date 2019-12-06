@@ -30,11 +30,11 @@ import Shellmet (($|))
 import System.Directory (findExecutable)
 import System.Process (callCommand)
 
-import Hit.ColorTerminal (Answer (..), arrow, errorMessage, greenCode, infoMessage, prompt,
-                          resetCode, yesOrNoText)
+import Hit.ColorTerminal (Answer (..), arrow, blueCode, errorMessage, greenCode, infoMessage,
+                          prompt, resetCode, yesOrNoText)
 import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Git.Status (showPrettyDiff)
-import Hit.Issue (getIssueTitle, mkIssueId)
+import Hit.Issue (createIssue', getIssueTitle, issueNumber, mkIssueId, showIssueName, unIssueNumber)
 
 import qualified Data.Text as T
 
@@ -52,8 +52,8 @@ runFresh (nameOrMaster -> branch) = do
     "git" ["rebase", "origin/" <> branch]
 
 -- | @hit new@ command.
-runNew :: Text -> IO ()
-runNew issueOrName = do
+runNew :: Bool -> Text -> IO ()
+runNew False issueOrName = do
     login <- getUsername
     title <- case readMaybe @Int $ toString issueOrName of
         Just issueNum -> do
@@ -73,6 +73,14 @@ runNew issueOrName = do
                        || isSpace c
                        || c `elem` ("_-./" :: String)
                    )
+runNew _ title =
+    createIssue' title >>= \case
+        Left err -> errorMessage $ show err
+        Right issue -> do
+          putTextLn . showIssueName blueCode 0 $ issue
+          runStash
+          "git" ["checkout", "master"]
+          runNew False $ show $ unIssueNumber . issueNumber $ issue
 
 -- | @hit commit@ command.
 runCommit :: CommitOptions -> IO ()

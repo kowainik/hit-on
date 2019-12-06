@@ -1,11 +1,15 @@
 module Hit.Issue
        ( runIssue
+       , createIssue'
 
          -- * Internal helpers
        , mkIssueId
        , getIssueTitle
        , getOwnerRepo
        , parseOwnerRepo
+       , showIssueName
+       , issueNumber
+       , unIssueNumber
        ) where
 
 import Data.Vector (Vector)
@@ -13,7 +17,7 @@ import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Nam
                SimpleUser (..), User, getUrl, mkId, mkName, unIssueNumber, untagName)
 import GitHub.Auth (Auth (OAuth))
 import GitHub.Data.Options (stateOpen)
-import GitHub.Endpoints.Issues (issue', issuesForRepo')
+import GitHub.Endpoints.Issues (createIssue, issue', issuesForRepo', newIssue)
 import Shellmet (($|))
 import System.Environment (lookupEnv)
 
@@ -99,6 +103,21 @@ showIssueFull i@Issue{..} = T.intercalate "\n" $
     highlight :: Text -> Text
     highlight x = boldCode <> greenCode <> x <> resetCode
 
+-- | Create an 'Issue' by given 'Text'
+createIssue' :: Text -> IO (Either Error Issue)
+createIssue' title = getOwnerRepo >>= \case
+    Just (owner, repo) -> do
+        token <- gitHubToken
+        case token of
+            Just oAuth -> createIssue oAuth owner repo (newIssue title)
+            Nothing -> do
+                let errTxt = "Can not get GITHUB_TOKEN"
+                errorMessage errTxt
+                pure $ Left $ ParseError errTxt
+    Nothing -> do
+        errorMessage noOwnerRepoError
+        pure $ Left $ ParseError noOwnerRepoError
+
 mkIssueId :: Int -> Id Issue
 mkIssueId = mkId $ Proxy @Issue
 
@@ -118,14 +137,21 @@ withOwnerRepo
     -> IO (Either Error a)
 withOwnerRepo action = getOwnerRepo >>= \case
     Just (owner, repo) -> do
-        token <- lookupEnv "GITHUB_TOKEN"
-        let gitHubToken = OAuth . encodeUtf8 <$> token
-        action gitHubToken owner repo
+        token <- gitHubToken
+        action token owner repo
     Nothing -> do
-        let errTxt = "Can not get the owner/repo names"
-        errorMessage errTxt
-        pure $ Left $ ParseError errTxt
+        errorMessage noOwnerRepoError
+        pure $ Left $ ParseError noOwnerRepoError
 
+-- | Get GITHUB_TOKEN from environment variables
+gitHubToken :: IO (Maybe Auth)
+gitHubToken = do
+    token <- lookupEnv "GITHUB_TOKEN"
+    pure $ OAuth . encodeUtf8 <$> token
+
+-- | Error message when the owner/repo cannot be get
+noOwnerRepoError :: Text
+noOwnerRepoError = "Cannot get the owner/repo names"
 
 -- | Get the owner and the repository name.
 getOwnerRepo :: IO (Maybe (Name Owner, Name Repo))
