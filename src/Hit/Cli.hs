@@ -118,7 +118,7 @@ newP = do
     createIssue <- switch
         $ long "issue"
        <> short 'i'
-       <> help "Create new issue in addition to branch"
+       <> help "Create new issue in addition to branch and assign it to you"
     issueNumOrBranch <- strArgument (metavar "ISSUE_NUMBER_OR_BRANCH_NAME")
     pure $ New createIssue issueNumOrBranch
 
