@@ -81,7 +81,7 @@ mkBranchDescription Nothing issueOrName = case readMaybe @Int $ toString issueOr
 -}
 displayBranchDescription :: BranchDescription -> IO Text
 displayBranchDescription = \case
-    FromText text -> pure text
+    FromText text -> pure $ mkShortDesc text
     FromNewIssue issueNum issueTitle -> pure $ nameWithNumber issueNum issueTitle
     FromIssueNumber issueNum -> do
         issueTitle <- getIssueTitle $ mkIssueId issueNum
