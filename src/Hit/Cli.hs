@@ -60,7 +60,9 @@ cliParser = info ( helper <*> versionP <*> hitP )
 data HitCommand
     = Hop (Maybe Text)
     | Fresh (Maybe Text)
-    | New Bool Text
+    | New
+        Bool  -- ^ Should create issue as well?
+        Text  -- ^ Issue or branch name
     | Issue (Maybe Int) Bool
     | Stash
     | Unstash
@@ -114,9 +116,9 @@ freshP = Fresh <$> maybeBranchP
 newP :: Parser HitCommand
 newP = do
     createIssue <- switch
-                 $ long "issue"
-                 <> short 'i'
-                 <> help "Create new issue instead of branch"
+        $ long "issue"
+       <> short 'i'
+       <> help "Create new issue in addition to branch and assign it to you"
     issueNumOrBranch <- strArgument (metavar "ISSUE_NUMBER_OR_BRANCH_NAME")
     pure $ New createIssue issueNumOrBranch
 

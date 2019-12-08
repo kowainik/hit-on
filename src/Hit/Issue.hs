@@ -1,6 +1,10 @@
+{- | This module contains functions to work with issues withing GitHub API.
+-}
+
 module Hit.Issue
-       ( runIssue
-       , createIssue'
+       ( -- * For CLI commands
+         runIssue
+       , createIssue
 
          -- * Internal helpers
        , mkIssueId
@@ -8,8 +12,6 @@ module Hit.Issue
        , getOwnerRepo
        , parseOwnerRepo
        , showIssueName
-       , issueNumber
-       , unIssueNumber
        ) where
 
 import Data.Vector (Vector)
@@ -17,7 +19,7 @@ import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Nam
                SimpleUser (..), User, getUrl, mkId, mkName, unIssueNumber, untagName)
 import GitHub.Auth (Auth (OAuth))
 import GitHub.Data.Options (stateOpen)
-import GitHub.Endpoints.Issues (createIssue, issue', issuesForRepo', newIssue)
+import GitHub.Endpoints.Issues (NewIssue (..), issue', issuesForRepo')
 import Shellmet (($|))
 import System.Environment (lookupEnv)
 
@@ -27,7 +29,11 @@ import qualified Hit.Formatting as Fmt
 
 import qualified Data.Text as T
 import qualified Data.Vector as V
+import qualified GitHub.Endpoints.Issues as GitHub
 
+----------------------------------------------------------------------------
+-- CLI for issues
+----------------------------------------------------------------------------
 
 -- | Run the @issue@ command.
 runIssue :: Maybe Int -> Maybe Text -> IO ()
@@ -35,7 +41,9 @@ runIssue issue me = case issue of
     Just num -> getIssue $ mkIssueId num
     Nothing  -> getAllIssues me
 
--- | Get the list of the opened issues for the current project.
+{- | Get the list of the opened issues for the current project and
+display short information about each issue.
+-}
 getAllIssues :: Maybe Text -> IO ()
 getAllIssues me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \case
     Left err -> errorMessage $ show err
@@ -55,12 +63,7 @@ getAllIssues me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \
     assignedTo :: Name User -> Vector SimpleUser -> Bool
     assignedTo user = isJust . V.find ((user ==) . simpleUserLogin)
 
--- | Get the 'Issue' by given issue number.
-getIssue :: Id Issue -> IO ()
-getIssue num = fetchIssue num >>= \case
-    Left err -> errorMessage $ show err
-    Right is -> putTextLn $ showIssueFull is
-
+-- | Show issue number with alignment and its name.
 showIssueName :: Text -> Int -> Issue -> Text
 showIssueName colorCode padSize Issue{..} =
     arrow <> colorCode <> " [#" <> show (unIssueNumber issueNumber) <> "] " <> padding <> resetCode <> issueTitle
@@ -68,6 +71,11 @@ showIssueName colorCode padSize Issue{..} =
     padding :: Text
     padding = T.replicate padSize " "
 
+-- | Get the 'Issue' by given issue number and pretty print it fully to terminal.
+getIssue :: Id Issue -> IO ()
+getIssue num = fetchIssue num >>= putTextLn . showIssueFull
+
+-- | Show full information about the issue.
 showIssueFull :: Issue -> Text
 showIssueFull i@Issue{..} = T.intercalate "\n" $
        showIssueName (statusToCode issueState) 0 i
@@ -103,55 +111,72 @@ showIssueFull i@Issue{..} = T.intercalate "\n" $
     highlight :: Text -> Text
     highlight x = boldCode <> greenCode <> x <> resetCode
 
--- | Create an 'Issue' by given 'Text'
-createIssue' :: Text -> IO (Either Error Issue)
-createIssue' title = getOwnerRepo >>= \case
-    Just (owner, repo) -> do
-        token <- gitHubToken
-        case token of
-            Just oAuth -> createIssue oAuth owner repo (newIssue title)
-            Nothing -> do
-                let errTxt = "Can not get GITHUB_TOKEN"
-                errorMessage errTxt
-                pure $ Left $ ParseError errTxt
+-- | Create an 'Issue' by given title 'Text'
+-- QUESTION: should we create 'Login' newtype to add more type-safety here?
+createIssue :: Text -> Text -> IO (Either Error Issue)
+createIssue title login = withOwnerRepo $ \token owner repo -> case token of
+    Just oAuth -> GitHub.createIssue oAuth owner repo $ mkNewIssue title login
     Nothing -> do
-        errorMessage noOwnerRepoError
-        pure $ Left $ ParseError noOwnerRepoError
+        let errorText = "Can not get GITHUB_TOKEN"
+        errorMessage errorText
+        pure $ Left $ ParseError errorText
 
-mkIssueId :: Int -> Id Issue
-mkIssueId = mkId $ Proxy @Issue
+----------------------------------------------------------------------------
+-- Helper functions
+----------------------------------------------------------------------------
 
-makeName :: forall a . Text -> Name a
-makeName = mkName (Proxy @a)
-
-fetchIssue :: Id Issue -> IO (Either Error Issue)
-fetchIssue iNum = withOwnerRepo (\t o r -> issue' t o r iNum)
-
+-- | Fetch only issue title.
 getIssueTitle :: Id Issue -> IO Text
-getIssueTitle num = fetchIssue num >>= \case
-    Left err -> errorMessage (show err) >> exitFailure
-    Right Issue{..} -> pure issueTitle
+getIssueTitle num = issueTitle <$> fetchIssue num
 
+{- | Fetch 'Issue' by 'Id'. If no issue found then print error and
+exit with failure.
+-}
+fetchIssue :: Id Issue -> IO Issue
+fetchIssue iNum = withOwnerRepo (\t o r -> issue' t o r iNum) >>= \case
+    Left err -> errorMessage (show err) >> exitFailure
+    Right issue -> pure issue
+
+-- | Perform action by given auth token, owner and repo name.
 withOwnerRepo
     :: (Maybe Auth -> Name Owner -> Name Repo -> IO (Either Error a))
     -> IO (Either Error a)
 withOwnerRepo action = getOwnerRepo >>= \case
     Just (owner, repo) -> do
-        token <- gitHubToken
+        token <- getGitHubToken
         action token owner repo
     Nothing -> do
-        errorMessage noOwnerRepoError
-        pure $ Left $ ParseError noOwnerRepoError
+        let errorText = "Cannot get the owner/repo names"
+        errorMessage errorText
+        pure $ Left $ ParseError errorText
 
--- | Get GITHUB_TOKEN from environment variables
-gitHubToken :: IO (Maybe Auth)
-gitHubToken = do
+-- | Smart constructor for @'Id' 'Issue'@.
+mkIssueId :: Int -> Id Issue
+mkIssueId = mkId $ Proxy @Issue
+
+-- | Smart constructor for 'Name'.
+makeName :: forall a . Text -> Name a
+makeName = mkName (Proxy @a)
+
+-- | Create new issue with title and assignee.
+mkNewIssue :: Text -> Text -> NewIssue
+mkNewIssue title login = NewIssue
+    { newIssueTitle     = title
+    , newIssueBody      = Nothing
+    , newIssueAssignees = V.singleton $ makeName @User login
+    , newIssueMilestone = Nothing
+    , newIssueLabels    = Nothing
+    }
+
+-- | Get authentication GitHub token from the environment variable @GITHUB_TOKEN@.
+getGitHubToken :: IO (Maybe Auth)
+getGitHubToken = do
     token <- lookupEnv "GITHUB_TOKEN"
     pure $ OAuth . encodeUtf8 <$> token
 
--- | Error message when the owner/repo cannot be get
-noOwnerRepoError :: Text
-noOwnerRepoError = "Cannot get the owner/repo names"
+----------------------------------------------------------------------------
+-- Fetch and parse name and repo from URL
+----------------------------------------------------------------------------
 
 -- | Get the owner and the repository name.
 getOwnerRepo :: IO (Maybe (Name Owner, Name Repo))

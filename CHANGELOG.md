@@ -3,9 +3,17 @@
 `hit-on` uses [PVP Versioning][1].
 The changelog is available [on GitHub][2].
 
-### Unreleased
+### Unreleased: 0.2.0.0
 
-* Move to the newer `relude-0.6.0.0`.
+* [#65](https://github.com/kowainik/hit-on/issues/55):
+  Add `--issue` option to `hit new` command to create issue.
+  (by [@bangn](https://github.com/bangn)).
+* [#127](https://github.com/kowainik/hit-on/issues/127):
+  Assign user to issue on `hit new --issue` command.
+  (by [@chshersh](https://github.com/chshersh)).
+* [#125](https://github.com/kowainik/hit-on/pull/125):
+  Move to the newer `relude-0.6.0.0`.
+  (by [@vrom911](https://github.com/vrom911)).
 
 ### 0.1.0.0 — Aug 3, 2019
 

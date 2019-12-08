@@ -111,7 +111,7 @@ mkColor color = toText $ setSGRCode [SetColor Foreground Vivid color]
 
 -- | Arrow symbol
 arrow :: Text
-arrow = " ➤  "
+arrow = " ➤ "
 
 -- | Represents a user's answer
 data Answer = Y | N
