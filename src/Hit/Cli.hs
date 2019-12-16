@@ -17,7 +17,7 @@ import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
 import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Git (getUsername, runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix,
                 runFresh, runHop, runNew, runPush, runResolve, runStash, runStatus, runSync,
-                runUncommit, runUnstash)
+                runUncommit, runUnstash, runLog)
 import Hit.Issue (runIssue)
 
 import qualified Data.Text as T
@@ -46,6 +46,7 @@ hit = execParser cliParser >>= \case
     Status commit -> runCurrent >> runStatus commit
     Diff commit -> runDiff commit
     Clone name -> runClone name
+    Log commit -> runLog commit
 
 ----------------------------------------------------------------------------
 -- Parsers
@@ -81,6 +82,7 @@ data HitCommand
     | Status (Maybe Text)
     | Diff (Maybe Text)
     | Clone Text
+    | Log (Maybe Text)
 
 -- | Commands parser.
 hitP :: Parser HitCommand
@@ -103,6 +105,7 @@ hitP = subparser
    <> com "status"   statusP   "Show current branch and beautiful stats with COMMIT_HASH (by default HEAD)"
    <> com "diff"     diffP     "Display beautiful diff with COMMIT_HASH (by default HEAD)"
    <> com "clone"    cloneP    "Clone the repo. Use 'reponame' or 'username/reponame' formats"
+   <> com "log"      logP      "Display the log of the current commit or COMMIT_HASH"
   where
     com :: String -> Parser HitCommand -> String -> Mod CommandFields HitCommand
     com name p desc = command name (info (helper <*> p) $ progDesc desc)
@@ -192,6 +195,9 @@ resolveP = Resolve <$> maybeBranchP
 
 cloneP :: Parser HitCommand
 cloneP = Clone <$> strArgument (metavar "REPOSITORY")
+
+logP :: Parser HitCommand
+logP = Log <$> maybeCommitP
 
 -- | Parse optional branch name as an argument.
 maybeBranchP :: Parser (Maybe Text)

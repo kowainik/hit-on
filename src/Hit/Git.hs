@@ -20,6 +20,7 @@ module Hit.Git
        , runStatus
        , runDiff
        , runClone
+       , runLog
 
        , getUsername
        ) where
@@ -280,6 +281,9 @@ runClone txt = do
     let gitLink = "git@github.com:" <> name <> ".git"
     "git" ["clone", gitLink]
 
+runLog :: Maybe Text -> IO ()
+runLog (fromMaybe "HEAD" -> commit)
+    = "git" ["log", "--oneline", "--decorate", commit]
 ----------------------------------------------------------------------------
 -- Internal helpers
 ----------------------------------------------------------------------------
