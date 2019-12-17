@@ -386,7 +386,7 @@ Hooray, your PR just got merged! It's time to clean your local repository and st
 With `git` you would do the following:
 
 ```shell
-git log --oneline --decoratore [COMMIT_HASH]
+git log --oneline --decorate [COMMIT_HASH]
 ```
 
 With `hit` you can finish your work faster:
