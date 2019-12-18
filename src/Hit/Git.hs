@@ -41,7 +41,7 @@ import Hit.Git.Hop (runHop)
 import Hit.Git.Log (runLog)
 import Hit.Git.Push (runPush)
 import Hit.Git.Stash (runStash)
-import Hit.Git.Status (showPrettyDiff)
+import Hit.Git.Status (runStatus)
 import Hit.Git.Sync (runSync)
 import Hit.Git.Uncommit (runUncommit)
 import Hit.Git.Unstash (runUnstash)
@@ -51,8 +51,6 @@ import Hit.Git.Common
     , getUsername
     , getCurrentBranch
     , issueFromBranch
-    , withDeletedFiles
-    , withUntrackedFiles
     )
 
 -- QUESTION: should we somehow move this into separate module or split this module
@@ -217,12 +215,6 @@ runCurrent = do
     branchName <- getCurrentBranch
     putTextLn $ arrow <> "Current branch: " <> greenCode <> branchName <> resetCode
     pure $ issueFromBranch branchName
-
-{- | Show stats from the given commit. If commit is not specified, uses HEAD.
--}
-runStatus :: Maybe Text -> IO ()
-runStatus (fromMaybe "HEAD" -> commit)
-    = withDeletedFiles $ withUntrackedFiles $ showPrettyDiff commit
 
 {- | @hit clone@ command receives the name of the repo in the following
 formats:

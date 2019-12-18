@@ -3,7 +3,7 @@ in pretty way.
 -}
 
 module Hit.Git.Status
-       ( showPrettyDiff
+       ( runStatus
        ) where
 
 import Shellmet (($?), ($|))
@@ -11,10 +11,20 @@ import System.Process (callCommand)
 
 import Hit.ColorTerminal (blueCode, boldCode, cyanCode, greenCode, magentaCode, redCode, resetCode,
                           yellowCode)
-import qualified Hit.Formatting as Fmt
+import Hit.Git.Common 
+    ( withDeletedFiles
+    , withUntrackedFiles
+    )
 
+import qualified Hit.Formatting as Fmt
 import qualified Data.Text as T
 
+
+{- | Show stats from the given commit. If commit is not specified, uses HEAD.
+-}
+runStatus :: Maybe Text -> IO ()
+runStatus (fromMaybe "HEAD" -> commit)
+    = withDeletedFiles $ withUntrackedFiles $ showPrettyDiff commit
 
 -- | Enum that represents all possible types of file modifications.
 data PatchType
