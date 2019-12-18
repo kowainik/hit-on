@@ -64,6 +64,7 @@ library
                            Hit.Git.Amend
                            Hit.Git.Clear
                            Hit.Git.Clone
+                           Hit.Git.Commit
                            Hit.Git.Common
                            Hit.Git.Current
                            Hit.Git.Diff

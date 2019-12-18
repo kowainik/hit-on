@@ -29,7 +29,6 @@ import Data.Char (isAlphaNum, isDigit, isSpace)
 import GitHub (Issue (issueNumber), IssueNumber (..), unIssueNumber)
 
 import Hit.ColorTerminal (errorMessage, infoMessage, successMessage)
-import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 
 import qualified Data.Text as T
@@ -37,6 +36,7 @@ import qualified Data.Text as T
 import Hit.Git.Amend (runAmend)
 import Hit.Git.Clear (runClear)
 import Hit.Git.Clone (runClone)
+import Hit.Git.Commit (runCommit)
 import Hit.Git.Current (runCurrent)
 import Hit.Git.Diff (runDiff)
 import Hit.Git.Fix (runFix)
@@ -53,8 +53,6 @@ import Hit.Git.Unstash (runUnstash)
 
 import Hit.Git.Common 
     ( getUsername
-    , getCurrentBranch
-    , issueFromBranch
     )
 
 -- QUESTION: should we somehow move this into separate module or split this module
@@ -130,40 +128,3 @@ runNew isIssue issueOrName = do
                 successMessage $ "Successfully created issue number #"
                     <> show (unIssueNumber issueNum)
                 pure $ Just issueNum
-
--- | @hit commit@ command.
-runCommit :: CommitOptions -> IO ()
-runCommit CommitOptions{..} = case coName of
-    Just (T.strip -> msg)
-        | msg == "" -> errorMessage "Commit message cannot be empty"
-        | otherwise -> getCurrentIssue >>= commitCmds msg
-    {- if the commit name is not specified then check the branchName
-    If this is issue-related branch, take the issue name as the commit name.
-    Otherwise print errorMessage.
-    -}
-    Nothing -> do
-        issueNum <- getCurrentIssue
-        case issueNum of
-            Nothing -> errorMessage "Commit message cannot be empty: can not be taken from the context"
-            Just n -> do
-                title <- getIssueTitle (mkIssueId n)
-                commitCmds title issueNum
-  where
-    commitCmds :: Text -> Maybe Int -> IO ()
-    commitCmds msg issueNum = do
-        "git" ["add", "."]
-        "git" ["commit", "-m", showMsg msg $ guard hasIssue *> issueNum]
-        when (coPush || coIsForcePush == Force) $ runPush coIsForcePush
-
-    getCurrentIssue :: IO (Maybe Int)
-    getCurrentIssue = issueFromBranch <$> getCurrentBranch
-
-    showMsg :: Text -> Maybe Int -> Text
-    showMsg msg = \case
-       Nothing -> msg
-       Just n  ->
-           let issue = "#" <> show n
-           in "[" <> issue <> "] " <> msg <> "\n\nResolves " <> issue
-
-    hasIssue :: Bool
-    hasIssue = not coNoIssueNumber
