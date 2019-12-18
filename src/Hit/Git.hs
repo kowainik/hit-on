@@ -43,6 +43,7 @@ import qualified Data.Text as T
 import Hit.Git.Common (nameOrMaster)
 import Hit.Git.Fresh (runFresh)
 import Hit.Git.Hop (runHop)
+import Hit.Git.Log (runLog)
 import Hit.Git.Uncommit (runUncommit)
 
 -- QUESTION: should we somehow move this into separate module or split this module
@@ -269,9 +270,6 @@ runClone txt = do
     let gitLink = "git@github.com:" <> name <> ".git"
     "git" ["clone", gitLink]
 
-runLog :: Maybe Text -> IO ()
-runLog (fromMaybe "HEAD" -> commit)
-    = "git" ["log", "--oneline", "--decorate", commit]
 ----------------------------------------------------------------------------
 -- Internal helpers
 ----------------------------------------------------------------------------

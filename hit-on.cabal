@@ -64,6 +64,7 @@ library
                            Hit.Git.Common
                            Hit.Git.Fresh
                            Hit.Git.Hop
+                           Hit.Git.Log
                            Hit.Git.Status
                            Hit.Git.Uncommit
                          Hit.Issue
