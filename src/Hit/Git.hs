@@ -41,13 +41,8 @@ import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 import qualified Data.Text as T
 
 import Hit.Git.Common (nameOrMaster)
+import Hit.Git.Hop (runHop)
 import Hit.Git.Uncommit (runUncommit)
-
--- | @hit hop@ command.
-runHop :: Maybe Text -> IO ()
-runHop (nameOrMaster -> branch) = do
-    "git" ["checkout",  branch]
-    "git" ["pull", "--rebase", "--prune"]
 
 -- | @hit fresh@ command.
 runFresh :: Maybe Text -> IO ()

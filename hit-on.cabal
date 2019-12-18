@@ -62,6 +62,7 @@ library
                          Hit.Formatting
                          Hit.Git
                            Hit.Git.Common
+                           Hit.Git.Hop
                            Hit.Git.Status
                            Hit.Git.Uncommit
                          Hit.Issue
