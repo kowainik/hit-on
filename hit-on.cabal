@@ -63,6 +63,7 @@ library
                          Hit.Git
                            Hit.Git.Common
                            Hit.Git.Status
+                           Hit.Git.Uncommit
                          Hit.Issue
 
   autogen-modules:     Paths_hit_on

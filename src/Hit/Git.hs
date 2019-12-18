@@ -41,7 +41,7 @@ import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 import qualified Data.Text as T
 
 import Hit.Git.Common (nameOrMaster)
-
+import Hit.Git.Uncommit (runUncommit)
 
 -- | @hit hop@ command.
 runHop :: Maybe Text -> IO ()
@@ -165,10 +165,6 @@ runCommit CommitOptions{..} = case coName of
 
     hasIssue :: Bool
     hasIssue = not coNoIssueNumber
-
--- | @hit uncommit@ command
-runUncommit :: IO ()
-runUncommit = "git" ["reset", "HEAD~1"]
 
 -- | @hit fix@ command
 runFix :: Maybe Text -> PushBool -> IO ()
