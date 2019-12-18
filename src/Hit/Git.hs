@@ -35,6 +35,7 @@ import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 
 import qualified Data.Text as T
 
+import Hit.Git.Amend (runAmend)
 import Hit.Git.Current (runCurrent)
 import Hit.Git.Diff (runDiff)
 import Hit.Git.Fix (runFix)
@@ -165,13 +166,6 @@ runCommit CommitOptions{..} = case coName of
 
     hasIssue :: Bool
     hasIssue = not coNoIssueNumber
-
--- | @hit amend@ command.
-runAmend :: Bool -> IO ()
-runAmend localAmend = do
-    "git" ["add", "."]
-    "git" ["commit", "--amend", "--no-edit"]
-    unless localAmend $ runPush Force
 
 -- | @hit resolve@ command.
 runResolve :: Maybe Text -> IO ()

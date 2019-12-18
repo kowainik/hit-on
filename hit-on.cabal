@@ -61,6 +61,7 @@ library
                          Hit.Core
                          Hit.Formatting
                          Hit.Git
+                           Hit.Git.Amend
                            Hit.Git.Common
                            Hit.Git.Current
                            Hit.Git.Diff
