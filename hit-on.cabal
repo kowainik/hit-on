@@ -62,6 +62,7 @@ library
                          Hit.Formatting
                          Hit.Git
                            Hit.Git.Common
+                           Hit.Git.Diff
                            Hit.Git.Fresh
                            Hit.Git.Hop
                            Hit.Git.Log

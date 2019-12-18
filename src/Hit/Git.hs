@@ -27,8 +27,6 @@ module Hit.Git
 
 import Data.Char (isAlphaNum, isDigit, isSpace)
 import GitHub (Issue (issueNumber), IssueNumber (..), unIssueNumber)
-import System.Directory (findExecutable)
-import System.Process (callCommand)
 
 import Hit.ColorTerminal (Answer (..), arrow, errorMessage, greenCode, infoMessage, prompt,
                           resetCode, successMessage, yesOrNoText)
@@ -37,6 +35,7 @@ import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 
 import qualified Data.Text as T
 
+import Hit.Git.Diff (runDiff)
 import Hit.Git.Fresh (runFresh)
 import Hit.Git.Hop (runHop)
 import Hit.Git.Log (runLog)
@@ -224,17 +223,6 @@ runCurrent = do
 runStatus :: Maybe Text -> IO ()
 runStatus (fromMaybe "HEAD" -> commit)
     = withDeletedFiles $ withUntrackedFiles $ showPrettyDiff commit
-
-{- | Show diff from the given commit. If commit is not specified, uses HEAD.
-This commands checks whether @diff-hightligh@ is on path and if not, just calls
-@git diff@.
--}
-runDiff :: Maybe Text -> IO ()
-runDiff (fromMaybe "HEAD" -> commit) = withUntrackedFiles $
-    findExecutable "diff-highlight" >>= \case
-        Nothing -> "git" ["diff", commit]
-        Just _  -> callCommand $ toString $
-            "git diff " <> commit <> " --color=always | diff-highlight | less -rFX"
 
 {- | @hit clone@ command receives the name of the repo in the following
 formats:
