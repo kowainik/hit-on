@@ -148,6 +148,7 @@ git config --global user.login <your_login>
  | status   | Show current branch and beautiful stats with COMMIT_HASH (by default HEAD) |
  | diff     | Display beautiful diff with COMMIT_HASH (by default HEAD)                  |
  | clone    | Clone the repo. Use 'reponame' or 'username/reponame' formats              |
+ | log      | Outputs the log of the current commit or COMMIT_HASH                       |
 
 ## Usage
 
@@ -376,6 +377,22 @@ With `hit` you can finish your work faster:
 
 ```shell
 hit resolve
+```
+
+### hit log
+
+Hooray, your PR just got merged! It's time to clean your local repository and start working on a new issue!
+
+With `git` you would do the following:
+
+```shell
+git log --oneline --decorate [COMMIT_HASH]
+```
+
+With `hit` you can finish your work faster:
+
+```shell
+hit log [COMMIT_HASH]
 ```
 
 [git]: https://git-scm.com/
