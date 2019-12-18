@@ -42,6 +42,7 @@ import Hit.Git.Hop (runHop)
 import Hit.Git.Log (runLog)
 import Hit.Git.Stash (runStash)
 import Hit.Git.Status (showPrettyDiff)
+import Hit.Git.Sync (runSync)
 import Hit.Git.Uncommit (runUncommit)
 import Hit.Git.Unstash (runUnstash)
 
@@ -187,11 +188,6 @@ runPush :: PushBool -> IO ()
 runPush isForce = getCurrentBranch >>= \branch ->
     "git" $ ["push", "--set-upstream", "origin", branch]
          ++ ["--force" | isForce == Force]
-
--- | @hit sync@ command.
-runSync :: IO ()
-runSync = getCurrentBranch >>= \branch ->
-    "git" ["pull", "--rebase", "origin", branch]
 
 -- | @hit resolve@ command.
 runResolve :: Maybe Text -> IO ()
