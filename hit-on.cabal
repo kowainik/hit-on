@@ -64,6 +64,7 @@ library
                            Hit.Git.Common
                            Hit.Git.Current
                            Hit.Git.Diff
+                           Hit.Git.Fix
                            Hit.Git.Fresh
                            Hit.Git.Hop
                            Hit.Git.Log

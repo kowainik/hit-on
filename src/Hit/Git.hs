@@ -37,6 +37,7 @@ import qualified Data.Text as T
 
 import Hit.Git.Current (runCurrent)
 import Hit.Git.Diff (runDiff)
+import Hit.Git.Fix (runFix)
 import Hit.Git.Fresh (runFresh)
 import Hit.Git.Hop (runHop)
 import Hit.Git.Log (runLog)
@@ -164,16 +165,6 @@ runCommit CommitOptions{..} = case coName of
 
     hasIssue :: Bool
     hasIssue = not coNoIssueNumber
-
--- | @hit fix@ command
-runFix :: Maybe Text -> PushBool -> IO ()
-runFix msg pushBool = do
-    "git" ["add", "."]
-    "git" ["commit", "-m", message]
-    runPush pushBool
-  where
-    message :: Text
-    message = fromMaybe "Fix" msg
 
 -- | @hit amend@ command.
 runAmend :: Bool -> IO ()
