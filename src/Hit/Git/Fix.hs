@@ -4,8 +4,7 @@ module Hit.Git.Fix
     ( runFix
     ) where
 
-import qualified Data.Text as T
-import System.Process (callCommand)
+import Shellmet()
 
 import Hit.Core (PushBool (..))
 import Hit.Git.Push (runPush)
@@ -13,8 +12,8 @@ import Hit.Git.Push (runPush)
 -- | @hit fix@ command
 runFix :: Maybe Text -> PushBool -> IO ()
 runFix msg pushBool = do
-    callCommand "git add ."
-    callCommand $ "git commit -m " <> T.unpack message
+    "git" ["add", "."]
+    "git" ["commit", "-m", message]
     runPush pushBool
   where
     message :: Text

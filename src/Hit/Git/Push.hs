@@ -4,8 +4,7 @@ module Hit.Git.Push
     ( runPush
     ) where
 
-import qualified Data.Text as T
-import System.Process (callCommand)
+import Shellmet()
 
 import Hit.Core (PushBool (..))
 import Hit.Git.Common (getCurrentBranch)
@@ -13,6 +12,5 @@ import Hit.Git.Common (getCurrentBranch)
 -- | @hit push@ command.
 runPush :: PushBool -> IO ()
 runPush isForce = getCurrentBranch >>= \branch ->
-    callCommand $ "git push --set-upstream origin " ++ 
-        (T.unpack branch) ++ 
-            (if isForce == Force then " --force" else "")
+    "git" $ ["push", "--set-upstream", "origin", branch]
+         ++ ["--force" | isForce == Force]

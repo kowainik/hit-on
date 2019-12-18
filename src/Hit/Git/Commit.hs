@@ -5,7 +5,8 @@ module Hit.Git.Commit
     ) where
 
 import qualified Data.Text as T
-import System.Process (callCommand)
+
+import Shellmet()
 
 import Hit.ColorTerminal (errorMessage)
 import Hit.Core (CommitOptions (..), PushBool (..))
@@ -33,9 +34,9 @@ runCommit CommitOptions{..} = case coName of
   where
     commitCmds :: Text -> Maybe Int -> IO ()
     commitCmds msg issueNum = do
-        callCommand "git add ."
-        callCommand $ "git commit -m " ++ (T.unpack $ showMsg msg $ guard hasIssue *> issueNum)
-        if (coPush || coIsForcePush == Force) then runPush coIsForcePush else pure ()
+        "git" ["add", "."]
+        "git" ["commit", "-m", showMsg msg $ guard hasIssue *> issueNum]
+        when (coPush || coIsForcePush == Force) $ runPush coIsForcePush
 
     getCurrentIssue :: IO (Maybe Int)
     getCurrentIssue = issueFromBranch <$> getCurrentBranch

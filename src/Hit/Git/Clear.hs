@@ -4,7 +4,7 @@ module Hit.Git.Clear
     ( runClear
     ) where
 
-import System.Process (callCommand)
+import Shellmet()
 
 import Hit.ColorTerminal (Answer (..), infoMessage, prompt, yesOrNoText)
 import Hit.Core (PushBool (..))
@@ -25,5 +25,5 @@ runClear = \case
   where
     clearChanges :: IO ()
     clearChanges = do
-        callCommand "git add ."
-        callCommand "git reset --hard"
+        "git" ["add", "."]
+        "git" ["reset", "--hard"]

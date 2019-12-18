@@ -4,8 +4,8 @@ module Hit.Git.Unstash
     ( runUnstash
     ) where
 
-import System.Process (callCommand)
+import Shellmet()
 
 -- | @hit unstash@ command: pop all saved changes.
 runUnstash :: IO ()
-runUnstash = callCommand "git stash pop"
+runUnstash = "git" ["stash", "pop"]

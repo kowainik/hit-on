@@ -4,8 +4,7 @@ module Hit.Git.Resolve
     ( runResolve
     ) where
 
-import qualified Data.Text as T
-import System.Process (callCommand)
+import Shellmet()
 
 import Hit.Git.Hop (runHop)
 import Hit.Git.Common (nameOrMaster, getCurrentBranch)
@@ -15,5 +14,4 @@ runResolve :: Maybe Text -> IO ()
 runResolve (nameOrMaster -> master)= do
     curBranch <- getCurrentBranch
     runHop $ Just master
-    when (curBranch /= master) $ 
-        callCommand $ "git branch -D " ++ (T.unpack curBranch)
+    when (curBranch /= master) $ "git" ["branch", "-D", curBranch]

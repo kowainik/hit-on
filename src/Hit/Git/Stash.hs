@@ -4,10 +4,10 @@ module Hit.Git.Stash
     ( runStash
     ) where
 
-import System.Process (callCommand)
+import Shellmet()
 
 -- | @hit stash@ command: save all local changes to stash.
 runStash :: IO ()
 runStash = do
-    callCommand "git add ."
-    callCommand "git stash"
+    "git" ["add", "."]
+    "git" ["stash"]

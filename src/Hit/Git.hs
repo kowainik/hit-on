@@ -1,5 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
-
 -- | Reexports of the single commands
 
 module Hit.Git

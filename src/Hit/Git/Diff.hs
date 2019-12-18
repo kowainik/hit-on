@@ -4,6 +4,7 @@ module Hit.Git.Diff
     ( runDiff
     ) where
 
+import Shellmet()
 import System.Directory (findExecutable)
 import System.Process (callCommand)
 
@@ -16,6 +17,6 @@ This commands checks whether @diff-hightligh@ is on path and if not, just calls
 runDiff :: Maybe Text -> IO ()
 runDiff (fromMaybe "HEAD" -> commit) = withUntrackedFiles $
     findExecutable "diff-highlight" >>= \case
-        Nothing -> callCommand $ toString $  "git diff " <> commit
+        Nothing -> "git" ["diff", commit]
         Just _  -> callCommand $ toString $
             "git diff " <> commit <> " --color=always | diff-highlight | less -rFX"

@@ -4,10 +4,9 @@ module Hit.Git.Log
     ( runLog
     ) where
 
-import qualified Data.Text as T
-import System.Process (callCommand)
+import Shellmet()
 
 -- | @hit log@ command.
 runLog :: Maybe Text -> IO ()
 runLog (fromMaybe "HEAD" -> commit)
-    = callCommand $ "git log --oneline --decorate " ++ (T.unpack commit)
+    = "git" ["log", "--oneline", "--decorate", commit]
