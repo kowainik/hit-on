@@ -68,6 +68,7 @@ library
                            Hit.Git.Stash
                            Hit.Git.Status
                            Hit.Git.Uncommit
+                           Hit.Git.Unstash
                          Hit.Issue
 
   autogen-modules:     Paths_hit_on

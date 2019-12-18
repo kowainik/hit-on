@@ -43,6 +43,7 @@ import Hit.Git.Log (runLog)
 import Hit.Git.Stash (runStash)
 import Hit.Git.Status (showPrettyDiff)
 import Hit.Git.Uncommit (runUncommit)
+import Hit.Git.Unstash (runUnstash)
 
 import Hit.Git.Common 
     ( nameOrMaster
@@ -173,10 +174,6 @@ runFix msg pushBool = do
   where
     message :: Text
     message = fromMaybe "Fix" msg
-
--- | @hit unstash@ command: pop all saved changes.
-runUnstash :: IO ()
-runUnstash = "git" ["stash", "pop"]
 
 -- | @hit amend@ command.
 runAmend :: Bool -> IO ()
