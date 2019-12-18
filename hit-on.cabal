@@ -65,6 +65,7 @@ library
                            Hit.Git.Fresh
                            Hit.Git.Hop
                            Hit.Git.Log
+                           Hit.Git.Push
                            Hit.Git.Stash
                            Hit.Git.Status
                            Hit.Git.Sync

@@ -40,6 +40,7 @@ import qualified Data.Text as T
 import Hit.Git.Fresh (runFresh)
 import Hit.Git.Hop (runHop)
 import Hit.Git.Log (runLog)
+import Hit.Git.Push (runPush)
 import Hit.Git.Stash (runStash)
 import Hit.Git.Status (showPrettyDiff)
 import Hit.Git.Sync (runSync)
@@ -182,12 +183,6 @@ runAmend localAmend = do
     "git" ["add", "."]
     "git" ["commit", "--amend", "--no-edit"]
     unless localAmend $ runPush Force
-
--- | @hit push@ command.
-runPush :: PushBool -> IO ()
-runPush isForce = getCurrentBranch >>= \branch ->
-    "git" $ ["push", "--set-upstream", "origin", branch]
-         ++ ["--force" | isForce == Force]
 
 -- | @hit resolve@ command.
 runResolve :: Maybe Text -> IO ()
