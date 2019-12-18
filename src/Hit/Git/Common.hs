@@ -1,8 +1,8 @@
-{- | Functions which can be used by serveral Hit Commands 
+{- | Functions which can be used by serveral Hit Commands
 and are not specific to one.
 -}
 
-module Hit.Git.Common 
+module Hit.Git.Common
     ( nameOrMaster
     , getUsername
     , getCurrentBranch

@@ -1,6 +1,6 @@
 -- | Everything related to the `hit hop` command
 
-module Hit.Git.Hop 
+module Hit.Git.Hop
     ( runHop
     ) where
 

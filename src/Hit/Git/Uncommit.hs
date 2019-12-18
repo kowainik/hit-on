@@ -1,7 +1,7 @@
 -- | Everything related to the `hit uncommit` command
 
-module Hit.Git.Uncommit 
-    ( runUncommit 
+module Hit.Git.Uncommit
+    ( runUncommit
     ) where
 
 import Shellmet()
