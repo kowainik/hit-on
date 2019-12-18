@@ -28,13 +28,14 @@ module Hit.Git
 import Data.Char (isAlphaNum, isDigit, isSpace)
 import GitHub (Issue (issueNumber), IssueNumber (..), unIssueNumber)
 
-import Hit.ColorTerminal (Answer (..), arrow, errorMessage, greenCode, infoMessage, prompt,
-                          resetCode, successMessage, yesOrNoText)
+import Hit.ColorTerminal (Answer (..), errorMessage, infoMessage, prompt
+                         , successMessage, yesOrNoText)
 import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 
 import qualified Data.Text as T
 
+import Hit.Git.Current (runCurrent)
 import Hit.Git.Diff (runDiff)
 import Hit.Git.Fresh (runFresh)
 import Hit.Git.Hop (runHop)
@@ -206,15 +207,6 @@ runClear = \case
     clearChanges = do
         "git" ["add", "."]
         "git" ["reset", "--hard"]
-
-{- | Part of the @hit current@ command. Prints the current branch and returns
-the current issue number if possible.
--}
-runCurrent :: IO (Maybe Int)
-runCurrent = do
-    branchName <- getCurrentBranch
-    putTextLn $ arrow <> "Current branch: " <> greenCode <> branchName <> resetCode
-    pure $ issueFromBranch branchName
 
 {- | @hit clone@ command receives the name of the repo in the following
 formats:
