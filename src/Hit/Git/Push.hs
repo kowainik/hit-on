@@ -4,8 +4,8 @@ module Hit.Git.Push
     ( runPush
     ) where
 
-import System.Process (callCommand)
 import qualified Data.Text as T
+import System.Process (callCommand)
 
 import Hit.Core (PushBool (..))
 import Hit.Git.Common (getCurrentBranch)

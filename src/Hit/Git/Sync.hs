@@ -4,8 +4,8 @@ module Hit.Git.Sync
     ( runSync
     ) where
 
-import System.Process (callCommand)
 import qualified Data.Text as T
+import System.Process (callCommand)
 
 import Hit.Git.Common (getCurrentBranch)
 

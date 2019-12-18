@@ -7,10 +7,10 @@ module Hit.Git.Commit
 import qualified Data.Text as T
 import System.Process (callCommand)
 
+import Hit.ColorTerminal (errorMessage)
 import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Issue (getIssueTitle, mkIssueId)
 import Hit.Git.Common (issueFromBranch, getCurrentBranch)
-import Hit.ColorTerminal (errorMessage)
 import Hit.Git.Push (runPush)
 
 -- | @hit commit@ command.

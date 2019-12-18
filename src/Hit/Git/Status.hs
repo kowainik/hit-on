@@ -9,12 +9,9 @@ module Hit.Git.Status
 import Shellmet (($?), ($|))
 import System.Process (callCommand)
 
-import Hit.ColorTerminal (blueCode, boldCode, cyanCode, greenCode, magentaCode, redCode, resetCode,
-                          yellowCode)
-import Hit.Git.Common 
-    ( withDeletedFiles
-    , withUntrackedFiles
-    )
+import Hit.ColorTerminal (blueCode, boldCode, cyanCode, greenCode, magentaCode
+                         , redCode, resetCode, yellowCode)
+import Hit.Git.Common (withDeletedFiles, withUntrackedFiles)
 
 import qualified Hit.Formatting as Fmt
 import qualified Data.Text as T

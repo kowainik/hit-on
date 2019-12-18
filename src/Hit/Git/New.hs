@@ -4,13 +4,13 @@ module Hit.Git.New
     ( runNew
     ) where
 
-import Data.Char (isAlphaNum, isDigit, isSpace)
 import qualified Data.Text as T
+import Data.Char (isAlphaNum, isDigit, isSpace)
 
 import GitHub (Issue (issueNumber), IssueNumber (..), unIssueNumber)
 
-import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 import Hit.ColorTerminal (errorMessage, infoMessage, successMessage)
+import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 import Hit.Git.Common (getUsername)
 
 -- | @hit new@ command.

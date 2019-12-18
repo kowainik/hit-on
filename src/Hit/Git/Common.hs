@@ -3,7 +3,7 @@ and are not specific to one.
 -}
 
 module Hit.Git.Common 
-    (nameOrMaster
+    ( nameOrMaster
     , getUsername
     , getCurrentBranch
     , issueFromBranch
@@ -11,10 +11,11 @@ module Hit.Git.Common
     , withUntrackedFiles
     ) where
 
-import Data.Char (isDigit)
-import Control.Exception (bracket)
-import Shellmet (($|))
 import qualified Data.Text as T
+
+import Control.Exception (bracket)
+import Data.Char (isDigit)
+import Shellmet (($|))
 
 import Hit.ColorTerminal (errorMessage)
 

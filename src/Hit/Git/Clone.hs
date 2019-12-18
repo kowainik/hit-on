@@ -7,8 +7,8 @@ module Hit.Git.Clone
 import qualified Data.Text as T
 import System.Process (callCommand)
 
-import Hit.Git.Common (getUsername)
 import Hit.ColorTerminal (errorMessage)
+import Hit.Git.Common (getUsername)
 
 {- | @hit clone@ command receives the name of the repo in the following
 formats:

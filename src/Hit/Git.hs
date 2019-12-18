@@ -1,6 +1,6 @@
 {-# LANGUAGE ViewPatterns #-}
 
--- | Logic for CLI commands to make GitHub workflows easier.
+-- | Reexports of the single commands
 
 module Hit.Git
        ( runHop

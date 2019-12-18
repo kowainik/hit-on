@@ -7,8 +7,8 @@ module Hit.Git.Resolve
 import qualified Data.Text as T
 import System.Process (callCommand)
 
-import Hit.Git.Common (nameOrMaster, getCurrentBranch)
 import Hit.Git.Hop (runHop)
+import Hit.Git.Common (nameOrMaster, getCurrentBranch)
 
 -- | @hit resolve@ command.
 runResolve :: Maybe Text -> IO ()

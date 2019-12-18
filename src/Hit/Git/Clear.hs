@@ -6,8 +6,8 @@ module Hit.Git.Clear
 
 import System.Process (callCommand)
 
-import Hit.Core (PushBool (..))
 import Hit.ColorTerminal (Answer (..), infoMessage, prompt, yesOrNoText)
+import Hit.Core (PushBool (..))
 
 -- | Remove all local changes permanently.
 runClear :: PushBool -> IO ()
