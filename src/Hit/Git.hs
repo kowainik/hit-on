@@ -40,6 +40,8 @@ import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 
 import qualified Data.Text as T
 
+import Hit.Git.Common (nameOrMaster)
+
 
 -- | @hit hop@ command.
 runHop :: Maybe Text -> IO ()
@@ -295,9 +297,6 @@ getUsername = do
     if login == ""
         then errorMessage "user.login is not specified" >> exitFailure
         else pure login
-
-nameOrMaster :: Maybe Text -> Text
-nameOrMaster = fromMaybe "master"
 
 -- | Get the name of the current branch.
 getCurrentBranch :: IO Text

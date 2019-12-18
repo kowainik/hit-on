@@ -61,6 +61,7 @@ library
                          Hit.Core
                          Hit.Formatting
                          Hit.Git
+                           Hit.Git.Common
                            Hit.Git.Status
                          Hit.Issue
 
