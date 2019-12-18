@@ -28,14 +28,15 @@ module Hit.Git
 import Data.Char (isAlphaNum, isDigit, isSpace)
 import GitHub (Issue (issueNumber), IssueNumber (..), unIssueNumber)
 
-import Hit.ColorTerminal (Answer (..), errorMessage, infoMessage, prompt
-                         , successMessage, yesOrNoText)
+import Hit.ColorTerminal (errorMessage, infoMessage, successMessage)
 import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 
 import qualified Data.Text as T
 
 import Hit.Git.Amend (runAmend)
+import Hit.Git.Clear (runClear)
+import Hit.Git.Clone (runClone)
 import Hit.Git.Current (runCurrent)
 import Hit.Git.Diff (runDiff)
 import Hit.Git.Fix (runFix)
@@ -166,45 +167,3 @@ runCommit CommitOptions{..} = case coName of
 
     hasIssue :: Bool
     hasIssue = not coNoIssueNumber
-
--- | Remove all local changes permanently.
-runClear :: PushBool -> IO ()
-runClear = \case
-    Force  -> clearChanges
-    Simple -> do
-        putText $ unlines
-            [ "This command permanently deletes all uncommited changes"
-            , "Hint: if you want to save changes, use 'hit stash' command."
-            , "Are you sure you want to delete changes? " <> yesOrNoText N
-            ]
-        prompt N >>= \case
-            N -> infoMessage "Aborting local clean up"
-            Y -> clearChanges
-  where
-    clearChanges :: IO ()
-    clearChanges = do
-        "git" ["add", "."]
-        "git" ["reset", "--hard"]
-
-{- | @hit clone@ command receives the name of the repo in the following
-formats:
-
-* @reponame@ — current user's username is used to clone the repo from.
-* @name/reponame@ — specified GitHub username is used to clone the repo from.
-
-__Note__ that the @ssh@ strategy is used for cloning from GitHub. See the corresponding @git@ command:
-
-@
-git clone git@github.com:username/project-name.git
-@
--}
-runClone :: Text -> IO ()
-runClone txt = do
-    name <- case T.splitOn "/" txt of
-        [reponame] -> getUsername >>= \u -> pure $ u <> "/" <> reponame
-        [username, reponame] -> pure $ username <> "/" <> reponame
-        _ -> do
-            errorMessage ("Incorrect name: " <> txt <> ". Use 'repo' or 'user/repo' formats")
-            exitFailure
-    let gitLink = "git@github.com:" <> name <> ".git"
-    "git" ["clone", gitLink]
