@@ -33,7 +33,6 @@ import System.Process (callCommand)
 import Hit.ColorTerminal (Answer (..), arrow, errorMessage, greenCode, infoMessage, prompt,
                           resetCode, successMessage, yesOrNoText)
 import Hit.Core (CommitOptions (..), PushBool (..))
-import Hit.Git.Status (showPrettyDiff)
 import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 
 import qualified Data.Text as T
@@ -41,6 +40,8 @@ import qualified Data.Text as T
 import Hit.Git.Fresh (runFresh)
 import Hit.Git.Hop (runHop)
 import Hit.Git.Log (runLog)
+import Hit.Git.Stash (runStash)
+import Hit.Git.Status (showPrettyDiff)
 import Hit.Git.Uncommit (runUncommit)
 
 import Hit.Git.Common 
@@ -172,12 +173,6 @@ runFix msg pushBool = do
   where
     message :: Text
     message = fromMaybe "Fix" msg
-
--- | @hit stash@ command: save all local changes to stash.
-runStash :: IO ()
-runStash = do
-    "git" ["add", "."]
-    "git" ["stash"]
 
 -- | @hit unstash@ command: pop all saved changes.
 runUnstash :: IO ()
