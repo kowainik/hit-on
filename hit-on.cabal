@@ -70,6 +70,7 @@ library
                            Hit.Git.Hop
                            Hit.Git.Log
                            Hit.Git.Push
+                           Hit.Git.Resolve
                            Hit.Git.Stash
                            Hit.Git.Status
                            Hit.Git.Sync

@@ -43,6 +43,7 @@ import Hit.Git.Fresh (runFresh)
 import Hit.Git.Hop (runHop)
 import Hit.Git.Log (runLog)
 import Hit.Git.Push (runPush)
+import Hit.Git.Resolve (runResolve)
 import Hit.Git.Stash (runStash)
 import Hit.Git.Status (runStatus)
 import Hit.Git.Sync (runSync)
@@ -50,8 +51,7 @@ import Hit.Git.Uncommit (runUncommit)
 import Hit.Git.Unstash (runUnstash)
 
 import Hit.Git.Common 
-    ( nameOrMaster
-    , getUsername
+    ( getUsername
     , getCurrentBranch
     , issueFromBranch
     )
@@ -166,13 +166,6 @@ runCommit CommitOptions{..} = case coName of
 
     hasIssue :: Bool
     hasIssue = not coNoIssueNumber
-
--- | @hit resolve@ command.
-runResolve :: Maybe Text -> IO ()
-runResolve (nameOrMaster -> master)= do
-    curBranch <- getCurrentBranch
-    runHop $ Just master
-    when (curBranch /= master) $ "git" ["branch", "-D", curBranch]
 
 -- | Remove all local changes permanently.
 runClear :: PushBool -> IO ()
