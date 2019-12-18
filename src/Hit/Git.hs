@@ -41,14 +41,9 @@ import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 import qualified Data.Text as T
 
 import Hit.Git.Common (nameOrMaster)
+import Hit.Git.Fresh (runFresh)
 import Hit.Git.Hop (runHop)
 import Hit.Git.Uncommit (runUncommit)
-
--- | @hit fresh@ command.
-runFresh :: Maybe Text -> IO ()
-runFresh (nameOrMaster -> branch) = do
-    "git" ["fetch", "origin", branch]
-    "git" ["rebase", "origin/" <> branch]
 
 -- QUESTION: should we somehow move this into separate module or split this module
 --           smaller parts?
