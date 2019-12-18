@@ -72,6 +72,7 @@ library
                            Hit.Git.Fresh
                            Hit.Git.Hop
                            Hit.Git.Log
+                           Hit.Git.New
                            Hit.Git.Push
                            Hit.Git.Resolve
                            Hit.Git.Stash
