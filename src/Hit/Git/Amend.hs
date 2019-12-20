@@ -9,6 +9,7 @@ import Shellmet()
 import Hit.Core (PushBool (..))
 import Hit.Git.Push (runPush)
 
+
 -- | @hit amend@ command.
 runAmend :: Bool -> IO ()
 runAmend localAmend = do

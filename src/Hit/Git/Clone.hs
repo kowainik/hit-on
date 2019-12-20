@@ -15,7 +15,9 @@ formats:
 
 * @reponame@ — current user's username is used to clone the repo from.
 * @name/reponame@ — specified GitHub username is used to clone the repo from.
+
 __Note__ that the @ssh@ strategy is used for cloning from GitHub. See the corresponding @git@ command:
+
 @
 git clone git@github.com:username/project-name.git
 @
