@@ -6,6 +6,7 @@ module Hit.Git.Stash
 
 import Shellmet()
 
+
 -- | @hit stash@ command: save all local changes to stash.
 runStash :: IO ()
 runStash = do

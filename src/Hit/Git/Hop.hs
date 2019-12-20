@@ -8,6 +8,7 @@ import Shellmet()
 
 import Hit.Git.Common (nameOrMaster)
 
+
 -- | @hit hop@ command.
 runHop :: Maybe Text -> IO ()
 runHop (nameOrMaster -> branch) = do

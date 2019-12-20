@@ -4,11 +4,13 @@ module Hit.Git.Clone
     ( runClone
     ) where
 
-import qualified Data.Text as T
 import Shellmet()
 
 import Hit.ColorTerminal (errorMessage)
 import Hit.Git.Common (getUsername)
+
+import qualified Data.Text as T
+
 
 {- | @hit clone@ command receives the name of the repo in the following
 formats:

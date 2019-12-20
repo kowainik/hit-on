@@ -10,6 +10,7 @@ import System.Process (callCommand)
 
 import Hit.Git.Common (withUntrackedFiles)
 
+
 {- | Show diff from the given commit. If commit is not specified, uses HEAD.
 This commands checks whether @diff-hightligh@ is on path and if not, just calls
 @git diff@.

@@ -9,6 +9,7 @@ import Shellmet()
 import Hit.ColorTerminal (Answer (..), infoMessage, prompt, yesOrNoText)
 import Hit.Core (PushBool (..))
 
+
 -- | Remove all local changes permanently.
 runClear :: PushBool -> IO ()
 runClear = \case

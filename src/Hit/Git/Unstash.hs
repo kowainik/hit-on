@@ -6,6 +6,7 @@ module Hit.Git.Unstash
 
 import Shellmet()
 
+
 -- | @hit unstash@ command: pop all saved changes.
 runUnstash :: IO ()
 runUnstash = "git" ["stash", "pop"]

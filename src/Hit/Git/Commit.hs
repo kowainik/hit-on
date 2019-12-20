@@ -4,8 +4,6 @@ module Hit.Git.Commit
     ( runCommit
     ) where
 
-import qualified Data.Text as T
-
 import Shellmet()
 
 import Hit.ColorTerminal (errorMessage)
@@ -13,6 +11,9 @@ import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Issue (getIssueTitle, mkIssueId)
 import Hit.Git.Common (issueFromBranch, getCurrentBranch)
 import Hit.Git.Push (runPush)
+
+import qualified Data.Text as T
+
 
 -- | @hit commit@ command.
 runCommit :: CommitOptions -> IO ()

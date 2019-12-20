@@ -8,6 +8,7 @@ import Shellmet()
 
 import Hit.Git.Common (nameOrMaster)
 
+
 -- | @hit fresh@ command.
 runFresh :: Maybe Text -> IO ()
 runFresh (nameOrMaster -> branch) = do

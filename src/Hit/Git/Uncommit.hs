@@ -6,6 +6,7 @@ module Hit.Git.Uncommit
 
 import Shellmet()
 
+
 -- | @hit uncommit@ command
 runUncommit :: IO ()
 runUncommit = "git" ["reset", "HEAD~1"]

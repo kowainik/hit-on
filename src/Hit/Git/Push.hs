@@ -9,6 +9,7 @@ import Shellmet()
 import Hit.Core (PushBool (..))
 import Hit.Git.Common (getCurrentBranch)
 
+
 -- | @hit push@ command.
 runPush :: PushBool -> IO ()
 runPush isForce = getCurrentBranch >>= \branch ->

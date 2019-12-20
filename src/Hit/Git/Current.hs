@@ -7,6 +7,7 @@ module Hit.Git.Current
 import Hit.ColorTerminal (arrow, greenCode, resetCode)
 import Hit.Git.Common (getCurrentBranch, issueFromBranch)
 
+
 {- | Part of the @hit current@ command. Prints the current branch and returns
 the current issue number if possible.
 -}

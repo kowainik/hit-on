@@ -11,13 +11,14 @@ module Hit.Git.Common
     , withUntrackedFiles
     ) where
 
-import qualified Data.Text as T
-
 import Control.Exception (bracket)
 import Data.Char (isDigit)
 import Shellmet (($|))
 
 import Hit.ColorTerminal (errorMessage)
+
+import qualified Data.Text as T
+
 
 nameOrMaster :: Maybe Text -> Text
 nameOrMaster = fromMaybe "master"

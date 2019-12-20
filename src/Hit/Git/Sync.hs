@@ -8,6 +8,7 @@ import Shellmet()
 
 import Hit.Git.Common (getCurrentBranch)
 
+
 -- | @hit sync@ command.
 runSync :: IO ()
 runSync = getCurrentBranch >>= \branch ->

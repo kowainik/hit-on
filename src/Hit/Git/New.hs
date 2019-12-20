@@ -4,7 +4,6 @@ module Hit.Git.New
     ( runNew
     ) where
 
-import qualified Data.Text as T
 import Data.Char (isAlphaNum, isDigit, isSpace)
 
 import GitHub (Issue (issueNumber), IssueNumber (..), unIssueNumber)
@@ -12,6 +11,9 @@ import GitHub (Issue (issueNumber), IssueNumber (..), unIssueNumber)
 import Hit.ColorTerminal (errorMessage, infoMessage, successMessage)
 import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 import Hit.Git.Common (getUsername)
+
+import qualified Data.Text as T
+
 
 -- | @hit new@ command.
 runNew :: Bool -> Text -> IO ()
@@ -37,8 +39,6 @@ runNew isIssue issueOrName = do
                     <> show (unIssueNumber issueNum)
                 pure $ Just issueNum
 
--- QUESTION: should we somehow move this into separate module or split this module
---           smaller parts?
 {- | This data type represents all cases on how to create short branch
 name description. During 'hit new' command there can be several cases:
 

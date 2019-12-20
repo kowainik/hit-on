@@ -9,6 +9,7 @@ import Shellmet()
 import Hit.Core (PushBool (..))
 import Hit.Git.Push (runPush)
 
+
 -- | @hit fix@ command
 runFix :: Maybe Text -> PushBool -> IO ()
 runFix msg pushBool = do

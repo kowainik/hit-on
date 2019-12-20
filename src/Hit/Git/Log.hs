@@ -6,6 +6,7 @@ module Hit.Git.Log
 
 import Shellmet()
 
+
 -- | @hit log@ command.
 runLog :: Maybe Text -> IO ()
 runLog (fromMaybe "HEAD" -> commit)
