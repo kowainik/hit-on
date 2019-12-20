@@ -61,7 +61,25 @@ library
                          Hit.Core
                          Hit.Formatting
                          Hit.Git
+                           Hit.Git.Amend
+                           Hit.Git.Clear
+                           Hit.Git.Clone
+                           Hit.Git.Commit
+                           Hit.Git.Common
+                           Hit.Git.Current
+                           Hit.Git.Diff
+                           Hit.Git.Fix
+                           Hit.Git.Fresh
+                           Hit.Git.Hop
+                           Hit.Git.Log
+                           Hit.Git.New
+                           Hit.Git.Push
+                           Hit.Git.Resolve
+                           Hit.Git.Stash
                            Hit.Git.Status
+                           Hit.Git.Sync
+                           Hit.Git.Uncommit
+                           Hit.Git.Unstash
                          Hit.Issue
 
   autogen-modules:     Paths_hit_on
