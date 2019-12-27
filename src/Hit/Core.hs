@@ -11,7 +11,7 @@ module Hit.Core
 data PushBool
     = Simple
     | Force
-    deriving (Show, Eq)
+    deriving stock (Show, Eq)
 
 -- | Options of the @hit commit@ command.
 data CommitOptions = CommitOptions
