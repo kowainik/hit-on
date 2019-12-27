@@ -14,6 +14,8 @@ The changelog is available [on GitHub][2].
 * [#125](https://github.com/kowainik/hit-on/pull/125):
   Move to the newer `relude-0.6.0.0`.
   (by [@vrom911](https://github.com/vrom911)).
+* [#133](https://github.com/kowainik/hit-on/pull/133):
+  Move to GHC-8.8.1.
 
 ### 0.1.0.0 — Aug 3, 2019
 
