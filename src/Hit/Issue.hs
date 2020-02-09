@@ -5,6 +5,8 @@ module Hit.Issue
        ( -- * For CLI commands
          runIssue
        , createIssue
+       , assignIssue
+       , fetchIssue
 
          -- * Internal helpers
        , mkIssueId
@@ -19,12 +21,12 @@ import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Nam
                SimpleUser (..), User, getUrl, mkId, mkName, unIssueNumber, untagName)
 import GitHub.Auth (Auth (OAuth))
 import GitHub.Data.Options (stateOpen)
-import GitHub.Endpoints.Issues (NewIssue (..), issue', issuesForRepo')
+import GitHub.Endpoints.Issues (EditIssue (..), NewIssue (..), editOfIssue, issue', issuesForRepo')
 import Shellmet (($|))
 import System.Environment (lookupEnv)
 
 import Hit.ColorTerminal (arrow, blueBg, blueCode, boldCode, errorMessage, greenCode, redCode,
-                          resetCode)
+                          resetCode, successMessage)
 import qualified Hit.Formatting as Fmt
 
 import qualified Data.Text as T
@@ -120,6 +122,44 @@ createIssue title login = withOwnerRepo $ \token owner repo -> case token of
         let errorText = "Can not get GITHUB_TOKEN"
         errorMessage errorText
         pure $ Left $ ParseError errorText
+
+{- | Assign the user to the given 'Issue'.
+
+This function can fail assignment due to the following reasons:
+
+ * Auth token fetch failure
+ * Assignment query to GutHub failure
+
+The function should inform user about corresponding 'Error' in each case and
+continue working.
+-}
+assignIssue :: Issue -> Text -> IO ()
+assignIssue issue username = do
+    res <- withOwnerRepo $ \token owner repo -> case token of
+        Just auth -> do
+            let assignee :: Name User
+                assignee = makeName @User username
+            let curAssignees :: V.Vector (Name User)
+                curAssignees = V.map simpleUserLogin $ issueAssignees issue
+
+            if V.elem assignee curAssignees
+            then pure $ Right (issue, True)
+            else do
+                -- TODO: this is hack to cheat on GitHub library, as it
+                -- doesn't use the correct id in query.
+                let issId = mkIssueId (unIssueNumber $ issueNumber issue)
+                (, False) <<$>> GitHub.editIssue auth owner repo issId editOfIssue
+                    { editIssueAssignees = Just $ V.cons assignee curAssignees
+                    }
+
+        Nothing -> pure $ Left $ UserError "Can not get the GITHUB_TOKEN to assign you to the issue."
+    case res of
+        Right (iss, False) -> successMessage $ "You were assigned to the issue #" <>
+            show (unIssueNumber $ issueNumber iss)
+        Right (_iss, True) -> pass
+        Left err  -> do
+            errorMessage "Can not assign you to the issue."
+            putTextLn $ "    " <> show err
 
 ----------------------------------------------------------------------------
 -- Helper functions

@@ -11,6 +11,10 @@ The changelog is available [on GitHub][2].
 * [#127](https://github.com/kowainik/hit-on/issues/127):
   Assign user to issue on `hit new --issue` command.
   (by [@chshersh](https://github.com/chshersh)).
+* [#15](https://github.com/kowainik/hit-on/issues/15):
+  When the new branch for the issue is created, add the user as an assignee to
+  this issue.
+  (by [@vrom911](https://github.com/vrom911)).
 * [#125](https://github.com/kowainik/hit-on/pull/125):
   Move to the newer `relude-0.6.0.0`.
   (by [@vrom911](https://github.com/vrom911)).
