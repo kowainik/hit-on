@@ -1,5 +1,8 @@
-resolver: nightly-2019-12-27
+resolver: lts-14.7
 
 extra-deps:
   - github-0.23
-  - binary-instances-1
+  - binary-instances-1  # for github
+  - optparse-applicative-0.15.1.0
+  - relude-0.6.0.0
+  - shellmet-0.0.3.0

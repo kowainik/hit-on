@@ -1,0 +1,5 @@
+resolver: nightly-2020-02-08
+
+extra-deps:
+  - github-0.23
+  - binary-instances-1

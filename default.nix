@@ -1,31 +1,51 @@
-{ # The git revision here corresponds to the nixpkgs-unstable channel, which at
-  # the time of this writing has GHC 8.6.5 as the default compiler (matching the
-  # one used by stack.yaml). Use https://howoldis.herokuapp.com/ to determine
-  # the current rev.
-  pkgs ? import (builtins.fetchTarball "https://github.com/nixos/nixpkgs/archive/002b853782e.tar.gz") {}
-  # Which GHC compiler to use.
-  # To determine the list of compilers available run:
-  #   nix-env -f "<nixpkgs>" -qaP -A haskell.compiler
-, compiler ? "default"
+# Run using:
+#
+#     $(nix-build --no-link -A fullBuildScript)
+{
+  stack2nix-output-path ? "custom-stack2nix-output.nix",
 }:
 let
-  haskellPackages =
-    if compiler == "default"
-      then pkgs.haskellPackages
-      else pkgs.haskell.packages.${compiler};
+  cabalPackageName = "hit-on";
+  compiler = "ghc865"; # matching stack.yaml
+
+  # Pin static-haskell-nix version.
+  static-haskell-nix =
+    if builtins.pathExists ../.in-static-haskell-nix
+      then toString ../. # for the case that we're in static-haskell-nix itself, so that CI always builds the latest version.
+      # Update this hash to use a different `static-haskell-nix` version:
+      else fetchTarball https://github.com/nh2/static-haskell-nix/archive/d1b20f35ec7d3761e59bd323bbe0cca23b3dfc82.tar.gz;
+
+  # Pin nixpkgs version
+  # By default to the one `static-haskell-nix` provides, but you may also give
+  # your own as long as it has the necessary patches, using e.g.
+  #     pkgs = import (fetchTarball https://github.com/nh2/nixpkgs/archive/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa123.tar.gz) {};
+  pkgs = import "${static-haskell-nix}/nixpkgs.nix";
+
+  stack2nix-script = import "${static-haskell-nix}/static-stack2nix-builder/stack2nix-script.nix" {
+    inherit pkgs;
+    stack-project-dir = toString ./.; # where stack.yaml is
+    hackageSnapshot = "2020-02-08T00:00:00Z"; # pins e.g. extra-deps without hashes or revisions
+  };
+
+  static-stack2nix-builder = import "${static-haskell-nix}/static-stack2nix-builder/default.nix" {
+    normalPkgs = pkgs;
+    inherit cabalPackageName compiler stack2nix-output-path;
+    # disableOptimization = true; # for compile speed
+  };
+
+  # Full invocation, including pinning `nix` version itself.
+  fullBuildScript = pkgs.writeShellScript "stack2nix-and-build-script.sh" ''
+    set -eu -o pipefail
+    STACK2NIX_OUTPUT_PATH=$(${stack2nix-script})
+    export NIX_PATH=nixpkgs=${pkgs.path}
+    ${pkgs.nix}/bin/nix-build --no-link -A static_package --argstr stack2nix-output-path "$STACK2NIX_OUTPUT_PATH" "$@"
+  '';
+
 in
-haskellPackages.developPackage {
-  # The path to our cabal project's root directory
-  root = ./.;
-
-  # Haskell packages to override
-  source-overrides = {
-    github = builtins.fetchTarball "https://github.com/phadej/github/archive/cdae698f50f9e6dc1b58d2181672294e2b11dfb3.tar.gz";
-    relude = builtins.fetchTarball "https://github.com/kowainik/relude/archive/55968311244690f5cc8b4484a37a63d988ea2ec4.tar.gz";
-    shellmet = builtins.fetchTarball "https://github.com/kowainik/shellmet/archive/36149eb0eb2b81916a93cdb92f3cb949d2eb9d23.tar.gz";
-  };
-
-  overrides = self: super: with pkgs.haskell.lib; {
-    github = dontCheck super.github;  # `dontCheck` skips running tests on this package
-  };
-}
+  {
+    static_package = static-stack2nix-builder.static_package;
+    inherit fullBuildScript;
+    # For debugging:
+    inherit stack2nix-script;
+    inherit static-stack2nix-builder;
+  }
