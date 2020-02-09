@@ -9,12 +9,12 @@ module Hit.Git.Status
 import Shellmet (($?), ($|))
 import System.Process (callCommand)
 
-import Hit.ColorTerminal (blueCode, boldCode, cyanCode, greenCode, magentaCode
-                         , redCode, resetCode, yellowCode)
+import Hit.ColorTerminal (blueCode, boldCode, cyanCode, greenCode, magentaCode, redCode, resetCode,
+                          yellowCode)
 import Hit.Git.Common (withDeletedFiles, withUntrackedFiles)
 
-import qualified Hit.Formatting as Fmt
 import qualified Data.Text as T
+import qualified Hit.Formatting as Fmt
 
 
 {- | Show stats from the given commit. If commit is not specified, uses HEAD.
@@ -102,8 +102,8 @@ Typical raw text returned by @git@ can look like this:
 @
 -}
 parseDiffName :: [Text] -> Maybe DiffName
-parseDiffName (t : xs)  = DiffName (unwords xs) <$> parsePatchType t
-parseDiffName _         = Nothing
+parseDiffName (t : xs) = DiffName (unwords xs) <$> parsePatchType t
+parseDiffName _        = Nothing
 
 -- | Output of the @git diff --stat@ command.
 data DiffStat = DiffStat
@@ -181,7 +181,7 @@ showPrettyDiff commit = do
 
     -- 2. Output pretty diff
     diffName <- map words   . lines <$> "git" $| ["diff", commit, "--name-status"]
-    diffStat <- map toStats . lines <$> "git" $| ["diff", commit, "--stat", "--color=always"]
+    diffStat <- map toStats . lines <$> "git" $| ["diff", commit, "--stat=1000", "--color=always"]
     let fileTypes = sortWith diffNameFile $ mapMaybe parseDiffName diffName
     let fileStats = sortWith diffStatFile $ mapMaybe parseDiffStat diffStat
     let rows = zipWith joinDiffs fileTypes fileStats
