@@ -50,28 +50,28 @@ getAllIssues :: Maybe Text -> IO ()
 getAllIssues me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \case
     Left err -> errorMessage $ show err
     Right is -> do
-        let maxLen = Fmt.maxLenOn (show . issueNumber) is
+        let maxLen = Fmt.maxLenOn showIssueNumber is
         for_ (my is) $ \i -> do
-            let thisLen = T.length $ show (issueNumber i)
+            let thisLen = T.length $ showIssueNumber i
                 padSize = maxLen - thisLen
             putTextLn $ showIssueName blueCode padSize i
   where
     my :: Vector Issue -> Vector Issue
     my issues = case me of
-        Just (makeName -> username) -> V.filter (assignedTo username . issueAssignees) issues
+        Just (makeName -> username) -> V.filter (username `isAssignedToIssue`) issues
         Nothing                     -> issues
-
-    -- Is the username an element of assignees vector?
-    assignedTo :: Name User -> Vector SimpleUser -> Bool
-    assignedTo user = isJust . V.find ((user ==) . simpleUserLogin)
 
 -- | Show issue number with alignment and its name.
 showIssueName :: Text -> Int -> Issue -> Text
-showIssueName colorCode padSize Issue{..} =
-    arrow <> colorCode <> " [#" <> show (unIssueNumber issueNumber) <> "] " <> padding <> resetCode <> issueTitle
+showIssueName colorCode padSize i@Issue{..} =
+    arrow <> colorCode <> " [#" <> showIssueNumber i <> "] " <> padding <> resetCode <> issueTitle
   where
     padding :: Text
     padding = T.replicate padSize " "
+
+-- | Show the issue number.
+showIssueNumber :: Issue -> Text
+showIssueNumber = show . unIssueNumber . issueNumber
 
 -- | Get the 'Issue' by given issue number and pretty print it fully to terminal.
 getIssue :: Id Issue -> IO ()
@@ -116,12 +116,8 @@ showIssueFull i@Issue{..} = T.intercalate "\n" $
 -- | Create an 'Issue' by given title 'Text'
 -- QUESTION: should we create 'Login' newtype to add more type-safety here?
 createIssue :: Text -> Text -> IO (Either Error Issue)
-createIssue title login = withOwnerRepo $ \token owner repo -> case token of
-    Just oAuth -> GitHub.createIssue oAuth owner repo $ mkNewIssue title login
-    Nothing -> do
-        let errorText = "Can not get GITHUB_TOKEN"
-        errorMessage errorText
-        pure $ Left $ ParseError errorText
+createIssue title login = withAuthOwnerRepo $ \token owner repo ->
+    GitHub.createIssue token owner repo $ mkNewIssue title login
 
 {- | Assign the user to the given 'Issue'.
 
@@ -135,31 +131,36 @@ continue working.
 -}
 assignIssue :: Issue -> Text -> IO ()
 assignIssue issue username = do
-    res <- withOwnerRepo $ \token owner repo -> case token of
-        Just auth -> do
-            let assignee :: Name User
-                assignee = makeName @User username
-            let curAssignees :: V.Vector (Name User)
-                curAssignees = V.map simpleUserLogin $ issueAssignees issue
+    res <- withAuthOwnerRepo $ \token owner repo -> do
+        let assignee :: Name User
+            assignee = makeName @User username
+        let curAssignees :: V.Vector (Name User)
+            curAssignees = V.map simpleUserLogin $ issueAssignees issue
 
-            if V.elem assignee curAssignees
-            then pure $ Right (issue, True)
-            else do
-                -- TODO: this is hack to cheat on GitHub library, as it
-                -- doesn't use the correct id in query.
-                let issId = mkIssueId (unIssueNumber $ issueNumber issue)
-                (, False) <<$>> GitHub.editIssue auth owner repo issId editOfIssue
-                    { editIssueAssignees = Just $ V.cons assignee curAssignees
-                    }
+        if assignee `isAssignedToIssue` issue
+        then pure $ Right (issue, True)
+        else do
+            -- TODO: this is hack to cheat on GitHub library, as it
+            -- doesn't use the correct id in query.
+            let issId = mkIssueId (unIssueNumber $ issueNumber issue)
+            (, False) <<$>> GitHub.editIssue token owner repo issId editOfIssue
+                { editIssueAssignees = Just $ V.cons assignee curAssignees
+                }
 
-        Nothing -> pure $ Left $ UserError "Can not get the GITHUB_TOKEN to assign you to the issue."
     case res of
-        Right (iss, False) -> successMessage $ "You were assigned to the issue #" <>
-            show (unIssueNumber $ issueNumber iss)
-        Right (_iss, True) -> pass
+        Right (iss, isAlreadyAssigned) ->
+            if isAlreadyAssigned
+            then pass
+            else successMessage $ "You were assigned to the issue #" <>
+                showIssueNumber iss
         Left err  -> do
             errorMessage "Can not assign you to the issue."
             putTextLn $ "    " <> show err
+
+-- | Is the user assigned to the given 'Issue'?
+isAssignedToIssue :: Name User -> Issue -> Bool
+isAssignedToIssue assignee = V.elem assignee .
+    V.map simpleUserLogin . issueAssignees
 
 ----------------------------------------------------------------------------
 -- Helper functions
@@ -189,6 +190,20 @@ withOwnerRepo action = getOwnerRepo >>= \case
         let errorText = "Cannot get the owner/repo names"
         errorMessage errorText
         pure $ Left $ ParseError errorText
+
+{- | Similar to 'withOwnerRepo', but returns the 'UserError' when cannot get the
+GitHub Token, as the given action should work with the 'Auth' instead of 'Maybe
+Auth'.
+-}
+withAuthOwnerRepo
+    :: (Auth -> Name Owner -> Name Repo -> IO (Either Error a))
+    -> IO (Either Error a)
+withAuthOwnerRepo action = withOwnerRepo $ \token owner repo -> case token of
+    Just auth -> action auth owner repo
+    Nothing -> do
+        let errorText = "Can not get GITHUB_TOKEN"
+        errorMessage errorText
+        pure $ Left $ UserError errorText
 
 -- | Smart constructor for @'Id' 'Issue'@.
 mkIssueId :: Int -> Id Issue
