@@ -6,11 +6,11 @@ module Hit.Git.New
 
 import Data.Char (isAlphaNum, isDigit, isSpace)
 
-import GitHub (Issue (issueNumber), IssueNumber (..), unIssueNumber)
+import GitHub (Issue (issueNumber, issueTitle), IssueNumber (..), unIssueNumber)
 
 import Hit.ColorTerminal (errorMessage, infoMessage, successMessage)
-import Hit.Issue (createIssue, getIssueTitle, mkIssueId)
 import Hit.Git.Common (getUsername)
+import Hit.Issue (assignIssue, createIssue, fetchIssue, mkIssueId)
 
 import qualified Data.Text as T
 
@@ -21,7 +21,7 @@ runNew isIssue issueOrName = do
     login <- getUsername
     maybeIssue <- if isIssue then tryCreateNewIssue login else pure Nothing
     let branchDescription = mkBranchDescription maybeIssue issueOrName
-    title <- displayBranchDescription branchDescription
+    title <- assignAndDisplayBranchDescription login branchDescription
     let branchName = login <> "/" <> title
     "git" ["checkout", "-b", branchName]
   where
@@ -59,19 +59,23 @@ mkBranchDescription Nothing issueOrName = case readMaybe @Int $ toString issueOr
     Just issueNum -> FromIssueNumber issueNum
     Nothing       -> FromText issueOrName
 
-{- | Display 'BranchDescription' in format:
+{- | Assigns the user to the issue if applicable (it current design, if the issue
+already exists and user creates the branch for it: 'FromIssueNumber').
+
+Displays 'BranchDescription' in format:
 
 @
 123-short-issue-title
 @
 -}
-displayBranchDescription :: BranchDescription -> IO Text
-displayBranchDescription = \case
+assignAndDisplayBranchDescription :: Text -> BranchDescription -> IO Text
+assignAndDisplayBranchDescription username = \case
     FromText text -> pure $ mkShortDesc text
     FromNewIssue issueNum issueTitle -> pure $ nameWithNumber issueNum issueTitle
     FromIssueNumber issueNum -> do
-        issueTitle <- getIssueTitle $ mkIssueId issueNum
-        pure $ nameWithNumber issueNum issueTitle
+        issue <- fetchIssue $ mkIssueId issueNum
+        assignIssue issue username
+        pure $ nameWithNumber issueNum $ issueTitle issue
   where
     nameWithNumber :: Int -> Text -> Text
     nameWithNumber issueNum issueTitle =
