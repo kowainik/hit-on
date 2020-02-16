@@ -6,9 +6,9 @@ module Hit.Git.New
 
 import Data.Char (isAlphaNum, isDigit, isSpace)
 
+import Colourista (errorMessage, infoMessage, successMessage)
 import GitHub (Issue (issueNumber, issueTitle), IssueNumber (..), unIssueNumber)
 
-import Hit.ColorTerminal (errorMessage, infoMessage, successMessage)
 import Hit.Git.Common (getUsername)
 import Hit.Issue (assignIssue, createIssue, fetchIssue, mkIssueId)
 

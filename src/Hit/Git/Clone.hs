@@ -4,9 +4,9 @@ module Hit.Git.Clone
     ( runClone
     ) where
 
-import Shellmet()
+import Colourista (errorMessage)
+import Shellmet ()
 
-import Hit.ColorTerminal (errorMessage)
 import Hit.Git.Common (getUsername)
 
 import qualified Data.Text as T

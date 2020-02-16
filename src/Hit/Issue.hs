@@ -16,6 +16,7 @@ module Hit.Issue
        , showIssueName
        ) where
 
+import Colourista (blue, blueBg, bold, errorMessage, formatWith, green, red, reset, successMessage)
 import Data.Vector (Vector)
 import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Name, Owner, Repo,
                SimpleUser (..), User, getUrl, mkId, mkName, unIssueNumber, untagName)
@@ -25,8 +26,8 @@ import GitHub.Endpoints.Issues (EditIssue (..), NewIssue (..), editOfIssue, issu
 import Shellmet (($|))
 import System.Environment (lookupEnv)
 
-import Hit.ColorTerminal (arrow, blueBg, blueCode, boldCode, errorMessage, greenCode, redCode,
-                          resetCode, successMessage)
+import Hit.Prompt (arrow)
+
 import qualified Hit.Formatting as Fmt
 
 import qualified Data.Text as T
@@ -54,7 +55,7 @@ getAllIssues me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \
         for_ (my is) $ \i -> do
             let thisLen = T.length $ showIssueNumber i
                 padSize = maxLen - thisLen
-            putTextLn $ showIssueName blueCode padSize i
+            putTextLn $ showIssueName blue padSize i
   where
     my :: Vector Issue -> Vector Issue
     my issues = case me of
@@ -64,7 +65,7 @@ getAllIssues me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \
 -- | Show issue number with alignment and its name.
 showIssueName :: Text -> Int -> Issue -> Text
 showIssueName colorCode padSize i@Issue{..} =
-    arrow <> colorCode <> " [#" <> showIssueNumber i <> "] " <> padding <> resetCode <> issueTitle
+    arrow <> colorCode <> " [#" <> showIssueNumber i <> "] " <> padding <> reset <> issueTitle
   where
     padding :: Text
     padding = T.replicate padSize " "
@@ -88,8 +89,8 @@ showIssueFull i@Issue{..} = T.intercalate "\n" $
   where
     statusToCode :: IssueState -> Text
     statusToCode = \case
-        StateOpen -> blueCode
-        StateClosed -> redCode
+        StateOpen -> blue
+        StateClosed -> red
 
     indentDesc :: Text -> Text
     indentDesc = unlines
@@ -108,10 +109,10 @@ showIssueFull i@Issue{..} = T.intercalate "\n" $
         $ toList issueLabels
 
     putLabel :: Text -> Text
-    putLabel x = blueBg <> x <> resetCode
+    putLabel = formatWith [blueBg]
 
     highlight :: Text -> Text
-    highlight x = boldCode <> greenCode <> x <> resetCode
+    highlight = formatWith [bold, green]
 
 -- | Create an 'Issue' by given title 'Text'
 -- QUESTION: should we create 'Login' newtype to add more type-safety here?

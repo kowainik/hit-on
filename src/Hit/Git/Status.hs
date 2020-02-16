@@ -6,11 +6,10 @@ module Hit.Git.Status
        ( runStatus
        ) where
 
+import Colourista (blue, bold, cyan, formatWith, green, magenta, red, reset, yellow)
 import Shellmet (($?), ($|))
 import System.Process (callCommand)
 
-import Hit.ColorTerminal (blueCode, boldCode, cyanCode, greenCode, magentaCode, redCode, resetCode,
-                          yellowCode)
 import Hit.Git.Common (withDeletedFiles, withUntrackedFiles)
 
 import qualified Data.Text as T
@@ -62,21 +61,21 @@ parsePatchType t = do
 -- | Display 'PatchType' in colorful and expanded text.
 displayPatchType :: PatchType -> Text
 displayPatchType = \case
-    Added         -> coloredIn greenCode   "added"
-    Copied        -> coloredIn blueCode    "copied"
-    Deleted       -> coloredIn redCode     "deleted"
-    Modified      -> coloredIn magentaCode "modified"
-    Renamed       -> coloredIn yellowCode  "renamed"
-    TypeChanged   -> coloredIn cyanCode    "type-changed"
-    Unmerged      -> inBold                "unmerged"
-    Unknown       -> inBold                "unknown"
-    BrokenPairing -> inBold                "broken"
+    Added         -> coloredIn green   "added"
+    Copied        -> coloredIn blue    "copied"
+    Deleted       -> coloredIn red     "deleted"
+    Modified      -> coloredIn magenta "modified"
+    Renamed       -> coloredIn yellow  "renamed"
+    TypeChanged   -> coloredIn cyan    "type-changed"
+    Unmerged      -> inBold            "unmerged"
+    Unknown       -> inBold            "unknown"
+    BrokenPairing -> inBold            "broken"
   where
     coloredIn :: Text -> Text -> Text
-    coloredIn color text = color <> inBold text
+    coloredIn color = formatWith [color, bold]
 
     inBold :: Text -> Text
-    inBold text = boldCode <> text <> resetCode
+    inBold = formatWith [bold]
 
 -- | Output of the @git diff --name-status@ command.
 data DiffName = DiffName
@@ -160,6 +159,7 @@ expandFilePath (left, right) = T.intercalate " => " $ map wrap middle
   where
     bracket :: Char -> Bool
     bracket c = c == '{' || c == '}'
+
     splitBrackets :: (Text, [Text], Text)
     splitBrackets = (l, [lm, rm], r)
       where
@@ -168,6 +168,7 @@ expandFilePath (left, right) = T.intercalate " => " $ map wrap middle
 
     wrap :: Text -> Text
     wrap mid = unwords [prefix, mid, suffix]
+
     middle :: [Text]
     prefix, suffix :: Text
     (prefix, middle, suffix) = splitBrackets
@@ -236,10 +237,10 @@ isRebaseInProgress = do
 gitRebaseHelp :: Text
 gitRebaseHelp = unlines
     [ ""
-    , boldCode <> yellowCode <> "Rebase in progress! What you can do:" <> resetCode
-    , "    " <> cyanCode <> "git rebase --continue " <> resetCode <> ": after fixing conflicts"
-    , "    " <> cyanCode <> "git rebase --skip     " <> resetCode <> ": to skip this patch"
-    , "    " <> cyanCode <> "git rebase --abort    " <> resetCode <> ": to abort to the original branch"
+    , formatWith [bold, yellow] "Rebase in progress! What you can do:"
+    , "    " <> cyan <> "git rebase --continue " <> reset <> ": after fixing conflicts"
+    , "    " <> cyan <> "git rebase --skip     " <> reset <> ": to skip this patch"
+    , "    " <> cyan <> "git rebase --abort    " <> reset <> ": to abort to the original branch"
     ]
 
 showConlictFiles :: IO ()
@@ -247,5 +248,5 @@ showConlictFiles = do
     conflictFiles <- lines <$> "git" $| ["diff", "--name-only", "--diff-filter=U"]
     unless (null conflictFiles) $
         putTextLn $ unlines $
-            ( boldCode <> redCode <> "Conflict files:" <> resetCode )
+            ( formatWith [bold, red] "Conflict files:" )
             : map ("    " <>) conflictFiles

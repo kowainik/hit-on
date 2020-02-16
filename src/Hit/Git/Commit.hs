@@ -4,13 +4,14 @@ module Hit.Git.Commit
     ( runCommit
     ) where
 
-import Shellmet()
+import Shellmet ()
 
-import Hit.ColorTerminal (errorMessage)
+import Colourista (errorMessage)
+
 import Hit.Core (CommitOptions (..), PushBool (..))
-import Hit.Issue (getIssueTitle, mkIssueId)
-import Hit.Git.Common (issueFromBranch, getCurrentBranch)
+import Hit.Git.Common (getCurrentBranch, issueFromBranch)
 import Hit.Git.Push (runPush)
+import Hit.Issue (getIssueTitle, mkIssueId)
 
 import qualified Data.Text as T
 

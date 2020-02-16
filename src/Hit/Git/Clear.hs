@@ -4,10 +4,11 @@ module Hit.Git.Clear
     ( runClear
     ) where
 
-import Shellmet()
+import Colourista (infoMessage)
+import Shellmet ()
 
-import Hit.ColorTerminal (Answer (..), infoMessage, prompt, yesOrNoText)
 import Hit.Core (PushBool (..))
+import Hit.Prompt (Answer (..), prompt, yesOrNoText)
 
 
 -- | Remove all local changes permanently.
