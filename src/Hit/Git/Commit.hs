@@ -5,7 +5,6 @@ module Hit.Git.Commit
     ) where
 
 import Shellmet ()
-
 import Colourista (errorMessage)
 
 import Hit.Core (CommitOptions (..), PushBool (..))
