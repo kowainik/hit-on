@@ -248,5 +248,5 @@ showConlictFiles = do
     conflictFiles <- lines <$> "git" $| ["diff", "--name-only", "--diff-filter=U"]
     unless (null conflictFiles) $
         putTextLn $ unlines $
-            ( formatWith [bold, red] "Conflict files:" )
+            formatWith [bold, red] "Conflict files:"
             : map ("    " <>) conflictFiles
