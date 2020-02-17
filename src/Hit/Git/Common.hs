@@ -11,11 +11,10 @@ module Hit.Git.Common
     , withUntrackedFiles
     ) where
 
+import Colourista (errorMessage)
 import Control.Exception (bracket)
 import Data.Char (isDigit)
 import Shellmet (($|))
-
-import Hit.ColorTerminal (errorMessage)
 
 import qualified Data.Text as T
 

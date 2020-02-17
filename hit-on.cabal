@@ -14,7 +14,7 @@ category:            Git, CLI Tool
 build-type:          Simple
 extra-doc-files:     README.md
                      CHANGELOG.md
-tested-with:         GHC == 8.8.1
+tested-with:         GHC == 8.8.2
 
 source-repository head
   type:                git
@@ -61,7 +61,6 @@ library
   hs-source-dirs:      src
   exposed-modules:     Hit
                          Hit.Cli
-                         Hit.ColorTerminal
                          Hit.Core
                          Hit.Formatting
                          Hit.Git
@@ -84,12 +83,14 @@ library
                            Hit.Git.Sync
                            Hit.Git.Uncommit
                            Hit.Git.Unstash
+                         Hit.Prompt
                          Hit.Issue
 
   autogen-modules:     Paths_hit_on
   other-modules:       Paths_hit_on
 
   build-depends:       ansi-terminal >= 0.8
+                     , colourista ^>= 0.0
                      , directory ^>= 1.3
                      , github ^>= 0.23
                      , gitrev ^>= 1.3

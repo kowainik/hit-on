@@ -1,5 +1,6 @@
-resolver: nightly-2019-12-27
+resolver: lts-15.0
 
 extra-deps:
+  - colourista-0.0.0.0
   - github-0.23
   - binary-instances-1

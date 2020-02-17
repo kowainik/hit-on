@@ -7,18 +7,19 @@ module Hit.Cli
        ( hit
        ) where
 
+import Colourista (blue, bold, formatWith)
 import Data.Version (showVersion)
-import Development.GitRev (gitCommitDate, gitDirty, gitHash)
+import Development.GitRev (gitCommitDate, gitHash)
 import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, auto, command,
                             execParser, flag, fullDesc, help, helper, info, infoOption, long,
                             metavar, progDesc, short, strArgument, subparser, switch)
 
-import Hit.ColorTerminal (arrow, blueCode, boldCode, redCode, resetCode)
 import Hit.Core (CommitOptions (..), PushBool (..))
 import Hit.Git (getUsername, runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix,
-                runFresh, runHop, runNew, runPush, runResolve, runStash, runStatus, runSync,
-                runUncommit, runUnstash, runLog)
+                runFresh, runHop, runLog, runNew, runPush, runResolve, runStash, runStatus, runSync,
+                runUncommit, runUnstash)
 import Hit.Issue (runIssue)
+import Hit.Prompt (arrow)
 
 import qualified Data.Text as T
 import qualified Paths_hit_on as Meta (version)
@@ -231,12 +232,13 @@ versionP = infoOption hitVersion
    <> help "Show hit's version"
 
 hitVersion :: String
-hitVersion = toString
-    $ T.intercalate "\n"
-    $ [sVersion, sHash, sDate] ++ [sDirty | $(gitDirty)]
+hitVersion = toString $ T.intercalate "\n"
+    [ sVersion
+    , sHash
+    , sDate
+    ]
   where
-    blueBold txt = blueCode <> boldCode <> txt <> resetCode
+    blueBold = formatWith [blue, bold]
     sVersion = blueBold "Hit " <> "v" <> toText (showVersion Meta.version)
     sHash = arrow <> blueBold "Git revision: " <> $(gitHash)
     sDate = arrow <> blueBold "Commit date:  " <> $(gitCommitDate)
-    sDirty = redCode <> "There are non-committed files." <> resetCode
