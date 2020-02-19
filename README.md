@@ -1,10 +1,14 @@
 # Hit On
 
 ![hit-on logo](https://user-images.githubusercontent.com/4276606/53816638-d86e4a00-3f9e-11e9-83ab-74032363292f.png)
+
+[![GitHub CI](https://github.com/kowainik/hit-on/workflows/CI/badge.svg)](https://github.com/kowainik/hit-on/actions)
 [![Build status](https://img.shields.io/travis/kowainik/hit-on.svg?logo=travis)](https://travis-ci.org/kowainik/hit-on)
+
 [![Hackage](https://img.shields.io/hackage/v/hit-on.svg?logo=haskell)](https://hackage.haskell.org/package/hit-on)
 [![Stackage Lts](http://stackage.org/package/hit-on/badge/lts)](http://stackage.org/lts/package/hit-on)
 [![Stackage Nightly](http://stackage.org/package/hit-on/badge/nightly)](http://stackage.org/nightly/package/hit-on)
+
 [![MPL-2.0 license](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](LICENSE)
 
 **Kowainik Git Workflow Helper Tool.**
@@ -84,10 +88,6 @@ You need to follow these steps:
      ```shell
         stack install hit-on
      ```
-  * [Nix](https://nixos.org/nix/)
-    ```shell
-       nix-env -f . -i
-    ```
 
 4. Make sure that `hit` is installed:
 
