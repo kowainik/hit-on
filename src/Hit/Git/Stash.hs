@@ -9,6 +9,4 @@ import Shellmet()
 
 -- | @hit stash@ command: save all local changes to stash.
 runStash :: IO ()
-runStash = do
-    "git" ["add", "."]
-    "git" ["stash"]
+runStash = "git" ["stash", "--include-untracked"]
