@@ -5,6 +5,9 @@ The changelog is available [on GitHub][2].
 
 ### Unreleased: 0.2.0.0
 
+* [#150](https://github.com/kowainik/hit-on/issues/150):
+  Add `--include-untracked` option to `hit stash` command.
+  (by [@mstruebing](https://github.com/mstruebing)).
 * [#65](https://github.com/kowainik/hit-on/issues/55):
   Add `--issue` option to `hit new` command to create issue.
   (by [@bangn](https://github.com/bangn)).
