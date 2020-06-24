@@ -1,6 +1,7 @@
-resolver: lts-15.0
+resolver: lts-15.4
 
 extra-deps:
-  - colourista-0.0.0.0
+  - colourista-0.1.0.0
   - github-0.23
   - binary-instances-1
+  - relude-0.7.0.0

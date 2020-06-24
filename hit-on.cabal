@@ -14,7 +14,7 @@ category:            Git, CLI Tool
 build-type:          Simple
 extra-doc-files:     README.md
                      CHANGELOG.md
-tested-with:         GHC == 8.8.2
+tested-with:         GHC == 8.8.3
 
 source-repository head
   type:                git
@@ -22,7 +22,7 @@ source-repository head
 
 common common-options
   build-depends:       base ^>= 4.13.0.0
-                     , relude ^>= 0.6.0.0
+                     , relude ^>= 0.7.0.0
 
   mixins:              base hiding (Prelude)
                      , relude (Relude as Prelude)
@@ -90,7 +90,7 @@ library
   other-modules:       Paths_hit_on
 
   build-depends:       ansi-terminal >= 0.8
-                     , colourista ^>= 0.0
+                     , colourista ^>= 0.1
                      , directory ^>= 1.3
                      , github ^>= 0.23
                      , gitrev ^>= 1.3
@@ -117,7 +117,7 @@ test-suite hit-on-test
   main-is:             Main.hs
 
   build-depends:       text
-                     , hspec
+                     , hspec ^>= 2.7.1
                      , github
                      , hit-on
 
