@@ -151,7 +151,7 @@ git diff HEAD~1 --stat CHANGELOG.md
 -}
 fileDiffStat :: Text -> Text -> IO DiffStat
 fileDiffStat commit fileName = do
-    diffStat <- "git" $| ["diff", commit, "--stat", "--color=always", fileName]
+    diffStat <- "git" $| ["diff", commit, "--stat", "--color=always", "--", fileName]
     let stats = map toStats $ lines diffStat
 
     let emptyDiffStat = DiffStat
