@@ -16,16 +16,21 @@ module Hit.Issue
        , showIssueName
        ) where
 
-import Colourista (blue, blueBg, bold, errorMessage, formatWith, green, red, reset, successMessage)
+import Colourista (blue, blueBg, bold, errorMessage, formatWith, green, red, reset, successMessage,
+                   warningMessage)
 import Data.Vector (Vector)
 import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Name, Owner, Repo,
-               SimpleUser (..), User, getUrl, mkId, mkName, unIssueNumber, untagName)
+               SimpleUser (..), User, getUrl, milestoneNumber, mkId, mkName, unIssueNumber, untagId,
+               untagName)
 import GitHub.Auth (Auth (OAuth))
 import GitHub.Data.Options (stateOpen)
 import GitHub.Endpoints.Issues (EditIssue (..), NewIssue (..), editOfIssue, issue', issuesForRepo')
+import GitHub.Endpoints.Issues.Milestones (milestones')
 import Shellmet (($|))
 import System.Environment (lookupEnv)
 
+import Hit.Core (IssueOptions (..), Milestone (..))
+import Hit.Git.Common (getUsername)
 import Hit.Prompt (arrow)
 
 import qualified Hit.Formatting as Fmt
@@ -39,26 +44,40 @@ import qualified GitHub.Endpoints.Issues as GitHub
 ----------------------------------------------------------------------------
 
 -- | Run the @issue@ command.
-runIssue :: Maybe Int -> Maybe Text -> IO ()
-runIssue issue me = case issue of
+runIssue :: IssueOptions -> IO ()
+runIssue IssueOptions{..} = case ioIssueNumber of
     Just num -> getIssue $ mkIssueId num
-    Nothing  -> getAllIssues me
+    Nothing  -> me >>= getAllIssues ioMilestone
+  where
+    me :: IO (Maybe Text)
+    me = if ioMe
+        then Just <$> getUsername
+        else pure Nothing
 
 {- | Get the list of the opened issues for the current project and
 display short information about each issue.
 -}
-getAllIssues :: Maybe Text -> IO ()
-getAllIssues me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \case
+getAllIssues
+    :: Maybe Milestone  -- ^ Project Milestone
+    -> Maybe Text  -- ^ User name of the assignee
+    -> IO ()
+getAllIssues milestone me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \case
     Left err -> errorMessage $ show err
     Right is -> do
         let maxLen = Fmt.maxLenOn showIssueNumber is
-        for_ (filterIssues is) $ \i -> do
+        milestoneId <- getMilestoneId
+        for_ (filterIssues milestoneId is) $ \i -> do
             let thisLen = T.length $ showIssueNumber i
                 padSize = maxLen - thisLen
             putTextLn $ showIssueName blue padSize i
   where
-    filterIssues :: Vector Issue -> Vector Issue
-    filterIssues = V.filter (\i -> my i && isNotPR i)
+    filterIssues :: Maybe Int -> Vector Issue -> Vector Issue
+    filterIssues milestoneId = V.filter
+        (\i ->
+            isNotPR i
+            && my i
+            && i `isInMilestone` milestoneId
+        )
 
     my :: Issue -> Bool
     my issue = case me of
@@ -67,6 +86,20 @@ getAllIssues me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \
 
     isNotPR :: Issue -> Bool
     isNotPR Issue{..} = isNothing issuePullRequest
+
+    getMilestoneId :: IO (Maybe Int)
+    getMilestoneId = case milestone of
+        Just (MilestoneId mId) -> pure $ Just mId
+        Just CurrentMilestone  -> fetchCurrentMilestoneId
+        Nothing                -> pure Nothing
+
+    isInMilestone :: Issue -> Maybe Int -> Bool
+    isInMilestone Issue{..} = \case
+        Just milestoneId -> issueMilestoneId == Just milestoneId
+        Nothing  -> True
+      where
+        issueMilestoneId :: Maybe Int
+        issueMilestoneId = untagId . milestoneNumber <$> issueMilestone
 
 -- | Show issue number with alignment and its name.
 showIssueName :: Text -> Int -> Issue -> Text
@@ -184,6 +217,19 @@ fetchIssue :: Id Issue -> IO Issue
 fetchIssue iNum = withOwnerRepo (\t o r -> issue' t o r iNum) >>= \case
     Left err -> errorMessage (show err) >> exitFailure
     Right issue -> pure issue
+
+{- | Fetches all open milestones. Then figure out the current one and return its
+ID as 'Int'.
+
+If it could not fetch, or there is no open milestones then prints a warning
+message and returns 'Nothing'.
+-}
+fetchCurrentMilestoneId :: IO (Maybe Int)
+fetchCurrentMilestoneId = withOwnerRepo milestones' >>= \case
+    Left err -> warningMessage (show err) >> pure Nothing
+    Right ms -> case sortBy (flip compare) $ map (untagId . milestoneNumber) $ toList ms of
+        []  -> warningMessage "" >> pure Nothing
+        m:_ -> pure $ Just m
 
 -- | Perform action by given auth token, owner and repo name.
 withOwnerRepo

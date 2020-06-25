@@ -11,12 +11,13 @@ import Colourista (blue, bold, formatWith)
 import Data.Version (showVersion)
 import Development.GitRev (gitCommitDate, gitHash)
 import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, auto, command,
-                            execParser, flag, fullDesc, help, helper, info, infoOption, long,
-                            metavar, progDesc, short, strArgument, subparser, switch)
+                            execParser, flag, flag', fullDesc, help, helper, info, infoOption, long,
+                            metavar, option, progDesc, short, strArgument, subparser, switch)
 
-import Hit.Core (CommitOptions (..), PushBool (..))
-import Hit.Git (getUsername, runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix,
-                runFresh, runHop, runLog, runNew, runPush, runResolve, runStash, runStatus, runSync,
+import Hit.Core (CommitOptions (..), IssueOptions (..), Milestone (..), PushBool (..),
+                 defaultIssueOptions)
+import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
+                runHop, runLog, runNew, runPush, runResolve, runStash, runStatus, runSync,
                 runUncommit, runUnstash)
 import Hit.Issue (runIssue)
 import Hit.Prompt (arrow)
@@ -30,9 +31,7 @@ hit = execParser cliParser >>= \case
     Hop branchName -> runHop branchName
     Fresh branchName -> runFresh branchName
     New createIssue issueNum -> runNew createIssue issueNum
-    Issue issueNum me -> if me
-        then getUsername >>= runIssue issueNum . Just
-        else runIssue issueNum Nothing
+    Issue issueOpts -> runIssue issueOpts
     Stash -> runStash
     Unstash -> runUnstash
     Commit opts -> runCommit opts
@@ -43,7 +42,7 @@ hit = execParser cliParser >>= \case
     Push isForce -> runPush isForce
     Sync -> runSync
     Clear isForce -> runClear isForce
-    Current -> runCurrent >>= flip whenJust (flip runIssue Nothing . Just)
+    Current -> runCurrent >>= flip whenJust (\i -> runIssue defaultIssueOptions {ioIssueNumber = Just i})
     Status commit -> runCurrent >> runStatus commit
     Diff commit -> runDiff commit
     Clone name -> runClone name
@@ -65,7 +64,7 @@ data HitCommand
     | New
         Bool  -- ^ Should create issue as well?
         Text  -- ^ Issue or branch name
-    | Issue (Maybe Int) Bool
+    | Issue IssueOptions
     | Stash
     | Unstash
     | Commit CommitOptions
@@ -128,12 +127,12 @@ newP = do
 
 issueP :: Parser HitCommand
 issueP = do
-    num <- optional issueNumP
-    me <- switch
+    ioIssueNumber <- optional issueNumP
+    ioMe <- switch
         $ long "me"
-       <> short 'm'
        <> help "Assigned to me"
-    pure $ Issue num me
+    ioMilestone <- milestoneP
+    pure $ Issue IssueOptions {..}
 
 stashP :: Parser HitCommand
 stashP = pure Stash
@@ -223,6 +222,23 @@ pushBoolP = flag Simple Force
 -- | Parse issue number as an argument.
 issueNumP :: Parser Int
 issueNumP = argument auto $ metavar "ISSUE_NUMBER"
+
+milestoneP :: Parser (Maybe Milestone)
+milestoneP = optional (curMilestone <|> milestoneId)
+  where
+    curMilestone :: Parser Milestone
+    curMilestone = flag' CurrentMilestone $ mconcat
+        [ long "current-milestone"
+        , short 'm'
+        , help "Use the Project's current Milestone"
+        ]
+
+    milestoneId :: Parser Milestone
+    milestoneId = MilestoneId <$> option auto
+        ( long "milestone"
+        <> help "Specify the project's Milestone ID"
+        <> metavar "MILESTONE_ID"
+        )
 
 -- | Show the version of the tool.
 versionP :: Parser (a -> a)

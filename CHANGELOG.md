@@ -32,6 +32,10 @@ The changelog is available [on GitHub][2].
   Filter out PRs from the list of all issues in the `hit issue` command.
 * [#154](https://github.com/kowainik/hit-on/issues/154):
   Add `--date=now` to the `amend` command.
+* [#157](https://github.com/kowainik/hit-on/issues/157):
+  Add milestone related options to the `hit issue` command:
+   * `-m|--current-milestone` — filter out issues in the current milestone.
+   * `--milestone=ID` — filter out issues in the given milestone.
 
 ### 0.1.0.0 — Aug 3, 2019
 
