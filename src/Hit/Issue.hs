@@ -226,9 +226,9 @@ message and returns 'Nothing'.
 -}
 fetchCurrentMilestoneId :: IO (Maybe Int)
 fetchCurrentMilestoneId = withOwnerRepo milestones' >>= \case
-    Left err -> Nothing <$ warningMessage (show err)
+    Left err -> Nothing <$ warningMessage ("Could not fetch the milestones\n    " <> show err)
     Right ms -> case sortBy (flip compare) $ map (untagId . milestoneNumber) $ toList ms of
-        []  -> warningMessage "" >> pure Nothing
+        []  -> warningMessage "There are no open milestones for this project" >> pure Nothing
         m:_ -> pure $ Just m
 
 -- | Perform action by given auth token, owner and repo name.
