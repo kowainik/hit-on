@@ -93,7 +93,7 @@ assignAndDisplayBranchDescription username = \case
         . T.filter (\c -> isAlphaNum c
                        || isDigit c
                        || isSpace c
-                       || c `elem` ("_-./" :: String)
+                       || c `elem` ("_-/" :: String)
                    )
         . stripRfc
 
