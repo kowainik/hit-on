@@ -83,6 +83,7 @@ library
                            Hit.Git.Sync
                            Hit.Git.Uncommit
                            Hit.Git.Unstash
+                           Hit.Git.Wip
                          Hit.Prompt
                          Hit.Issue
 

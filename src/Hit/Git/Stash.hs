@@ -4,7 +4,7 @@ module Hit.Git.Stash
     ( runStash
     ) where
 
-import Shellmet()
+import Shellmet ()
 
 
 -- | @hit stash@ command: save all local changes to stash.
