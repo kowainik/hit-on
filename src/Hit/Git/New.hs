@@ -7,7 +7,8 @@ module Hit.Git.New
 import Data.Char (isAlphaNum, isDigit, isSpace)
 
 import Colourista (errorMessage, infoMessage, successMessage)
-import GitHub (Issue (issueNumber, issueTitle), IssueNumber (..), unIssueNumber)
+import GitHub (Issue (issueHtmlUrl, issueNumber, issueTitle), IssueNumber (..), getUrl,
+               unIssueNumber)
 
 import Hit.Formatting (stripRfc)
 import Hit.Git.Common (getUsername)
@@ -38,6 +39,7 @@ runNew isIssue issueOrName = do
                 let issueNum = issueNumber issue
                 successMessage $ "Successfully created issue number #"
                     <> show (unIssueNumber issueNum)
+                showIssueLink issue
                 pure $ Just issueNum
 
 {- | This data type represents all cases on how to create short branch
@@ -76,6 +78,7 @@ assignAndDisplayBranchDescription username = \case
     FromIssueNumber issueNum -> do
         issue <- fetchIssue $ mkIssueId issueNum
         assignIssue issue username
+        showIssueLink issue
         pure $ nameWithNumber issueNum $ issueTitle issue
   where
     nameWithNumber :: Int -> Text -> Text
@@ -93,3 +96,7 @@ assignAndDisplayBranchDescription username = \case
                        || c `elem` ("_-./" :: String)
                    )
         . stripRfc
+
+showIssueLink :: Issue -> IO ()
+showIssueLink issue = whenJust (issueHtmlUrl issue) $ \url ->
+    infoMessage $ "  Issue link: " <> getUrl url
