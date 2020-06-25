@@ -226,7 +226,7 @@ message and returns 'Nothing'.
 -}
 fetchCurrentMilestoneId :: IO (Maybe Int)
 fetchCurrentMilestoneId = withOwnerRepo milestones' >>= \case
-    Left err -> warningMessage (show err) >> pure Nothing
+    Left err -> Nothing <$ warningMessage (show err)
     Right ms -> case sortBy (flip compare) $ map (untagId . milestoneNumber) $ toList ms of
         []  -> warningMessage "" >> pure Nothing
         m:_ -> pure $ Just m
