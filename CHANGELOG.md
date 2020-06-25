@@ -26,6 +26,8 @@ The changelog is available [on GitHub][2].
 * Use `colourista` for terminal output formatting.
 * [#151](https://github.com/kowainik/hit-on/issues/151):
   Print the issue link with `hit new NUM` and `hit new --issue` commands.
+* [#149](https://github.com/kowainik/hit-on/issues/149):
+  Improve the `hit status` command to show shorter status signs on big files.
 * [#156](https://github.com/kowainik/hit-on/issues/156):
   Strip `[RFC]` prefix from issues in branch names and commit messages.
 * [#152](https://github.com/kowainik/hit-on/issues/152):

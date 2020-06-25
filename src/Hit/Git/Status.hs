@@ -141,6 +141,33 @@ parseDiffStat = \case
         }
     _ -> Nothing
 
+{- | Get diff stats for a single file.
+
+Shell command example:
+
+@
+git diff HEAD~1 --stat CHANGELOG.md
+@
+-}
+fileDiffStat :: Text -> Text -> IO DiffStat
+fileDiffStat commit fileName = do
+    diffStat <- "git" $| ["diff", commit, "--stat", "--color=always", fileName]
+    let stats = map toStats $ lines diffStat
+
+    let emptyDiffStat = DiffStat
+            { diffStatFile  = fileName
+            , diffStatCount = "0"
+            , diffStatSigns = ""
+            }
+
+    -- it should always be the list of a single element
+    pure
+        $ fromMaybe emptyDiffStat
+        $ viaNonEmpty head stats >>= parseDiffStat
+  where
+    toStats :: Text -> [Text]
+    toStats = foldMap words . T.split (== '|')
+
 {- | Attempts to expand shortened paths which can appear in `git diff --stat`.
 This function takes a tuple of the part before and after the arrow.
 Examples of possible paths and what they should expand to:
@@ -179,16 +206,15 @@ showPrettyDiff commit = do
         showConlictFiles
 
     -- 2. Output pretty diff
-    diffName <- map words   . lines <$> "git" $| ["diff", commit, "--name-status"]
-    diffStat <- map toStats . lines <$> "git" $| ["diff", commit, "--stat=1000", "--color=always"]
-    let fileTypes = sortWith diffNameFile $ mapMaybe parseDiffName diffName
-    let fileStats = sortWith diffStatFile $ mapMaybe parseDiffStat diffStat
-    let rows = zipWith joinDiffs fileTypes fileStats
+    gitDiffName <- map words . lines <$> "git" $| ["diff", commit, "--name-status"]
+    let diffNames = sortWith diffNameFile $ mapMaybe parseDiffName gitDiffName
+
+    rows <- forM diffNames $ \diffName -> do
+        diffStat <- fileDiffStat commit (diffNameFile diffName)
+        pure $ joinDiffs diffName diffStat
+
     putText $ formatTableAligned rows
   where
-    toStats :: Text -> [Text]
-    toStats = foldMap words . T.split (== '|')
-
     joinDiffs :: DiffName -> DiffStat -> (Text, Text, Text, Text)
     joinDiffs DiffName{..} DiffStat{..} =
         ( displayPatchType diffNameType
