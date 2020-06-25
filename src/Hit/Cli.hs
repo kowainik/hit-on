@@ -18,7 +18,7 @@ import Hit.Core (CommitOptions (..), IssueOptions (..), Milestone (..), PushBool
                  defaultIssueOptions)
 import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
                 runHop, runLog, runNew, runPush, runResolve, runStash, runStatus, runSync,
-                runUncommit, runUnstash)
+                runUncommit, runUnstash, runWip)
 import Hit.Issue (runIssue)
 import Hit.Prompt (arrow)
 
@@ -35,6 +35,7 @@ hit = execParser cliParser >>= \case
     Stash -> runStash
     Unstash -> runUnstash
     Commit opts -> runCommit opts
+    Wip -> runWip
     Uncommit -> runUncommit
     Fix message pushBool -> runFix message pushBool
     Amend localAmend -> runAmend localAmend
@@ -68,6 +69,7 @@ data HitCommand
     | Stash
     | Unstash
     | Commit CommitOptions
+    | Wip
     | Uncommit
     | Fix
         (Maybe Text)  -- ^ Text of the fix commit
@@ -93,6 +95,7 @@ hitP = subparser
    <> com "stash"    stashP    "Stash all local changes"
    <> com "unstash"  unstashP  "Unstash previously stashed changes"
    <> com "commit"   commitP   "Commit all local changes and prepend issue number"
+   <> com "wip"      wipP      "Create WIP commit"
    <> com "uncommit" uncommitP "Reset to the previous commit saving the changes"
    <> com "fix"      fixP      "Fix requested changes to the last commit"
    <> com "amend"    amendP    "Amend changes to the last commit and force push"
@@ -198,6 +201,9 @@ cloneP = Clone <$> strArgument (metavar "REPOSITORY")
 
 logP :: Parser HitCommand
 logP = Log <$> maybeCommitP
+
+wipP :: Parser HitCommand
+wipP = pure Wip
 
 -- | Parse optional branch name as an argument.
 maybeBranchP :: Parser (Maybe Text)

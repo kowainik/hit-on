@@ -9,6 +9,7 @@ module Hit.Git
        , runStash
        , runUnstash
        , runCommit
+       , runWip
        , runUncommit
        , runFix
        , runAmend
@@ -42,3 +43,4 @@ import Hit.Git.Status (runStatus)
 import Hit.Git.Sync (runSync)
 import Hit.Git.Uncommit (runUncommit)
 import Hit.Git.Unstash (runUnstash)
+import Hit.Git.Wip (runWip)
