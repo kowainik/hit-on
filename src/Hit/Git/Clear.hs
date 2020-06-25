@@ -7,12 +7,12 @@ module Hit.Git.Clear
 import Colourista (infoMessage)
 import Shellmet ()
 
-import Hit.Core (PushBool (..))
+import Hit.Core (ForceFlag (..))
 import Hit.Prompt (Answer (..), prompt, yesOrNoText)
 
 
 -- | Remove all local changes permanently.
-runClear :: PushBool -> IO ()
+runClear :: ForceFlag -> IO ()
 runClear = \case
     Force  -> clearChanges
     Simple -> do

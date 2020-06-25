@@ -14,7 +14,7 @@ import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, au
                             execParser, flag, flag', fullDesc, help, helper, info, infoOption, long,
                             metavar, option, progDesc, short, strArgument, subparser, switch)
 
-import Hit.Core (CommitOptions (..), IssueOptions (..), Milestone (..), PushBool (..),
+import Hit.Core (CommitOptions (..), ForceFlag (..), IssueOptions (..), Milestone (..),
                  defaultIssueOptions)
 import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
                 runHop, runLog, runNew, runPush, runResolve, runStash, runStatus, runSync,
@@ -40,9 +40,9 @@ hit = execParser cliParser >>= \case
     Fix message pushBool -> runFix message pushBool
     Amend localAmend -> runAmend localAmend
     Resolve branchName -> runResolve branchName
-    Push isForce -> runPush isForce
-    Sync -> runSync
-    Clear isForce -> runClear isForce
+    Push forceFlag -> runPush forceFlag
+    Sync forceFlag -> runSync forceFlag
+    Clear forceFlag -> runClear forceFlag
     Current -> runCurrent >>= flip whenJust (\i -> runIssue defaultIssueOptions {ioIssueNumber = Just i})
     Status commit -> runCurrent >> runStatus commit
     Diff commit -> runDiff commit
@@ -73,13 +73,13 @@ data HitCommand
     | Uncommit
     | Fix
         (Maybe Text)  -- ^ Text of the fix commit
-        PushBool      -- ^ Force push
+        ForceFlag     -- ^ Force push
     | Amend
         Bool  -- ^ Local amend
     | Resolve (Maybe Text)
-    | Push PushBool
-    | Sync
-    | Clear PushBool
+    | Push ForceFlag
+    | Sync ForceFlag
+    | Clear ForceFlag
     | Current
     | Status (Maybe Text)
     | Diff (Maybe Text)
@@ -154,7 +154,7 @@ commitP = do
         $ long "push"
        <> short 'p'
        <> help "Push current branch with this commit"
-    coIsForcePush <- pushBoolP
+    coIsForcePush <- forceFlagP
     pure $ Commit CommitOptions{..}
 
 uncommitP :: Parser HitCommand
@@ -164,8 +164,8 @@ uncommitP = pure Uncommit
 fixP :: Parser HitCommand
 fixP = do
     commitMsg <- commitMessageP
-    isForce   <- pushBoolP
-    pure $ Fix commitMsg isForce
+    forceFlag <- forceFlagP
+    pure $ Fix commitMsg forceFlag
 
 amendP :: Parser HitCommand
 amendP = do
@@ -176,13 +176,13 @@ amendP = do
     pure $ Amend localAmend
 
 pushP :: Parser HitCommand
-pushP = Push <$> pushBoolP
+pushP = Push <$> forceFlagP
 
 syncP :: Parser HitCommand
-syncP = pure Sync
+syncP = Sync <$> forceFlagP
 
 clearP :: Parser HitCommand
-clearP = Clear <$> pushBoolP
+clearP = Clear <$> forceFlagP
 
 currentP :: Parser HitCommand
 currentP = pure Current
@@ -217,13 +217,12 @@ maybeCommitP = optional $ strArgument $ metavar "COMMIT_HASH"
 commitMessageP :: Parser (Maybe Text)
 commitMessageP = optional $ strArgument $ metavar "COMMIT_MESSAGE"
 
--- | Parse flag of force push.
-pushBoolP :: Parser PushBool
-pushBoolP = flag Simple Force
-    ( long "force"
-   <> short 'f'
-   <> help "Force push"
-    )
+-- | Parse flag of force push or sync.
+forceFlagP :: Parser ForceFlag
+forceFlagP = flag Simple Force
+    $  long "force"
+    <> short 'f'
+    <> help "Execute forcefully"
 
 -- | Parse issue number as an argument.
 issueNumP :: Parser Int

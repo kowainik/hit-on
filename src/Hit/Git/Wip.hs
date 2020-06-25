@@ -10,7 +10,7 @@ module Hit.Git.Wip
     ( runWip
     ) where
 
-import Hit.Core (CommitOptions (..), PushBool (..))
+import Hit.Core (CommitOptions (..), ForceFlag (..))
 import Hit.Git.Commit (runCommit)
 import Hit.Git.Common (getCurrentBranch)
 import Hit.Git.New (runNew)
