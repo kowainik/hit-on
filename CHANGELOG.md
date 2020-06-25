@@ -40,6 +40,8 @@ The changelog is available [on GitHub][2].
    * `--milestone=ID` — filter out issues in the given milestone.
 * [#148](https://github.com/kowainik/hit-on/issues/148):
   Ignore dots (`.`) in the branch names to avoid `git` failures.
+* [#155](https://github.com/kowainik/hit-on/issues/155):
+  Notify on an empty list of the issues.
 
 
 ### 0.1.0.0 — Aug 3, 2019

@@ -16,8 +16,8 @@ module Hit.Issue
        , showIssueName
        ) where
 
-import Colourista (blue, blueBg, bold, errorMessage, formatWith, green, red, reset, successMessage,
-                   warningMessage)
+import Colourista (blue, blueBg, bold, errorMessage, formatWith, green, red, reset, skipMessage,
+                   successMessage, warningMessage)
 import Data.Vector (Vector)
 import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Name, Owner, Repo,
                SimpleUser (..), User, getUrl, milestoneNumber, mkId, mkName, unIssueNumber, untagId,
@@ -66,7 +66,10 @@ getAllIssues milestone me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateO
     Right is -> do
         let maxLen = Fmt.maxLenOn showIssueNumber is
         milestoneId <- getMilestoneId
-        for_ (filterIssues milestoneId is) $ \i -> do
+        let issues = filterIssues milestoneId is
+        if V.null issues
+        then skipMessage "There are no open issues satisfying the provided filters"
+        else for_ issues $ \i -> do
             let thisLen = T.length $ showIssueNumber i
                 padSize = maxLen - thisLen
             putTextLn $ showIssueName blue padSize i
