@@ -1,4 +1,13 @@
--- | Everything related to the `hit current` command
+{- |
+Module                  : Hit.Git.Current
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+@hit current@ command runner and helpers.
+-}
 
 module Hit.Git.Current
     ( runCurrent

@@ -9,7 +9,7 @@ license:             MPL-2.0
 license-file:        LICENSE
 author:              Veronika Romashkina, Dmitrii Kovanikov
 maintainer:          Kowainik <xrom.xkov@gmail.com>
-copyright:           2019 Kowainik
+copyright:           2019-2020 Kowainik
 category:            Git, CLI Tool
 build-type:          Simple
 extra-doc-files:     README.md

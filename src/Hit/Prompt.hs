@@ -1,13 +1,22 @@
--- | This module contains functions for colorful printing into terminal.
+{- |
+Module                  : Hit.Prompt
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+This module contains functions for colorful printing into terminal.
+-}
 
 module Hit.Prompt
-       (  -- * Input with prompt
-         Answer (..)
-       , yesOrNoText
-       , prompt
+    (  -- * Input with prompt
+      Answer (..)
+    , yesOrNoText
+    , prompt
 
-       , arrow
-       ) where
+    , arrow
+    ) where
 
 import Colourista (bold, errorMessage, reset)
 
@@ -20,8 +29,8 @@ arrow = " ➤ "
 
 -- | Represents a user's answer
 data Answer
-  = Y
-  | N
+    = Y
+    | N
 
 -- | Parse an answer to 'Answer'. Takes a default `Answer` to return in case of empty user input.
 yesOrNoWithDefault :: Answer -> Text -> Maybe Answer
@@ -42,5 +51,5 @@ prompt def = do
     case answer of
         Just ans -> pure ans
         Nothing -> do
-           errorMessage "This wasn't a valid choice."
+           errorMessage "This is not a valid choice."
            prompt def

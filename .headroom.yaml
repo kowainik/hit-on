@@ -1,0 +1,28 @@
+run-mode: replace
+
+source-paths:
+  - src/
+
+excluded-paths: []
+
+template-paths:
+  - headroom-templates
+
+variables:
+  author: Kowainik
+  email: xrom.xkov@gmail.com
+
+license-headers:
+  haskell:
+    put-after: ["^{-#"]
+    margin-after: 1
+    margin-before: 1
+    block-comment:
+      starts-with: "{- |"
+      ends-with: "-}"
+
+post-process:
+  update-copyright:
+    enabled: true
+    config:
+      selected-authors-only: ["{{ author }}"]

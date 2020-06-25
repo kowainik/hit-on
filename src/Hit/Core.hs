@@ -1,13 +1,23 @@
-{- | This module contains core data types used in the package.
+{- |
+Module                  : Hit.Core
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+This module contains core data types used in the package.
 -}
 
 module Hit.Core
-       ( ForceFlag (..)
-       , CommitOptions (..)
-       , IssueOptions (..)
-       , Milestone (..)
-       , defaultIssueOptions
-       ) where
+    ( ForceFlag (..)
+    , CommitOptions (..)
+      -- * @hit issue@
+    , IssueOptions (..)
+    , defaultIssueOptions
+      -- * Milestones
+    , Milestone (..)
+    ) where
 
 
 {- | Data type to represent the type of @push@ or @sync@: force-push

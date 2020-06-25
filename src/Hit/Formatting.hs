@@ -1,7 +1,18 @@
+{- |
+Module                  : Hit.Formatting
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+Common functions to format output in a certain way,
+-}
+
 module Hit.Formatting
-       ( maxLenOn
-       , stripRfc
-       ) where
+    ( maxLenOn
+    , stripRfc
+    ) where
 
 import qualified Data.Text as T
 

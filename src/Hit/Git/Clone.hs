@@ -1,4 +1,13 @@
--- | Everything related to the `hit clone` command
+{- |
+Module                  : Hit.Git.Clone
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+@hit clone@ command runner and helpers.
+-}
 
 module Hit.Git.Clone
     ( runClone
