@@ -52,15 +52,21 @@ getAllIssues me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \
     Left err -> errorMessage $ show err
     Right is -> do
         let maxLen = Fmt.maxLenOn showIssueNumber is
-        for_ (my is) $ \i -> do
+        for_ (filterIssues is) $ \i -> do
             let thisLen = T.length $ showIssueNumber i
                 padSize = maxLen - thisLen
             putTextLn $ showIssueName blue padSize i
   where
-    my :: Vector Issue -> Vector Issue
-    my issues = case me of
-        Just (makeName -> username) -> V.filter (username `isAssignedToIssue`) issues
-        Nothing                     -> issues
+    filterIssues :: Vector Issue -> Vector Issue
+    filterIssues = V.filter (\i -> my i && isNotPR i)
+
+    my :: Issue -> Bool
+    my issue = case me of
+        Just (makeName -> username) -> username `isAssignedToIssue` issue
+        Nothing                     -> True
+
+    isNotPR :: Issue -> Bool
+    isNotPR Issue{..} = isNothing issuePullRequest
 
 -- | Show issue number with alignment and its name.
 showIssueName :: Text -> Int -> Issue -> Text
