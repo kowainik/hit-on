@@ -4,7 +4,7 @@ module Hit.Git.Amend
     ( runAmend
     ) where
 
-import Shellmet()
+import Shellmet ()
 
 import Hit.Core (PushBool (..))
 import Hit.Git.Push (runPush)
@@ -14,5 +14,5 @@ import Hit.Git.Push (runPush)
 runAmend :: Bool -> IO ()
 runAmend localAmend = do
     "git" ["add", "."]
-    "git" ["commit", "--amend", "--no-edit"]
+    "git" ["commit", "--amend", "--no-edit", "--date", "now"]
     unless localAmend $ runPush Force

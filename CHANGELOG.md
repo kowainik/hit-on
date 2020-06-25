@@ -30,6 +30,8 @@ The changelog is available [on GitHub][2].
   Strip `[RFC]` prefix from issues in branch names and commit messages.
 * [#152](https://github.com/kowainik/hit-on/issues/152):
   Filter out PRs from the list of all issues in the `hit issue` command.
+* [#154](https://github.com/kowainik/hit-on/issues/154):
+  Add `--date=now` to the `amend` command.
 
 ### 0.1.0.0 — Aug 3, 2019
 
