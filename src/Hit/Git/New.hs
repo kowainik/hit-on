@@ -9,6 +9,7 @@ import Data.Char (isAlphaNum, isDigit, isSpace)
 import Colourista (errorMessage, infoMessage, successMessage)
 import GitHub (Issue (issueNumber, issueTitle), IssueNumber (..), unIssueNumber)
 
+import Hit.Formatting (stripRfc)
 import Hit.Git.Common (getUsername)
 import Hit.Issue (assignIssue, createIssue, fetchIssue, mkIssueId)
 
@@ -91,3 +92,4 @@ assignAndDisplayBranchDescription username = \case
                        || isSpace c
                        || c `elem` ("_-./" :: String)
                    )
+        . stripRfc

@@ -4,10 +4,11 @@ module Hit.Git.Commit
     ( runCommit
     ) where
 
-import Shellmet ()
 import Colourista (errorMessage)
+import Shellmet ()
 
 import Hit.Core (CommitOptions (..), PushBool (..))
+import Hit.Formatting (stripRfc)
 import Hit.Git.Common (getCurrentBranch, issueFromBranch)
 import Hit.Git.Push (runPush)
 import Hit.Issue (getIssueTitle, mkIssueId)
@@ -43,7 +44,7 @@ runCommit CommitOptions{..} = case coName of
     getCurrentIssue = issueFromBranch <$> getCurrentBranch
 
     showMsg :: Text -> Maybe Int -> Text
-    showMsg msg = \case
+    showMsg (stripRfc -> msg) = \case
        Nothing -> msg
        Just n  ->
            let issue = "#" <> show n

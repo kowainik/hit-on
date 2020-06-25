@@ -7,6 +7,7 @@ module Hit.Git.Status
        ) where
 
 import Colourista (blue, bold, cyan, formatWith, green, magenta, red, reset, yellow)
+import Colourista.Short (b)
 import Shellmet (($?), ($|))
 import System.Process (callCommand)
 
@@ -19,8 +20,8 @@ import qualified Hit.Formatting as Fmt
 {- | Show stats from the given commit. If commit is not specified, uses HEAD.
 -}
 runStatus :: Maybe Text -> IO ()
-runStatus (fromMaybe "HEAD" -> commit)
-    = withDeletedFiles $ withUntrackedFiles $ showPrettyDiff commit
+runStatus (fromMaybe "HEAD" -> commit) =
+    withDeletedFiles $ withUntrackedFiles $ showPrettyDiff commit
 
 -- | Enum that represents all possible types of file modifications.
 data PatchType
@@ -67,15 +68,12 @@ displayPatchType = \case
     Modified      -> coloredIn magenta "modified"
     Renamed       -> coloredIn yellow  "renamed"
     TypeChanged   -> coloredIn cyan    "type-changed"
-    Unmerged      -> inBold            "unmerged"
-    Unknown       -> inBold            "unknown"
-    BrokenPairing -> inBold            "broken"
+    Unmerged      -> b                 "unmerged"
+    Unknown       -> b                 "unknown"
+    BrokenPairing -> b                 "broken"
   where
     coloredIn :: Text -> Text -> Text
     coloredIn color = formatWith [color, bold]
-
-    inBold :: Text -> Text
-    inBold = formatWith [bold]
 
 -- | Output of the @git diff --name-status@ command.
 data DiffName = DiffName
@@ -213,17 +211,17 @@ showPrettyDiff commit = do
       where
         formatRow :: (Text, Text, Text, Text) -> Text
         formatRow (fileType, fileName, fileCount, fileSigns) =
-            Fmt.padRight typeSize fileType
+            T.justifyLeft typeSize ' ' fileType
             <> "  "
-            <> Fmt.padRight nameSize fileName
+            <> T.justifyLeft nameSize ' ' fileName
             <> " | "
-            <> Fmt.padLeft countSize fileCount
+            <> T.justifyRight countSize ' ' fileCount
             <> " "
             <> fileSigns
 
         typeSize, nameSize :: Int
         typeSize  = Fmt.maxLenOn (\(a, _, _, _) -> a) rows
-        nameSize  = Fmt.maxLenOn (\(_, b, _, _) -> b) rows
+        nameSize  = Fmt.maxLenOn (\(_, x, _, _) -> x) rows
         countSize = Fmt.maxLenOn (\(_, _, c, _) -> c) rows
 
 {- | Returns 'True' if rebase is in progress. Calls magic comand and if this
