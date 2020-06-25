@@ -4,6 +4,9 @@
 module Hit.Core
        ( PushBool (..)
        , CommitOptions (..)
+       , IssueOptions (..)
+       , Milestone (..)
+       , defaultIssueOptions
        ) where
 
 
@@ -25,4 +28,24 @@ data CommitOptions = CommitOptions
     , coPush          :: !Bool
       -- | Use Force push?
     , coIsForcePush   :: !PushBool
+    }
+
+-- | Options of the @hit issue@ command.
+data IssueOptions = IssueOptions
+    { ioIssueNumber :: !(Maybe Int)
+    , ioMe          :: !Bool
+    , ioMilestone   :: !(Maybe Milestone)
+    }
+
+-- | Internal representation of the GutHub Milestone in CLI.
+data Milestone
+    = CurrentMilestone
+    | MilestoneId !Int
+    deriving stock (Show)
+
+defaultIssueOptions :: IssueOptions
+defaultIssueOptions = IssueOptions
+    { ioIssueNumber = Nothing
+    , ioMe = False
+    , ioMilestone = Nothing
     }

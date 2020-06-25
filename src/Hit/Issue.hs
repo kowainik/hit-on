@@ -26,6 +26,8 @@ import GitHub.Endpoints.Issues (EditIssue (..), NewIssue (..), editOfIssue, issu
 import Shellmet (($|))
 import System.Environment (lookupEnv)
 
+import Hit.Core (IssueOptions (..), Milestone (..))
+import Hit.Git.Common (getUsername)
 import Hit.Prompt (arrow)
 
 import qualified Hit.Formatting as Fmt
@@ -39,10 +41,15 @@ import qualified GitHub.Endpoints.Issues as GitHub
 ----------------------------------------------------------------------------
 
 -- | Run the @issue@ command.
-runIssue :: Maybe Int -> Maybe Text -> IO ()
-runIssue issue me = case issue of
+runIssue :: IssueOptions -> IO ()
+runIssue IssueOptions{..} = case ioIssueNumber of
     Just num -> getIssue $ mkIssueId num
-    Nothing  -> getAllIssues me
+    Nothing  -> me >>= getAllIssues
+  where
+    me :: IO (Maybe Text)
+    me = if ioMe
+        then Just <$> getUsername
+        else pure Nothing
 
 {- | Get the list of the opened issues for the current project and
 display short information about each issue.
