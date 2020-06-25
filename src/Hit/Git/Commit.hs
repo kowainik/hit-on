@@ -7,7 +7,7 @@ module Hit.Git.Commit
 import Colourista (errorMessage)
 import Shellmet ()
 
-import Hit.Core (CommitOptions (..), PushBool (..))
+import Hit.Core (CommitOptions (..), ForceFlag (..))
 import Hit.Formatting (stripRfc)
 import Hit.Git.Common (getCurrentBranch, issueFromBranch)
 import Hit.Git.Push (runPush)

@@ -6,7 +6,7 @@ module Hit.Git.Amend
 
 import Shellmet ()
 
-import Hit.Core (PushBool (..))
+import Hit.Core (ForceFlag (..))
 import Hit.Git.Push (runPush)
 
 

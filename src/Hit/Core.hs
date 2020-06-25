@@ -2,7 +2,7 @@
 -}
 
 module Hit.Core
-       ( PushBool (..)
+       ( ForceFlag (..)
        , CommitOptions (..)
        , IssueOptions (..)
        , Milestone (..)
@@ -10,8 +10,10 @@ module Hit.Core
        ) where
 
 
--- | Data type to represent the type of @push@: force-push or not.
-data PushBool
+{- | Data type to represent the type of @push@ or @sync@: force-push
+(force-reset) or not.
+-}
+data ForceFlag
     = Simple
     | Force
     deriving stock (Show, Eq)
@@ -27,7 +29,7 @@ data CommitOptions = CommitOptions
       -- | Push immediately.
     , coPush          :: !Bool
       -- | Use Force push?
-    , coIsForcePush   :: !PushBool
+    , coIsForcePush   :: !ForceFlag
     }
 
 -- | Options of the @hit issue@ command.
