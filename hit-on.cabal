@@ -75,6 +75,7 @@ library
                            Hit.Git.Fresh
                            Hit.Git.Hop
                            Hit.Git.Log
+                           Hit.Git.Milestones
                            Hit.Git.New
                            Hit.Git.Push
                            Hit.Git.Resolve
@@ -84,6 +85,7 @@ library
                            Hit.Git.Uncommit
                            Hit.Git.Unstash
                            Hit.Git.Wip
+                         Hit.GitHub
                          Hit.Prompt
                          Hit.Issue
 

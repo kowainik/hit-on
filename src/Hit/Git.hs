@@ -29,6 +29,7 @@ module Hit.Git
     , runDiff
     , runClone
     , runLog
+    , runMilestones
 
     , getUsername
     ) where
@@ -44,6 +45,7 @@ import Hit.Git.Fix (runFix)
 import Hit.Git.Fresh (runFresh)
 import Hit.Git.Hop (runHop)
 import Hit.Git.Log (runLog)
+import Hit.Git.Milestones (runMilestones)
 import Hit.Git.New (runNew)
 import Hit.Git.Push (runPush)
 import Hit.Git.Resolve (runResolve)

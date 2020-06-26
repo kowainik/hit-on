@@ -1,10 +1,9 @@
-
 module Main (main) where
 
 import GitHub.Data.Name (Name (..))
 import Test.Hspec (describe, hspec, it, shouldBe)
 
-import Hit.Issue (parseOwnerRepo)
+import Hit.GitHub (parseOwnerRepo)
 
 
 main :: IO ()
@@ -29,4 +28,3 @@ main = hspec $ do
             parseOwnerRepo "https://github.com/kowainik" `shouldBe` Nothing
         it "Parses an invalid GitHub repo link and returns a `Nothing`" $ do
             parseOwnerRepo "git@github.com" `shouldBe` Nothing
-
