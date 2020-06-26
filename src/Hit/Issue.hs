@@ -234,7 +234,7 @@ message and returns 'Nothing'.
 fetchCurrentMilestoneId :: IO (Maybe Int)
 fetchCurrentMilestoneId = withOwnerRepo milestones' >>= \case
     Left err -> Nothing <$ warningMessage ("Could not fetch the milestones\n    " <> show err)
-    Right ms -> case sortBy (flip compare) $ map (untagId . milestoneNumber) $ toList ms of
+    Right ms -> case sortWith Down $ map (untagId . milestoneNumber) $ toList ms of
         []  -> warningMessage "There are no open milestones for this project" >> pure Nothing
         m:_ -> pure $ Just m
 

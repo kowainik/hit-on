@@ -34,7 +34,7 @@ runMilestones = withOwnerRepo milestones' >>= \case
     Left err -> do
         errorMessage ("Could not fetch the milestones\n    " <> show err)
         exitFailure
-    Right ms -> for_ (sortBy (flip (comparing (untagId . milestoneNumber))) $ toList ms) $ \m ->
+    Right ms -> for_ (sortWith (Down . untagId . milestoneNumber) $ toList ms) $ \m ->
 
         putTextLn $ arrow <> prettyMilestone m
 
