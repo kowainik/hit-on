@@ -1,4 +1,13 @@
--- | Everything related to the `hit amend` command
+{- |
+Module                  : Hit.Git.Amend
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+@hit amend@ command runner and helpers.
+-}
 
 module Hit.Git.Amend
     ( runAmend

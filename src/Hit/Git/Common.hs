@@ -1,5 +1,12 @@
-{- | Functions which can be used by serveral Hit Commands
-and are not specific to one.
+{- |
+Module                  : Hit.Git.Common
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+Helper functions used by different Hit Commands.
 -}
 
 module Hit.Git.Common

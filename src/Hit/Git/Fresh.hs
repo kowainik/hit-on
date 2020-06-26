@@ -1,10 +1,19 @@
--- | Everything related to the `hit fresh` command
+{- |
+Module                  : Hit.Git.Fresh
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+@hit fresh@ command runner and helpers.
+-}
 
 module Hit.Git.Fresh
     ( runFresh
     ) where
 
-import Shellmet()
+import Shellmet ()
 
 import Hit.Git.Common (nameOrMaster)
 

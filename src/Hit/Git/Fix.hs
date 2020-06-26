@@ -1,4 +1,13 @@
--- | Everything related to the `hit fix` command
+{- |
+Module                  : Hit.Git.Fix
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+@hit fix@ command runner and helpers.
+-}
 
 module Hit.Git.Fix
     ( runFix

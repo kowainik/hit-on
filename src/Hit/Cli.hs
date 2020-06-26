@@ -1,11 +1,20 @@
 {-# LANGUAGE ApplicativeDo   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
--- | Command line interface for @hit@ executable.
+{- |
+Module                  : Hit.Cli
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+Command line interface for @hit@ executable.
+-}
 
 module Hit.Cli
-       ( hit
-       ) where
+    ( hit
+    ) where
 
 import Colourista (blue, bold, formatWith)
 import Data.Version (showVersion)

@@ -1,28 +1,37 @@
--- | Reexports of the single commands
+{- |
+Module                  : Hit.Git
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+Reexports of the all existing commands runners.
+-}
 
 module Hit.Git
-       ( runHop
-       , runFresh
-       , runNew
-       , runPush
-       , runResolve
-       , runStash
-       , runUnstash
-       , runCommit
-       , runWip
-       , runUncommit
-       , runFix
-       , runAmend
-       , runSync
-       , runClear
-       , runCurrent
-       , runStatus
-       , runDiff
-       , runClone
-       , runLog
+    ( runHop
+    , runFresh
+    , runNew
+    , runPush
+    , runResolve
+    , runStash
+    , runUnstash
+    , runCommit
+    , runWip
+    , runUncommit
+    , runFix
+    , runAmend
+    , runSync
+    , runClear
+    , runCurrent
+    , runStatus
+    , runDiff
+    , runClone
+    , runLog
 
-       , getUsername
-       ) where
+    , getUsername
+    ) where
 
 import Hit.Git.Amend (runAmend)
 import Hit.Git.Clear (runClear)

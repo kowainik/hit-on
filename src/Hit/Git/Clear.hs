@@ -1,4 +1,13 @@
--- | Everything related to the `hit clear` command
+{- |
+Module                  : Hit.Git.Clear
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+@hit clear@ command runner and helpers.
+-}
 
 module Hit.Git.Clear
     ( runClear

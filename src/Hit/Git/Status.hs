@@ -1,4 +1,12 @@
-{- | Data types that describe model of the @git diff@ command to display diffs
+{- |
+Module                  : Hit.Git.Status
+Copyright               : (c) 2019-2020 Kowainik
+SPDX-License-Identifier : MPL-2.0
+Maintainer              : Kowainik <xrom.xkov@gmail.com>
+Stability               : Stable
+Portability             : Portable
+
+Data types that describe model of the @git diff@ command to display diffs
 in pretty way.
 -}
 
