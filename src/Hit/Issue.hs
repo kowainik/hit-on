@@ -19,26 +19,21 @@ module Hit.Issue
       -- * Internal helpers
     , mkIssueId
     , getIssueTitle
-    , getOwnerRepo
-    , parseOwnerRepo
     , showIssueName
     ) where
 
 import Colourista (blue, blueBg, bold, errorMessage, formatWith, green, red, reset, skipMessage,
                    successMessage, warningMessage)
 import Data.Vector (Vector)
-import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Name, Owner, Repo,
-               SimpleUser (..), User, getUrl, milestoneNumber, mkId, mkName, unIssueNumber, untagId,
-               untagName)
-import GitHub.Auth (Auth (OAuth))
+import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Name, SimpleUser (..),
+               User, getUrl, milestoneNumber, mkId, unIssueNumber, untagId, untagName)
 import GitHub.Data.Options (stateOpen)
 import GitHub.Endpoints.Issues (EditIssue (..), NewIssue (..), editOfIssue, issue', issuesForRepo')
 import GitHub.Endpoints.Issues.Milestones (milestones')
-import Shellmet (($|))
-import System.Environment (lookupEnv)
 
 import Hit.Core (IssueOptions (..), Milestone (..))
 import Hit.Git.Common (getUsername)
+import Hit.GitHub (makeName, withAuthOwnerRepo, withOwnerRepo)
 import Hit.Prompt (arrow)
 
 import qualified Hit.Formatting as Fmt
@@ -239,44 +234,13 @@ message and returns 'Nothing'.
 fetchCurrentMilestoneId :: IO (Maybe Int)
 fetchCurrentMilestoneId = withOwnerRepo milestones' >>= \case
     Left err -> Nothing <$ warningMessage ("Could not fetch the milestones\n    " <> show err)
-    Right ms -> case sortBy (flip compare) $ map (untagId . milestoneNumber) $ toList ms of
+    Right ms -> case sortWith Down $ map (untagId . milestoneNumber) $ toList ms of
         []  -> warningMessage "There are no open milestones for this project" >> pure Nothing
         m:_ -> pure $ Just m
-
--- | Perform action by given auth token, owner and repo name.
-withOwnerRepo
-    :: (Maybe Auth -> Name Owner -> Name Repo -> IO (Either Error a))
-    -> IO (Either Error a)
-withOwnerRepo action = getOwnerRepo >>= \case
-    Just (owner, repo) -> do
-        token <- getGitHubToken
-        action token owner repo
-    Nothing -> do
-        let errorText = "Cannot get the owner/repo names"
-        errorMessage errorText
-        pure $ Left $ ParseError errorText
-
-{- | Similar to 'withOwnerRepo', but returns the 'UserError' when cannot get the
-GitHub Token, as the given action should work with the 'Auth' instead of 'Maybe
-Auth'.
--}
-withAuthOwnerRepo
-    :: (Auth -> Name Owner -> Name Repo -> IO (Either Error a))
-    -> IO (Either Error a)
-withAuthOwnerRepo action = withOwnerRepo $ \token owner repo -> case token of
-    Just auth -> action auth owner repo
-    Nothing -> do
-        let errorText = "Can not get GITHUB_TOKEN"
-        errorMessage errorText
-        pure $ Left $ UserError errorText
 
 -- | Smart constructor for @'Id' 'Issue'@.
 mkIssueId :: Int -> Id Issue
 mkIssueId = mkId $ Proxy @Issue
-
--- | Smart constructor for 'Name'.
-makeName :: forall a . Text -> Name a
-makeName = mkName (Proxy @a)
 
 -- | Create new issue with title and assignee.
 mkNewIssue :: Text -> Text -> NewIssue
@@ -287,60 +251,3 @@ mkNewIssue title login = NewIssue
     , newIssueMilestone = Nothing
     , newIssueLabels    = Nothing
     }
-
--- | Get authentication GitHub token from the environment variable @GITHUB_TOKEN@.
-getGitHubToken :: IO (Maybe Auth)
-getGitHubToken = do
-    token <- lookupEnv "GITHUB_TOKEN"
-    pure $ OAuth . encodeUtf8 <$> token
-
-----------------------------------------------------------------------------
--- Fetch and parse name and repo from URL
-----------------------------------------------------------------------------
-
--- | Get the owner and the repository name.
-getOwnerRepo :: IO (Maybe (Name Owner, Name Repo))
-getOwnerRepo = parseOwnerRepo <$> "git" $| ["remote", "get-url", "origin"]
-
-{- |
-__Note:__ this works with GitHub projects!
-
-This function supports four kinds of the URLs:
-
-SSH one:
-
-@
-git@github.com:kowainik/hit-on.git
-@
-
-or
-
-@
-git@github.com:kowainik/hit-on
-@
-
-And HTTPS one:
-
-@
-https://github.com/kowainik/hit-on.git
-@
-
-or
-
-@
-https://github.com/kowainik/hit-on
-@
--}
-parseOwnerRepo :: Text -> Maybe (Name Owner, Name Repo)
-parseOwnerRepo url =
-    ( T.stripPrefix "git@github.com:"     url
-  <|> T.stripPrefix "https://github.com/" url
-    ) >>= stripGitSuffix >>= separateName
-  where
-    separateName :: Text -> Maybe (Name Owner, Name Repo)
-    separateName nm =
-        let (owner, T.drop 1 -> repo) = T.breakOn "/" nm in
-        guard (owner /= "" && repo /= "") *> Just (makeName owner, makeName repo)
-
-    stripGitSuffix :: Text -> Maybe Text
-    stripGitSuffix x = whenNothing (T.stripSuffix ".git" x) (Just x)

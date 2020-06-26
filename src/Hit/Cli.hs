@@ -26,8 +26,8 @@ import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, au
 import Hit.Core (CommitOptions (..), ForceFlag (..), IssueOptions (..), Milestone (..),
                  defaultIssueOptions)
 import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
-                runHop, runLog, runNew, runPush, runResolve, runStash, runStatus, runSync,
-                runUncommit, runUnstash, runWip)
+                runHop, runLog, runMilestones, runNew, runPush, runResolve, runStash, runStatus,
+                runSync, runUncommit, runUnstash, runWip)
 import Hit.Issue (runIssue)
 import Hit.Prompt (arrow)
 
@@ -57,6 +57,7 @@ hit = execParser cliParser >>= \case
     Diff commit -> runDiff commit
     Clone name -> runClone name
     Log commit -> runLog commit
+    Milestones -> runMilestones
 
 ----------------------------------------------------------------------------
 -- Parsers
@@ -94,6 +95,7 @@ data HitCommand
     | Diff (Maybe Text)
     | Clone Text
     | Log (Maybe Text)
+    | Milestones
 
 -- | Commands parser.
 hitP :: Parser HitCommand
@@ -118,6 +120,7 @@ hitP = subparser
    <> com "diff"     diffP     "Display beautiful diff with COMMIT_HASH (by default HEAD)"
    <> com "clone"    cloneP    "Clone the repo. Use 'reponame' or 'username/reponame' formats"
    <> com "log"      logP      "Display the log of the current commit or COMMIT_HASH"
+   <> com "milestones" milestonesP "Show the list of open milestones for the project"
   where
     com :: String -> Parser HitCommand -> String -> Mod CommandFields HitCommand
     com name p desc = command name (info (helper <*> p) $ progDesc desc)
@@ -213,6 +216,9 @@ logP = Log <$> maybeCommitP
 
 wipP :: Parser HitCommand
 wipP = pure Wip
+
+milestonesP :: Parser HitCommand
+milestonesP = pure Milestones
 
 -- | Parse optional branch name as an argument.
 maybeBranchP :: Parser (Maybe Text)

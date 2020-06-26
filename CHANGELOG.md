@@ -42,6 +42,8 @@ The changelog is available [on GitHub][2].
   Ignore dots (`.`) in the branch names to avoid `git` failures.
 * [#155](https://github.com/kowainik/hit-on/issues/155):
   Notify on an empty list of the issues.
+* [#177](https://github.com/kowainik/hit-on/issues/177):
+  Add `hit milestones` command to show all open milestones.
 
 
 ### 0.1.0.0 — Aug 3, 2019
