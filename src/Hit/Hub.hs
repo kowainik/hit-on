@@ -18,8 +18,10 @@ import Shellmet (($?))
 import System.Directory (findExecutable)
 
 
-{- |
+{- | Helper function to run the @hub@ tool
 
+It exits with error when the tool is not in PATH or the work of the tool was not
+successful.
 -}
 withHub
     :: [Text]  -- ^ Hub command arguments
