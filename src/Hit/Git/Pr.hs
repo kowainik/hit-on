@@ -40,7 +40,7 @@ runPr isDraft = do
     curBranch <- getCurrentBranch
     -- check if the open PR with head @owner:branch_name@ already exist
     res <- withAuthOwnerRepo $ \auth owner repo -> do
-        let headPrMod = optionsHead $ untagName repo <> ":" <> curBranch
+        let headPrMod = optionsHead $ untagName owner <> ":" <> curBranch
         executeRequest auth (pullRequestsForR owner repo headPrMod FetchAll)
     case res of
         Left err -> do
@@ -49,7 +49,7 @@ runPr isDraft = do
             exitFailure
         Right prs ->
             if (not $ V.null prs)
-            then errorMessage "PR for the current branch is already exist" >> exitFailure
+            then errorMessage "PR for the current branch already exists" >> exitFailure
             else do
                 when (curBranch == "master") $ runNew False "patch"
                 runCommit CommitOptions
