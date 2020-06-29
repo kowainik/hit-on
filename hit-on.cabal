@@ -77,6 +77,7 @@ library
                            Hit.Git.Log
                            Hit.Git.Milestones
                            Hit.Git.New
+                           Hit.Git.Pr
                            Hit.Git.Push
                            Hit.Git.Resolve
                            Hit.Git.Stash
@@ -86,6 +87,7 @@ library
                            Hit.Git.Unstash
                            Hit.Git.Wip
                          Hit.GitHub
+                         Hit.Hub
                          Hit.Prompt
                          Hit.Issue
 

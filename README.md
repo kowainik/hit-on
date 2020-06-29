@@ -34,6 +34,7 @@ Or how you can see pretty short stats about your changes:
 To start using `hit` make sure that you have the following tools installed on your machine:
 
 + [ `git`][git] — `hit` is a wrapper around `git`
+* [`hub`](https://github.com/github/hub) – to make PRs to GitHub directly.
 + **Optional:** `diff-highlight` — for pretty output of the `hit diff` command
   + Linux installation instructions
     ```shell
