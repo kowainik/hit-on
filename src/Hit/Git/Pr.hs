@@ -37,6 +37,7 @@ It requires @hub@ tool to be installed.
 -}
 runPr :: Bool -> IO ()
 runPr isDraft = do
+    whenM ((== "master") <$> getCurrentBranch) $ runNew False "patch"
     curBranch <- getCurrentBranch
     -- check if the open PR with head @owner:branch_name@ already exist
     res <- withAuthOwnerRepo $ \auth owner repo -> do
@@ -51,7 +52,6 @@ runPr isDraft = do
             if (not $ V.null prs)
             then errorMessage "PR for the current branch already exists" >> exitFailure
             else do
-                when (curBranch == "master") $ runNew False "patch"
                 runCommit CommitOptions
                     { coName          = Nothing
                     , coNoIssueNumber = False
