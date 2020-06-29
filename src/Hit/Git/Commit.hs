@@ -29,7 +29,7 @@ import qualified Data.Text as T
 runCommit :: CommitOptions -> IO ()
 runCommit CommitOptions{..} = case coName of
     Just (T.strip -> msg)
-        | msg == "" -> errorMessage "Commit message cannot be empty"
+        | msg == "" -> errorMessage "Commit message cannot be empty" >> exitFailure
         | otherwise -> getCurrentIssue >>= commitCmds msg
     {- if the commit name is not specified then check the branchName
     If this is issue-related branch, take the issue name as the commit name.
@@ -38,7 +38,9 @@ runCommit CommitOptions{..} = case coName of
     Nothing -> do
         issueNum <- getCurrentIssue
         case issueNum of
-            Nothing -> errorMessage "Commit message cannot be empty: can not be taken from the context"
+            Nothing -> do
+                errorMessage "Commit message cannot be empty: can not be taken from the context"
+                exitFailure
             Just n -> do
                 title <- getIssueTitle (mkIssueId n)
                 commitCmds title issueNum

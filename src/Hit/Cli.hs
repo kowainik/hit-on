@@ -26,8 +26,8 @@ import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, au
 import Hit.Core (CommitOptions (..), ForceFlag (..), IssueOptions (..), Milestone (..),
                  defaultIssueOptions)
 import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
-                runHop, runLog, runMilestones, runNew, runPush, runResolve, runStash, runStatus,
-                runSync, runUncommit, runUnstash, runWip)
+                runHop, runLog, runMilestones, runNew, runPr, runPush, runResolve, runStash,
+                runStatus, runSync, runUncommit, runUnstash, runWip)
 import Hit.Issue (runIssue)
 import Hit.Prompt (arrow)
 
@@ -58,6 +58,7 @@ hit = execParser cliParser >>= \case
     Clone name -> runClone name
     Log commit -> runLog commit
     Milestones -> runMilestones
+    Pr isDraft -> runPr isDraft
 
 ----------------------------------------------------------------------------
 -- Parsers
@@ -96,6 +97,8 @@ data HitCommand
     | Clone Text
     | Log (Maybe Text)
     | Milestones
+    | Pr
+        !Bool  -- ^ Create a draft PR?
 
 -- | Commands parser.
 hitP :: Parser HitCommand
@@ -107,6 +110,7 @@ hitP = subparser
    <> com "unstash"  unstashP  "Unstash previously stashed changes"
    <> com "commit"   commitP   "Commit all local changes and prepend issue number"
    <> com "wip"      wipP      "Create WIP commit"
+   <> com "pr"       prP       "Commit all local changes and open the PR at GitHub"
    <> com "uncommit" uncommitP "Reset to the previous commit saving the changes"
    <> com "fix"      fixP      "Fix requested changes to the last commit"
    <> com "amend"    amendP    "Amend changes to the last commit and force push"
@@ -216,6 +220,9 @@ logP = Log <$> maybeCommitP
 
 wipP :: Parser HitCommand
 wipP = pure Wip
+
+prP :: Parser HitCommand
+prP = Pr <$> switch (long "draft" <> short 'd' <> help "Create a draft PR")
 
 milestonesP :: Parser HitCommand
 milestonesP = pure Milestones

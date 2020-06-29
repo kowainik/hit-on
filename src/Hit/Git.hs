@@ -19,6 +19,7 @@ module Hit.Git
     , runUnstash
     , runCommit
     , runWip
+    , runPr
     , runUncommit
     , runFix
     , runAmend
@@ -47,6 +48,7 @@ import Hit.Git.Hop (runHop)
 import Hit.Git.Log (runLog)
 import Hit.Git.Milestones (runMilestones)
 import Hit.Git.New (runNew)
+import Hit.Git.Pr (runPr)
 import Hit.Git.Push (runPush)
 import Hit.Git.Resolve (runResolve)
 import Hit.Git.Stash (runStash)
