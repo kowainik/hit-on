@@ -18,22 +18,39 @@ module Hit.Git.Branch
 
 import Data.Char (isAlphaNum, isDigit, isSpace)
 
-import Colourista (errorMessage, infoMessage, successMessage)
+import Colourista (errorMessage, infoMessage, successMessage, warningMessage)
 import GitHub (Issue (issueHtmlUrl, issueNumber, issueTitle), IssueNumber (..), getUrl,
                unIssueNumber)
 import Shellmet (($?))
 
+import Hit.Core (NewOptions (..), newOptionsWithName)
 import Hit.Formatting (stripRfc)
 import Hit.Git.Common (getCurrentBranch, getUsername)
-import Hit.Issue (assignIssue, createIssue, fetchIssue, mkIssueId)
+import Hit.Issue (assignIssue, createIssue, fetchIssue, getAllIssues, meToUsername, mkIssueId,
+                  printIssues)
 
 import qualified Data.Text as T
+import qualified Data.Vector as V
 
 
 -- | @hit new@ command.
-runNew :: Bool -> Text -> IO ()
-runNew isIssue issueOrName = do
-    branchName <- mkBranchName isIssue issueOrName
+runNew :: NewOptions -> IO ()
+runNew NewOptions{..} = do
+    issueOrBranch <- case noIssueOrBranch of
+        Just issueOrBranch -> pure issueOrBranch
+        Nothing -> if noMe
+            then meToUsername noMe >>= getAllIssues Nothing >>= \is -> case length is of
+                 0 -> warningMessage "There is no issues assign to you at the moment" >> exitFailure
+                 1 -> pure $ show $ unIssueNumber $ issueNumber $ V.head is
+                 _n  -> do
+                     infoMessage "Here is the list of the issues assigned to you:" >> printIssues is
+                     exitFailure
+
+            else do
+                errorMessage "You should specify either the issue number, or branch name"
+                errorMessage "Or you can use '--me' option to create a branch of issue assign to you."
+                exitFailure
+    branchName <- mkBranchName noCreateIssue issueOrBranch
     "git" ["checkout", "-b", branchName]
 
 {- | @hit rename@ command.
@@ -47,7 +64,7 @@ runRename :: Text -> IO ()
 runRename issueOrName = do
     curBranch <- getCurrentBranch
     if curBranch == "master"
-    then runNew False issueOrName
+    then runNew $ newOptionsWithName issueOrName
     else do
         newBranch <- mkBranchName False issueOrName
         -- rename a current branch locally

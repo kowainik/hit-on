@@ -48,7 +48,11 @@ The changelog is available [on GitHub][2].
   Add `hit pr` command to commit and create pull request at once.
 * [#160](https://github.com/kowainik/hit-on/issues/160):
   Add `hit rename` command to rename current local and remote branch.
-
+* [#116](https://github.com/kowainik/hit-on/issues/116):
+  Add `--me` option to the `hit new` command.
+  If there is one issues assign to you it will act like the
+  `hit new ASSIGNED_ISSUE_NUM` command. If there is more that one assigned issue
+  it will print them all and do n othing more.
 
 ### 0.1.0.0 — Aug 3, 2019
 

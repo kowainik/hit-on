@@ -16,7 +16,12 @@ module Hit.Issue
     , assignIssue
     , fetchIssue
 
+      -- * Issues helpers
+    , getAllIssues
+    , printIssues
+
       -- * Internal helpers
+    , meToUsername
     , mkIssueId
     , getIssueTitle
     , showIssueName
@@ -51,32 +56,52 @@ import qualified GitHub.Endpoints.Issues as GitHub
 runIssue :: IssueOptions -> IO ()
 runIssue IssueOptions{..} = case ioIssueNumber of
     Just num -> getIssue $ mkIssueId num
-    Nothing  -> me >>= getAllIssues ioMilestone
-  where
-    me :: IO (Maybe Text)
-    me = if ioMe
-        then Just <$> getUsername
-        else pure Nothing
+    Nothing  -> meToUsername ioMe >>= printFilteredIssues ioMilestone
 
-{- | Get the list of the opened issues for the current project and
-display short information about each issue.
+{- | If requested, get the username.
+-}
+meToUsername :: Bool -> IO (Maybe Text)
+meToUsername isMe =
+    if isMe
+    then Just <$> getUsername
+    else pure Nothing
+
+{- | Outputs the list of the open issues for the current project
+with applied filters.
+
+See 'getAllIssues' to find out more about filtering.
+-}
+printFilteredIssues
+    :: Maybe Milestone  -- ^ Project Milestone
+    -> Maybe Text  -- ^ User name of the assignee
+    -> IO ()
+printFilteredIssues milestone me = getAllIssues milestone me >>= printIssues
+
+{- | Outputs the list of the given issues for the current project.
+-}
+printIssues :: Vector Issue -> IO ()
+printIssues issues = let maxLen = Fmt.maxLenOn showIssueNumber issues in
+    if V.null issues
+    then skipMessage "There are no open issues satisfying the provided filters"
+    else for_ issues $ \i -> do
+        let thisLen = T.length $ showIssueNumber i
+            padSize = maxLen - thisLen
+        putTextLn $ showIssueName blue padSize i
+
+{- | Get the list of the opened issues for the current project
+filtered out by the given input:
+  * Only current user's issues?
+  * Only issues from the current/specified milestone?
 -}
 getAllIssues
     :: Maybe Milestone  -- ^ Project Milestone
     -> Maybe Text  -- ^ User name of the assignee
-    -> IO ()
+    -> IO (Vector Issue)
 getAllIssues milestone me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \case
-    Left err -> errorMessage $ show err
+    Left err -> errorMessage (show err) >> exitFailure
     Right is -> do
-        let maxLen = Fmt.maxLenOn showIssueNumber is
         milestoneId <- getMilestoneId
-        let issues = filterIssues milestoneId is
-        if V.null issues
-        then skipMessage "There are no open issues satisfying the provided filters"
-        else for_ issues $ \i -> do
-            let thisLen = T.length $ showIssueNumber i
-                padSize = maxLen - thisLen
-            putTextLn $ showIssueName blue padSize i
+        pure $ filterIssues milestoneId is
   where
     filterIssues :: Maybe Int -> Vector Issue -> Vector Issue
     filterIssues milestoneId = V.filter

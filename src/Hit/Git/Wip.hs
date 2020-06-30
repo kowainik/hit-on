@@ -18,7 +18,7 @@ module Hit.Git.Wip
     ( runWip
     ) where
 
-import Hit.Core (CommitOptions (..), ForceFlag (..))
+import Hit.Core (CommitOptions (..), ForceFlag (..), newOptionsWithName)
 import Hit.Git.Branch (runNew)
 import Hit.Git.Commit (runCommit)
 import Hit.Git.Common (getCurrentBranch)
@@ -28,7 +28,7 @@ import Hit.Git.Common (getCurrentBranch)
 runWip :: IO ()
 runWip = do
     curBranch <- getCurrentBranch
-    when (curBranch == "master") $ runNew False "wip"
+    when (curBranch == "master") $ runNew $ newOptionsWithName "wip"
     runCommit CommitOptions
         { coName          = Just "WIP"
         , coNoIssueNumber = True
