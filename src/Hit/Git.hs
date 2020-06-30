@@ -30,6 +30,7 @@ module Hit.Git
     , runStatus
     , runDiff
     , runClone
+    , runFork
     , runLog
     , runMilestones
 
@@ -39,7 +40,7 @@ module Hit.Git
 import Hit.Git.Amend (runAmend)
 import Hit.Git.Branch (runNew, runRename)
 import Hit.Git.Clear (runClear)
-import Hit.Git.Clone (runClone)
+import Hit.Git.Clone (runClone, runFork)
 import Hit.Git.Commit (runCommit)
 import Hit.Git.Common (getUsername)
 import Hit.Git.Current (runCurrent)
