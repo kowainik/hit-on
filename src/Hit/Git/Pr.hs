@@ -14,7 +14,7 @@ module Hit.Git.Pr
     ) where
 
 import Colourista (errorMessage)
-import GitHub (untagName)
+import GitHub (Issue (..), IssueLabel (..), untagName)
 import GitHub.Data.Options (optionsHead)
 import GitHub.Data.Request (FetchCount (..))
 import GitHub.Endpoints.PullRequests (pullRequestsForR)
@@ -23,10 +23,12 @@ import GitHub.Request (executeRequest)
 import Hit.Core (CommitOptions (..), ForceFlag (..), newOptionsWithName)
 import Hit.Git.Branch (runNew)
 import Hit.Git.Commit (runCommit)
-import Hit.Git.Common (getCurrentBranch, getUsername)
+import Hit.Git.Common (getCurrentBranch, getUsername, issueFromBranch)
 import Hit.GitHub (withAuthOwnerRepo)
 import Hit.Hub (withHub)
+import Hit.Issue (fetchIssue, mkIssueId)
 
+import qualified Data.Text as T
 import qualified Data.Vector as V
 
 
@@ -59,5 +61,11 @@ runPr isDraft = do
                     , coIsForcePush   = Simple
                     }
                 user <- getUsername
+                labels <- case issueFromBranch curBranch of
+                    Just n -> pure . Just . T.intercalate "," . map (untagName . labelName) .
+                        toList . issueLabels
+                            <$> fetchIssue (mkIssueId n)
+                    Nothing -> pure []
                 withHub $ ["pull-request", "--no-edit", "--assign", user, "--browse"]
                     <> ["--draft" | isDraft]
+                    <> [args | Just ls <- labels, args <- ["--labels", ls] ]
