@@ -25,9 +25,9 @@ import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, au
 
 import Hit.Core (CommitOptions (..), ForceFlag (..), IssueOptions (..), Milestone (..),
                  NewOptions (..), defaultIssueOptions)
-import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
-                runHop, runLog, runMilestones, runNew, runPr, runPush, runRename, runResolve,
-                runStash, runStatus, runSync, runUncommit, runUnstash, runWip)
+import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFork,
+                runFresh, runHop, runLog, runMilestones, runNew, runPr, runPush, runRename,
+                runResolve, runStash, runStatus, runSync, runUncommit, runUnstash, runWip)
 import Hit.Issue (runIssue)
 import Hit.Prompt (arrow)
 
@@ -57,6 +57,7 @@ hit = execParser cliParser >>= \case
     Status commit -> runCurrent >> runStatus commit
     Diff commit -> runDiff commit
     Clone name -> runClone name
+    Fork name -> runFork name
     Log commit -> runLog commit
     Milestones -> runMilestones
     Pr isDraft -> runPr isDraft
@@ -94,7 +95,8 @@ data HitCommand
     | Current
     | Status (Maybe Text)
     | Diff (Maybe Text)
-    | Clone Text
+    | Clone !Text
+    | Fork !Text
     | Log (Maybe Text)
     | Milestones
     | Pr
@@ -124,6 +126,7 @@ hitP = subparser
    <> com "status"   statusP   "Show current branch and beautiful stats with COMMIT_HASH (by default HEAD)"
    <> com "diff"     diffP     "Display beautiful diff with COMMIT_HASH (by default HEAD)"
    <> com "clone"    cloneP    "Clone the repo. Use 'reponame' or 'username/reponame' formats"
+   <> com "fork"     forkP     "Fork the repo. Use 'username/reponame' formats"
    <> com "log"      logP      "Display the log of the current commit or COMMIT_HASH"
    <> com "milestones" milestonesP "Show the list of open milestones for the project"
   where
@@ -219,7 +222,10 @@ resolveP :: Parser HitCommand
 resolveP = Resolve <$> maybeBranchP
 
 cloneP :: Parser HitCommand
-cloneP = Clone <$> strArgument (metavar "REPOSITORY")
+cloneP = Clone <$> repoP
+
+forkP :: Parser HitCommand
+forkP = Fork <$> repoP
 
 logP :: Parser HitCommand
 logP = Log <$> maybeCommitP
@@ -236,6 +242,9 @@ milestonesP = pure Milestones
 -- | @--me@ flag.
 meP :: Parser Bool
 meP = switch $ long "me" <> help "Assigned to me"
+
+repoP :: Parser Text
+repoP = strArgument (metavar "REPOSITORY")
 
 -- | Parse optional branch name as an argument.
 maybeBranchP :: Parser (Maybe Text)

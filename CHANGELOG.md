@@ -55,6 +55,8 @@ The changelog is available [on GitHub][2].
   it will print them all and do n othing more.
 * [#182](https://github.com/kowainik/hit-on/issues/182):
   Add labels from the issue in the `hit pr` command.
+* [#165](https://github.com/kowainik/hit-on/issues/165):
+  Add `hit fork` command.
 
 ### 0.1.0.0 — Aug 3, 2019
 

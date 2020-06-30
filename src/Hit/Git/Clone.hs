@@ -6,17 +6,21 @@ Maintainer              : Kowainik <xrom.xkov@gmail.com>
 Stability               : Stable
 Portability             : Portable
 
-@hit clone@ command runner and helpers.
+@hit clone@ and @hit fork@ command runners and helpers.
 -}
 
 module Hit.Git.Clone
     ( runClone
+    , runFork
     ) where
 
-import Colourista (errorMessage)
+import Colourista (errorMessage, infoMessage, successMessage)
+import GitHub.Endpoints.Repos (forkExistingRepo')
 import Shellmet ()
+import System.Directory (setCurrentDirectory)
 
 import Hit.Git.Common (getUsername)
+import Hit.GitHub (getGitHubToken, makeName)
 
 import qualified Data.Text as T
 
@@ -35,11 +39,39 @@ git clone git@github.com:username/project-name.git
 -}
 runClone :: Text -> IO ()
 runClone txt = do
-    name <- case T.splitOn "/" txt of
-        [reponame] -> getUsername >>= \u -> pure $ u <> "/" <> reponame
-        [username, reponame] -> pure $ username <> "/" <> reponame
-        _ -> do
-            errorMessage ("Incorrect name: " <> txt <> ". Use 'repo' or 'user/repo' formats")
-            exitFailure
+    (owner, repo) <- parseOwnerRepo txt
+    let name = owner <> "/" <> repo
     let gitLink = "git@github.com:" <> name <> ".git"
     "git" ["clone", gitLink]
+    infoMessage $ " '" <> name <> "' repository is cloned to the '" <> repo <>"/' folder."
+
+{- |
+-}
+runFork :: Text -> IO ()
+runFork name = getGitHubToken >>= \case
+    Nothing -> errorMessage "Can not get GITHUB_TOKEN" >> exitFailure
+    Just auth -> do
+        (owner, repo) <- parseOwnerRepo name
+        forkExistingRepo' auth (makeName owner) (makeName repo) Nothing >>= \case
+            Left err -> do
+                errorMessage $ "Can not fork the repository: " <> name
+                errorMessage $ show err
+                exitFailure
+            Right _ -> do
+                successMessage $ " '" <> name <> "' repository is forked for your account at GitHub"
+                usr <- getUsername
+                infoMessage $ " Link: https://github.com/" <> usr <> "/" <> repo
+
+                runClone repo
+                -- Step up into the folder and Add the upstream remote
+                setCurrentDirectory $ toString repo
+                "git" ["remote", "add", "upstream", "git@github.com:" <> name <> ".git"]
+                successMessage "'upstream' remote is added for the repository"
+
+parseOwnerRepo :: Text -> IO (Text, Text)
+parseOwnerRepo name = case T.splitOn "/" name of
+    [reponame] -> getUsername >>= \u -> pure (u, reponame)
+    [username, reponame] -> pure (username, reponame)
+    _ -> do
+        errorMessage ("Incorrect name: " <> name <> ". Use 'repo' or 'user/repo' formats")
+        exitFailure
