@@ -49,7 +49,7 @@ runPr isDraft = do
             putTextLn $ "    " <> show err
             exitFailure
         Right prs ->
-            if (not $ V.null prs)
+            if not $ V.null prs
             then errorMessage "PR for the current branch already exists" >> exitFailure
             else do
                 runCommit CommitOptions
