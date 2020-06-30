@@ -20,7 +20,7 @@ import GitHub.Data.Request (FetchCount (..))
 import GitHub.Endpoints.PullRequests (pullRequestsForR)
 import GitHub.Request (executeRequest)
 
-import Hit.Core (CommitOptions (..), ForceFlag (..))
+import Hit.Core (CommitOptions (..), ForceFlag (..), newOptionsWithName)
 import Hit.Git.Branch (runNew)
 import Hit.Git.Commit (runCommit)
 import Hit.Git.Common (getCurrentBranch, getUsername)
@@ -37,7 +37,7 @@ It requires @hub@ tool to be installed.
 -}
 runPr :: Bool -> IO ()
 runPr isDraft = do
-    whenM ((== "master") <$> getCurrentBranch) $ runNew False "patch"
+    whenM ((== "master") <$> getCurrentBranch) $ runNew $ newOptionsWithName "patch"
     curBranch <- getCurrentBranch
     -- check if the open PR with head @owner:branch_name@ already exist
     res <- withAuthOwnerRepo $ \auth owner repo -> do

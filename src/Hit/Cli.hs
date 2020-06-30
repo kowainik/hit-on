@@ -24,7 +24,7 @@ import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, au
                             metavar, option, progDesc, short, strArgument, subparser, switch)
 
 import Hit.Core (CommitOptions (..), ForceFlag (..), IssueOptions (..), Milestone (..),
-                 defaultIssueOptions)
+                 NewOptions (..), defaultIssueOptions)
 import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
                 runHop, runLog, runMilestones, runNew, runPr, runPush, runRename, runResolve,
                 runStash, runStatus, runSync, runUncommit, runUnstash, runWip)
@@ -39,7 +39,7 @@ hit :: IO ()
 hit = execParser cliParser >>= \case
     Hop branchName -> runHop branchName
     Fresh branchName -> runFresh branchName
-    New createIssue issueNum -> runNew createIssue issueNum
+    New newOptions -> runNew newOptions
     Rename issueNumOrBranch -> runRename issueNumOrBranch
     Issue issueOpts -> runIssue issueOpts
     Stash -> runStash
@@ -74,9 +74,7 @@ cliParser = info ( helper <*> versionP <*> hitP )
 data HitCommand
     = Hop (Maybe Text)
     | Fresh (Maybe Text)
-    | New
-        Bool  -- ^ Should create issue as well?
-        Text  -- ^ Issue or branch name
+    | New !NewOptions
     | Rename !Text  -- ^ Issue number or branch name
     | Issue IssueOptions
     | Stash
@@ -140,12 +138,13 @@ freshP = Fresh <$> maybeBranchP
 
 newP :: Parser HitCommand
 newP = do
-    createIssue <- switch
+    noCreateIssue <- switch
         $ long "issue"
        <> short 'i'
        <> help "Create new issue in addition to branch and assign it to you"
-    issueNumOrBranch <- issueNumOrBranchOpt
-    pure $ New createIssue issueNumOrBranch
+    noIssueOrBranch <- optional issueNumOrBranchOpt
+    noMe <- meP
+    pure $ New NewOptions{..}
 
 renameP :: Parser HitCommand
 renameP = Rename <$> issueNumOrBranchOpt
@@ -156,9 +155,7 @@ issueNumOrBranchOpt = strArgument (metavar "ISSUE_NUMBER_OR_BRANCH_NAME")
 issueP :: Parser HitCommand
 issueP = do
     ioIssueNumber <- optional issueNumP
-    ioMe <- switch
-        $ long "me"
-       <> help "Assigned to me"
+    ioMe <- meP
     ioMilestone <- milestoneP
     pure $ Issue IssueOptions {..}
 
@@ -235,6 +232,10 @@ prP = Pr <$> switch (long "draft" <> short 'd' <> help "Create a draft PR")
 
 milestonesP :: Parser HitCommand
 milestonesP = pure Milestones
+
+-- | @--me@ flag.
+meP :: Parser Bool
+meP = switch $ long "me" <> help "Assigned to me"
 
 -- | Parse optional branch name as an argument.
 maybeBranchP :: Parser (Maybe Text)

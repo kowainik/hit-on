@@ -17,6 +17,9 @@ module Hit.Core
     , defaultIssueOptions
       -- * Milestones
     , Milestone (..)
+      -- * @hit new@
+    , NewOptions (..)
+    , newOptionsWithName
     ) where
 
 
@@ -60,4 +63,18 @@ defaultIssueOptions = IssueOptions
     { ioIssueNumber = Nothing
     , ioMe = False
     , ioMilestone = Nothing
+    }
+
+
+data NewOptions = NewOptions
+    { noCreateIssue   :: !Bool  -- ^ Should create issue as well?
+    , noIssueOrBranch :: !(Maybe Text)  -- ^ Issue or branch name
+    , noMe            :: !Bool  -- ^ Branch from __my__ issues?
+    }
+
+newOptionsWithName :: Text -> NewOptions
+newOptionsWithName issueOrBranch = NewOptions
+    { noCreateIssue = False
+    , noMe = False
+    , noIssueOrBranch = Just issueOrBranch
     }
