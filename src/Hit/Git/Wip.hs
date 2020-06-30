@@ -19,9 +19,9 @@ module Hit.Git.Wip
     ) where
 
 import Hit.Core (CommitOptions (..), ForceFlag (..))
+import Hit.Git.Branch (runNew)
 import Hit.Git.Commit (runCommit)
 import Hit.Git.Common (getCurrentBranch)
-import Hit.Git.New (runNew)
 
 
 -- | @hit wip@ command: create and push @WIP@ commit.

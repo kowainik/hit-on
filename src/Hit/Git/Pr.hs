@@ -21,9 +21,9 @@ import GitHub.Endpoints.PullRequests (pullRequestsForR)
 import GitHub.Request (executeRequest)
 
 import Hit.Core (CommitOptions (..), ForceFlag (..))
+import Hit.Git.Branch (runNew)
 import Hit.Git.Commit (runCommit)
 import Hit.Git.Common (getCurrentBranch, getUsername)
-import Hit.Git.New (runNew)
 import Hit.GitHub (withAuthOwnerRepo)
 import Hit.Hub (withHub)
 
@@ -49,7 +49,7 @@ runPr isDraft = do
             putTextLn $ "    " <> show err
             exitFailure
         Right prs ->
-            if (not $ V.null prs)
+            if not $ V.null prs
             then errorMessage "PR for the current branch already exists" >> exitFailure
             else do
                 runCommit CommitOptions

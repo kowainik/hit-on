@@ -44,6 +44,10 @@ The changelog is available [on GitHub][2].
   Notify on an empty list of the issues.
 * [#177](https://github.com/kowainik/hit-on/issues/177):
   Add `hit milestones` command to show all open milestones.
+* [#153](https://github.com/kowainik/hit-on/issues/153):
+  Add `hit pr` command to commit and create pull request at once.
+* [#160](https://github.com/kowainik/hit-on/issues/160):
+  Add `hit rename` command to rename current local and remote branch.
 
 
 ### 0.1.0.0 — Aug 3, 2019

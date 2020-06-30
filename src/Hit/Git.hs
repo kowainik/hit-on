@@ -13,6 +13,7 @@ module Hit.Git
     ( runHop
     , runFresh
     , runNew
+    , runRename
     , runPush
     , runResolve
     , runStash
@@ -36,6 +37,7 @@ module Hit.Git
     ) where
 
 import Hit.Git.Amend (runAmend)
+import Hit.Git.Branch (runNew, runRename)
 import Hit.Git.Clear (runClear)
 import Hit.Git.Clone (runClone)
 import Hit.Git.Commit (runCommit)
@@ -47,7 +49,6 @@ import Hit.Git.Fresh (runFresh)
 import Hit.Git.Hop (runHop)
 import Hit.Git.Log (runLog)
 import Hit.Git.Milestones (runMilestones)
-import Hit.Git.New (runNew)
 import Hit.Git.Pr (runPr)
 import Hit.Git.Push (runPush)
 import Hit.Git.Resolve (runResolve)
