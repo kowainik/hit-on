@@ -17,6 +17,7 @@ module Hit.Git.Clone
 import Colourista (errorMessage, infoMessage, successMessage)
 import GitHub.Endpoints.Repos (forkExistingRepo')
 import Shellmet ()
+import System.Directory (setCurrentDirectory)
 
 import Hit.Git.Common (getUsername)
 import Hit.GitHub (getGitHubToken, makeName)
@@ -62,6 +63,10 @@ runFork name = getGitHubToken >>= \case
                 infoMessage $ " Link: https://github.com/" <> usr <> "/" <> repo
 
                 runClone repo
+                -- Step up into the folder and Add the upstream remote
+                setCurrentDirectory $ toString repo
+                "git" ["remote", "add", "upstream", "git@github.com:" <> name <> ".git"]
+                successMessage "'upstream' remote is added for the repository"
 
 parseOwnerRepo :: Text -> IO (Text, Text)
 parseOwnerRepo name = case T.splitOn "/" name of
