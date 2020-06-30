@@ -21,9 +21,9 @@ import GitHub.Endpoints.PullRequests (pullRequestsForR)
 import GitHub.Request (executeRequest)
 
 import Hit.Core (CommitOptions (..), ForceFlag (..))
+import Hit.Git.Branch (runNew)
 import Hit.Git.Commit (runCommit)
 import Hit.Git.Common (getCurrentBranch, getUsername)
-import Hit.Git.New (runNew)
 import Hit.GitHub (withAuthOwnerRepo)
 import Hit.Hub (withHub)
 

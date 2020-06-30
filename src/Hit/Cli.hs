@@ -26,8 +26,8 @@ import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, au
 import Hit.Core (CommitOptions (..), ForceFlag (..), IssueOptions (..), Milestone (..),
                  defaultIssueOptions)
 import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFresh,
-                runHop, runLog, runMilestones, runNew, runPr, runPush, runResolve, runStash,
-                runStatus, runSync, runUncommit, runUnstash, runWip)
+                runHop, runLog, runMilestones, runNew, runPr, runPush, runRename, runResolve,
+                runStash, runStatus, runSync, runUncommit, runUnstash, runWip)
 import Hit.Issue (runIssue)
 import Hit.Prompt (arrow)
 
@@ -40,6 +40,7 @@ hit = execParser cliParser >>= \case
     Hop branchName -> runHop branchName
     Fresh branchName -> runFresh branchName
     New createIssue issueNum -> runNew createIssue issueNum
+    Rename issueNumOrBranch -> runRename issueNumOrBranch
     Issue issueOpts -> runIssue issueOpts
     Stash -> runStash
     Unstash -> runUnstash
@@ -76,6 +77,7 @@ data HitCommand
     | New
         Bool  -- ^ Should create issue as well?
         Text  -- ^ Issue or branch name
+    | Rename !Text  -- ^ Issue number or branch name
     | Issue IssueOptions
     | Stash
     | Unstash
@@ -106,6 +108,7 @@ hitP = subparser
     $ com "hop"      hopP      "Switch to branch and sync it"
    <> com "fresh"    freshP    "Rebase current branch on remote one"
    <> com "new"      newP      "Create new branch from the current one"
+   <> com "rename"   renameP   "Rename current branch to the given issue number branch or text"
    <> com "stash"    stashP    "Stash all local changes"
    <> com "unstash"  unstashP  "Unstash previously stashed changes"
    <> com "commit"   commitP   "Commit all local changes and prepend issue number"
@@ -141,8 +144,14 @@ newP = do
         $ long "issue"
        <> short 'i'
        <> help "Create new issue in addition to branch and assign it to you"
-    issueNumOrBranch <- strArgument (metavar "ISSUE_NUMBER_OR_BRANCH_NAME")
+    issueNumOrBranch <- issueNumOrBranchOpt
     pure $ New createIssue issueNumOrBranch
+
+renameP :: Parser HitCommand
+renameP = Rename <$> issueNumOrBranchOpt
+
+issueNumOrBranchOpt :: Parser Text
+issueNumOrBranchOpt = strArgument (metavar "ISSUE_NUMBER_OR_BRANCH_NAME")
 
 issueP :: Parser HitCommand
 issueP = do

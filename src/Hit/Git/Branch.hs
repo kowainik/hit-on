@@ -1,16 +1,19 @@
 {- |
-Module                  : Hit.Git.New
+Module                  : Hit.Git.Branch
 Copyright               : (c) 2019-2020 Kowainik
 SPDX-License-Identifier : MPL-2.0
 Maintainer              : Kowainik <xrom.xkov@gmail.com>
 Stability               : Stable
 Portability             : Portable
 
-@hit new@ command runner and helpers.
+All functionality related to the branch creation and manipulation.
+
+@hit new@ and @hit rename@ command runners and helpers.
 -}
 
-module Hit.Git.New
+module Hit.Git.Branch
     ( runNew
+    , runRename
     ) where
 
 import Data.Char (isAlphaNum, isDigit, isSpace)
@@ -18,9 +21,10 @@ import Data.Char (isAlphaNum, isDigit, isSpace)
 import Colourista (errorMessage, infoMessage, successMessage)
 import GitHub (Issue (issueHtmlUrl, issueNumber, issueTitle), IssueNumber (..), getUrl,
                unIssueNumber)
+import Shellmet (($?))
 
 import Hit.Formatting (stripRfc)
-import Hit.Git.Common (getUsername)
+import Hit.Git.Common (getCurrentBranch, getUsername)
 import Hit.Issue (assignIssue, createIssue, fetchIssue, mkIssueId)
 
 import qualified Data.Text as T
@@ -29,12 +33,53 @@ import qualified Data.Text as T
 -- | @hit new@ command.
 runNew :: Bool -> Text -> IO ()
 runNew isIssue issueOrName = do
+    branchName <- mkBranchName isIssue issueOrName
+    "git" ["checkout", "-b", branchName]
+
+{- | @hit rename@ command.
+
+Renames the current (non-master) branch to the given name or issue with the
+username prefix.
+
+If the current branch is master, it just creates a new branch as in 'runNew'.
+-}
+runRename :: Text -> IO ()
+runRename issueOrName = do
+    curBranch <- getCurrentBranch
+    if curBranch == "master"
+    then runNew False issueOrName
+    else do
+        newBranch <- mkBranchName False issueOrName
+        -- rename a current branch locally
+        "git" ["branch", "-m", curBranch, newBranch]
+        -- check if the old branch is on remote
+        isRemote <- (True <$ "git" ["ls-remote", "--exit-code", "--heads", "origin", curBranch]) $? pure False
+        -- rename the corresponding branch remote (if applicable)
+        when isRemote $ do
+            "git" ["push", "origin", "-u", newBranch]
+            "git" ["push", "origin", "--delete", curBranch]
+
+{- | This function returns the new branch name that should be used.
+
+If specified, the new corresponding issue is created and assigned.
+If the provided new name is issue number then it should assign the user to the issue and create the branch in the following view:
+
+@
+username/42-Issue-Title-From-GitHub
+@
+
+The issue title is taken from the corresponding issue and escaped.
+-}
+mkBranchName
+    :: Bool  -- ^ if the new issue should be created
+    -> Text  -- ^ user input: issue number or text
+    -> IO Text
+mkBranchName doCreateIssue issueOrName = do
     login <- getUsername
-    maybeIssue <- if isIssue then tryCreateNewIssue login else pure Nothing
+    maybeIssue <- if doCreateIssue then tryCreateNewIssue login else pure Nothing
     let branchDescription = mkBranchDescription maybeIssue issueOrName
     title <- assignAndDisplayBranchDescription login branchDescription
-    let branchName = login <> "/" <> title
-    "git" ["checkout", "-b", branchName]
+    pure $ login <> "/" <> title
   where
     tryCreateNewIssue :: Text -> IO (Maybe IssueNumber)
     tryCreateNewIssue login = do
@@ -50,6 +95,7 @@ runNew isIssue issueOrName = do
                     <> show (unIssueNumber issueNum)
                 showIssueLink issue
                 pure $ Just issueNum
+
 
 {- | This data type represents all cases on how to create short branch
 name description. During 'hit new' command there can be several cases:

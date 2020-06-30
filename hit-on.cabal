@@ -65,6 +65,7 @@ library
                          Hit.Formatting
                          Hit.Git
                            Hit.Git.Amend
+                           Hit.Git.Branch
                            Hit.Git.Clear
                            Hit.Git.Clone
                            Hit.Git.Commit
@@ -76,7 +77,6 @@ library
                            Hit.Git.Hop
                            Hit.Git.Log
                            Hit.Git.Milestones
-                           Hit.Git.New
                            Hit.Git.Pr
                            Hit.Git.Push
                            Hit.Git.Resolve
