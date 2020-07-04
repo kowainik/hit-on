@@ -21,13 +21,15 @@ import Data.Version (showVersion)
 import Development.GitRev (gitCommitDate, gitHash)
 import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, auto, command,
                             execParser, flag, flag', fullDesc, help, helper, info, infoOption, long,
-                            metavar, option, progDesc, short, strArgument, subparser, switch)
+                            metavar, option, progDesc, short, strArgument, strOption, subparser,
+                            switch)
 
 import Hit.Core (CommitOptions (..), ForceFlag (..), IssueOptions (..), Milestone (..),
                  NewOptions (..), defaultIssueOptions)
 import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFork,
                 runFresh, runHop, runLog, runMilestones, runNew, runPr, runPush, runRename,
-                runResolve, runStash, runStatus, runSync, runUncommit, runUnstash, runWip)
+                runResolve, runStatus, runSync, runUncommit, runWip)
+import Hit.Git.Stash (runStash, runStashClear, runStashDiff, runStashList, runUnstash)
 import Hit.Issue (runIssue)
 import Hit.Prompt (arrow)
 
@@ -42,7 +44,11 @@ hit = execParser cliParser >>= \case
     New newOptions -> runNew newOptions
     Rename issueNumOrBranch -> runRename issueNumOrBranch
     Issue issueOpts -> runIssue issueOpts
-    Stash -> runStash
+    Stash cmd -> case cmd of
+        StashSave name       -> runStash name
+        StashDiff num        -> runStashDiff num
+        StashClear forceFlag -> runStashClear forceFlag
+        StashList            -> runStashList
     Unstash -> runUnstash
     Commit opts -> runCommit opts
     Wip -> runWip
@@ -78,7 +84,7 @@ data HitCommand
     | New !NewOptions
     | Rename !Text  -- ^ Issue number or branch name
     | Issue IssueOptions
-    | Stash
+    | Stash !StashCmd
     | Unstash
     | Commit CommitOptions
     | Wip
@@ -101,6 +107,23 @@ data HitCommand
     | Milestones
     | Pr
         !Bool  -- ^ Create a draft PR?
+
+-- | Subcommands for the @git stash@ command
+data StashCmd
+    -- | @git stash@ or @git stash push@ if name is provided
+    = StashSave
+        !(Maybe Text)  -- ^ Optional name
+
+    -- | @git stash show@ - show diff
+    | StashDiff
+        !(Maybe Int)  -- ^ Stash index
+
+    -- | @git stash list@
+    | StashList
+
+    -- | @git stash clear@
+    | StashClear
+        !ForceFlag
 
 -- | Commands parser.
 hitP :: Parser HitCommand
@@ -163,7 +186,30 @@ issueP = do
     pure $ Issue IssueOptions {..}
 
 stashP :: Parser HitCommand
-stashP = pure Stash
+stashP = Stash <$> stashCmdP
+  where
+    stashCmdP :: Parser StashCmd
+    stashCmdP = stashListP <|> stashDiffP <|> stashClearP <|> stashSaveP
+
+    stashListP, stashDiffP, stashClearP:: Parser StashCmd
+    stashListP  = subcom "list"  (pure StashList) "List all stashes"
+    stashClearP = subcom "clear" (StashClear <$> forceFlagP) "Clear all stashes"
+    stashDiffP  = subcom "diff"  (StashDiff <$> stashIndexP) "Show diff with the given stash"
+      where
+        stashIndexP :: Parser (Maybe Int)
+        stashIndexP = optional $ argument auto $ help "Index of stash"
+
+    stashSaveP :: Parser StashCmd
+    stashSaveP = do
+        stashName <- optional $ strOption $ mconcat
+            [ long "name"
+            , metavar "STRING"
+            , help "Name of stash"
+            ]
+        pure $ StashSave stashName
+
+    subcom :: String -> Parser StashCmd -> String -> Parser StashCmd
+    subcom name p desc = subparser $ command name (info p $ progDesc desc)
 
 unstashP :: Parser HitCommand
 unstashP = pure Unstash
