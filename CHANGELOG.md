@@ -57,6 +57,13 @@ The changelog is available [on GitHub][2].
   Add labels from the issue in the `hit pr` command.
 * [#165](https://github.com/kowainik/hit-on/issues/165):
   Add `hit fork` command.
+* [#159](https://github.com/kowainik/hit-on/issues/159):
+  Add `hit wip` command.
+* [#136](https://github.com/kowainik/hit-on/issues/136):
+  Add `--force` flag to the `hit sync` command.
+* [#135](https://github.com/kowainik/hit-on/issues/135):
+  Implement `hit stash diff`, `hit stash list`, `hit stash clear` commands.
+  Add `--name` option to `hit stash` for named stashes.
 
 ### 0.1.0.0 — Aug 3, 2019
 

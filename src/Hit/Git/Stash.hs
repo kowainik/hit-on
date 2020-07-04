@@ -6,7 +6,7 @@ Maintainer              : Kowainik <xrom.xkov@gmail.com>
 Stability               : Stable
 Portability             : Portable
 
-Family of @hit stash@ and @hit unstan@ commands runners and helpers.
+Family of @hit stash@ and @hit unstash@ commands runners and helpers.
 -}
 
 module Hit.Git.Stash
