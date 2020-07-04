@@ -84,7 +84,6 @@ library
                            Hit.Git.Status
                            Hit.Git.Sync
                            Hit.Git.Uncommit
-                           Hit.Git.Unstash
                            Hit.Git.Wip
                          Hit.GitHub
                          Hit.Hub
