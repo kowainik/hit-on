@@ -14,6 +14,11 @@ All functionality related to the branch creation and manipulation.
 module Hit.Git.Branch
     ( runNew
     , runRename
+
+      -- * Branch naming helpers
+    , BranchDescription (..)
+    , assignAndDisplayBranchDescription
+    , mkBranchDescription
     ) where
 
 import Data.Char (isAlphaNum, isDigit, isSpace)
@@ -95,7 +100,7 @@ mkBranchName doCreateIssue issueOrName = do
     login <- getUsername
     maybeIssue <- if doCreateIssue then tryCreateNewIssue login else pure Nothing
     let branchDescription = mkBranchDescription maybeIssue issueOrName
-    title <- assignAndDisplayBranchDescription login branchDescription
+    title <- assignAndDisplayBranchDescription True login branchDescription
     pure $ login <> "/" <> title
   where
     tryCreateNewIssue :: Text -> IO (Maybe IssueNumber)
@@ -134,8 +139,8 @@ mkBranchDescription Nothing issueOrName = case readMaybe @Int $ toString issueOr
     Just issueNum -> FromIssueNumber issueNum
     Nothing       -> FromText issueOrName
 
-{- | Assigns the user to the issue if applicable (it current design, if the issue
-already exists and user creates the branch for it: 'FromIssueNumber').
+{- | Assigns the user to the issue if applicable (in the current design, if the
+issue already exists and user creates the branch for it: 'FromIssueNumber').
 
 Displays 'BranchDescription' in format:
 
@@ -143,14 +148,19 @@ Displays 'BranchDescription' in format:
 123-short-issue-title
 @
 -}
-assignAndDisplayBranchDescription :: Text -> BranchDescription -> IO Text
-assignAndDisplayBranchDescription username = \case
+assignAndDisplayBranchDescription
+    :: Bool  -- ^ To assign the given user to the issue?
+    -> Text  -- ^ User name
+    -> BranchDescription
+    -> IO Text
+assignAndDisplayBranchDescription doAssign username = \case
     FromText text -> pure $ mkShortDesc text
     FromNewIssue issueNum issueTitle -> pure $ nameWithNumber issueNum issueTitle
     FromIssueNumber issueNum -> do
         issue <- fetchIssue $ mkIssueId issueNum
-        assignIssue issue username
-        showIssueLink issue
+        when doAssign $ do
+            assignIssue issue username
+            showIssueLink issue
         pure $ nameWithNumber issueNum $ issueTitle issue
   where
     nameWithNumber :: Int -> Text -> Text
