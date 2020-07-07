@@ -13,13 +13,25 @@ module Hit.Git.Fresh
     ( runFresh
     ) where
 
-import Shellmet ()
+import Colourista (errorMessage, infoMessage, warningMessage)
+import Shellmet (($?))
+import System.IO (hFlush)
 
 import Hit.Git.Common (nameOrMaster)
+import Hit.Prompt (Answer (..), arrow, prompt, yesOrNoText)
 
 
 -- | @hit fresh@ command.
 runFresh :: Maybe Text -> IO ()
 runFresh (nameOrMaster -> branch) = do
     "git" ["fetch", "origin", branch]
-    "git" ["rebase", "origin/" <> branch]
+    isRebase <- (True <$ "git" ["rebase", "origin/" <> branch]) $? pure False
+    unless isRebase $ do
+        errorMessage " 'git rebase' failed."
+        putTextLn $ "  Do you want to abort the command? " <> yesOrNoText Y
+        putText arrow >> hFlush stdout
+        prompt Y >>= \case
+            Y -> do
+                infoMessage "Aborting the command."
+                "git" ["rebase", "--abort"] $? pass
+            N -> warningMessage "Unsuccessful 'hit fresh' while rebasing."
