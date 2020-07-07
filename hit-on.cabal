@@ -119,6 +119,7 @@ test-suite hit-on-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Main.hs
+  other-modules:       Test.Hit.Names
 
   build-depends:       text
                      , hspec ^>= 2.7.1

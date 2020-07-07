@@ -11,6 +11,9 @@ Portability             : Portable
 
 module Hit.Git.Commit
     ( runCommit
+
+      -- * Commit message helpers
+    , toCommitMessage
     ) where
 
 import Colourista (errorMessage)
@@ -48,18 +51,20 @@ runCommit CommitOptions{..} = case coName of
     commitCmds :: Text -> Maybe Int -> IO ()
     commitCmds msg issueNum = do
         "git" ["add", "."]
-        "git" ["commit", "-m", showMsg msg $ guard hasIssue *> issueNum]
+        "git" ["commit", "-m", toCommitMessage hasIssue msg issueNum]
         when (coPush || coIsForcePush == Force) $ runPush coIsForcePush
 
     getCurrentIssue :: IO (Maybe Int)
     getCurrentIssue = issueFromBranch <$> getCurrentBranch
 
-    showMsg :: Text -> Maybe Int -> Text
-    showMsg (stripRfc -> msg) = \case
-       Nothing -> msg
-       Just n  ->
-           let issue = "#" <> show n
-           in "[" <> issue <> "] " <> msg <> "\n\nResolves " <> issue
-
     hasIssue :: Bool
     hasIssue = not coNoIssueNumber
+
+toCommitMessage :: Bool -> Text -> Maybe Int -> Text
+toCommitMessage hasIssue (stripRfc -> msg) issueNum
+    | not hasIssue = msg
+    | otherwise = case issueNum of
+        Nothing -> msg
+        Just n  ->
+            let issue = "#" <> show n
+            in "[" <> issue <> "] " <> msg <> "\n\nResolves " <> issue

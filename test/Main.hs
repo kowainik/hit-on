@@ -4,10 +4,12 @@ import GitHub.Data.Name (Name (..))
 import Test.Hspec (describe, hspec, it, shouldBe)
 
 import Hit.GitHub (parseOwnerRepo)
+import Test.Hit.Names (namesSpec)
 
 
 main :: IO ()
 main = hspec $ do
+    namesSpec
     describe "parseOwnerRepo" $ do
         let expectedOwnerName = N "kowainik"
         let expectedRepoName = N "hit-on"
