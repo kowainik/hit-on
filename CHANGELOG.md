@@ -64,6 +64,8 @@ The changelog is available [on GitHub][2].
 * [#135](https://github.com/kowainik/hit-on/issues/135):
   Implement `hit stash diff`, `hit stash list`, `hit stash clear` commands.
   Add `--name` option to `hit stash` for named stashes.
+* [#109](https://github.com/kowainik/hit-on/issues/109):
+  Do not fail on `hit fresh` when unsuccessful rebasing.
 
 ### 0.1.0.0 — Aug 3, 2019
 

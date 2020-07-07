@@ -18,7 +18,8 @@ module Hit.Prompt
     , arrow
     ) where
 
-import Colourista (bold, errorMessage, reset)
+import Colourista (errorMessage)
+import Colourista.Short (b)
 
 import qualified Data.Text as T
 
@@ -41,8 +42,8 @@ yesOrNoWithDefault def (T.toLower -> answer )
     | otherwise = Nothing
 
 yesOrNoText :: Answer -> Text
-yesOrNoText N = "y/" <> bold <> "[n]" <> reset
-yesOrNoText Y = bold <> "[y]" <> reset <> "/n"
+yesOrNoText N = "y/" <> b "[n]"
+yesOrNoText Y = b "[y]" <> "/n"
 
 -- | Prompt user for y/n input. Takes a default 'Answer' for the case of empty user input.
 prompt :: Answer -> IO Answer
