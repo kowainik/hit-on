@@ -70,6 +70,7 @@ data NewOptions = NewOptions
     { noCreateIssue   :: !Bool  -- ^ Should create issue as well?
     , noIssueOrBranch :: !(Maybe Text)  -- ^ Issue or branch name
     , noMe            :: !Bool  -- ^ Branch from __my__ issues?
+    , noMilestone     :: !(Maybe Milestone)  -- ^ When creating a new issue, add to any milestone?
     }
 
 newOptionsWithName :: Text -> NewOptions
@@ -77,4 +78,5 @@ newOptionsWithName issueOrBranch = NewOptions
     { noCreateIssue = False
     , noMe = False
     , noIssueOrBranch = Just issueOrBranch
+    , noMilestone = Nothing
     }

@@ -66,6 +66,9 @@ The changelog is available [on GitHub][2].
   Add `--name` option to `hit stash` for named stashes.
 * [#109](https://github.com/kowainik/hit-on/issues/109):
   Do not fail on `hit fresh` when unsuccessful rebasing.
+* [#178](https://github.com/kowainik/hit-on/issues/178):
+  Add ability to add newly created issues to the specified milestone with the
+  `-m|--current-milestone` or `--milestone ID` during the `hit new` command.
 
 ### 0.1.0.0 — Aug 3, 2019
 
