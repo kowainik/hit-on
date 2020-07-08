@@ -28,11 +28,11 @@ import GitHub (Issue (issueHtmlUrl, issueNumber, issueTitle), IssueNumber (..), 
                unIssueNumber)
 import Shellmet (($?))
 
-import Hit.Core (NewOptions (..), newOptionsWithName)
+import Hit.Core (Milestone, NewOptions (..), newOptionsWithName)
 import Hit.Formatting (stripRfc)
 import Hit.Git.Common (getCurrentBranch, getUsername)
-import Hit.Issue (assignIssue, createIssue, fetchIssue, getAllIssues, meToUsername, mkIssueId,
-                  printIssues)
+import Hit.Issue (assignIssue, createIssue, fetchIssue, getAllIssues, getMilestoneId, meToUsername,
+                  mkIssueId, printIssues)
 
 import qualified Data.Text as T
 import qualified Data.Vector as V
@@ -55,7 +55,7 @@ runNew NewOptions{..} = do
                 errorMessage "You should specify either the issue number, or branch name"
                 errorMessage "Or you can use '--me' option to create a branch of issue assign to you."
                 exitFailure
-    branchName <- mkBranchName noCreateIssue issueOrBranch
+    branchName <- mkBranchName noCreateIssue noMilestone issueOrBranch
     "git" ["checkout", "-b", branchName]
 
 {- | @hit rename@ command.
@@ -71,7 +71,7 @@ runRename issueOrName = do
     if curBranch == "master"
     then runNew $ newOptionsWithName issueOrName
     else do
-        newBranch <- mkBranchName False issueOrName
+        newBranch <- mkBranchName False Nothing issueOrName
         -- rename a current branch locally
         "git" ["branch", "-m", curBranch, newBranch]
         -- check if the old branch is on remote
@@ -94,9 +94,10 @@ The issue title is taken from the corresponding issue and escaped.
 -}
 mkBranchName
     :: Bool  -- ^ if the new issue should be created
+    -> Maybe Milestone  -- ^ Add the new issue to the milestone?
     -> Text  -- ^ user input: issue number or text
     -> IO Text
-mkBranchName doCreateIssue issueOrName = do
+mkBranchName doCreateIssue milestone issueOrName = do
     login <- getUsername
     maybeIssue <- if doCreateIssue then tryCreateNewIssue login else pure Nothing
     let branchDescription = mkBranchDescription maybeIssue issueOrName
@@ -106,7 +107,8 @@ mkBranchName doCreateIssue issueOrName = do
     tryCreateNewIssue :: Text -> IO (Maybe IssueNumber)
     tryCreateNewIssue login = do
         infoMessage $ "Creating issue with title: '" <> issueOrName <> "'"
-        createIssue issueOrName login >>= \case
+        milestoneId <- getMilestoneId milestone
+        createIssue issueOrName login milestoneId >>= \case
             Left err -> do
                 errorMessage "Error creating issue under 'hit new' command!"
                 putTextLn $ show err

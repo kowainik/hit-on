@@ -25,13 +25,15 @@ module Hit.Issue
     , mkIssueId
     , getIssueTitle
     , showIssueName
+      -- ** Milestones
+    , getMilestoneId
     ) where
 
 import Colourista (blue, blueBg, bold, errorMessage, formatWith, green, red, reset, skipMessage,
                    successMessage, warningMessage)
 import Data.Vector (Vector)
 import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Name, SimpleUser (..),
-               User, getUrl, milestoneNumber, mkId, unIssueNumber, untagId, untagName)
+               User, getUrl, milestoneNumber, mkId, unIssueNumber, untagName)
 import GitHub.Data.Options (stateOpen)
 import GitHub.Endpoints.Issues (EditIssue (..), NewIssue (..), editOfIssue, issue', issuesForRepo')
 import GitHub.Endpoints.Issues.Milestones (milestones')
@@ -45,6 +47,7 @@ import qualified Hit.Formatting as Fmt
 
 import qualified Data.Text as T
 import qualified Data.Vector as V
+import qualified GitHub as G
 import qualified GitHub.Endpoints.Issues as GitHub
 
 
@@ -100,10 +103,10 @@ getAllIssues
 getAllIssues milestone me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \case
     Left err -> errorMessage (show err) >> exitFailure
     Right is -> do
-        milestoneId <- getMilestoneId
+        milestoneId <- getMilestoneId milestone
         pure $ filterIssues milestoneId is
   where
-    filterIssues :: Maybe Int -> Vector Issue -> Vector Issue
+    filterIssues :: Maybe (Id G.Milestone) -> Vector Issue -> Vector Issue
     filterIssues milestoneId = V.filter
         (\i ->
             isNotPR i
@@ -119,19 +122,10 @@ getAllIssues milestone me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateO
     isNotPR :: Issue -> Bool
     isNotPR Issue{..} = isNothing issuePullRequest
 
-    getMilestoneId :: IO (Maybe Int)
-    getMilestoneId = case milestone of
-        Just (MilestoneId mId) -> pure $ Just mId
-        Just CurrentMilestone  -> fetchCurrentMilestoneId
-        Nothing                -> pure Nothing
-
-    isInMilestone :: Issue -> Maybe Int -> Bool
+    isInMilestone :: Issue -> Maybe (Id G.Milestone) -> Bool
     isInMilestone Issue{..} = \case
-        Just milestoneId -> issueMilestoneId == Just milestoneId
+        Just milestoneId -> (milestoneNumber <$> issueMilestone) == Just milestoneId
         Nothing  -> True
-      where
-        issueMilestoneId :: Maybe Int
-        issueMilestoneId = untagId . milestoneNumber <$> issueMilestone
 
 -- | Show issue number with alignment and its name.
 showIssueName :: Text -> Int -> Issue -> Text
@@ -187,9 +181,9 @@ showIssueFull i@Issue{..} = T.intercalate "\n" $
 
 -- | Create an 'Issue' by given title 'Text'
 -- QUESTION: should we create 'Login' newtype to add more type-safety here?
-createIssue :: Text -> Text -> IO (Either Error Issue)
-createIssue title login = withAuthOwnerRepo $ \token owner repo ->
-    GitHub.createIssue token owner repo $ mkNewIssue title login
+createIssue :: Text -> Text -> Maybe (Id G.Milestone) -> IO (Either Error Issue)
+createIssue title login milestone = withAuthOwnerRepo $ \token owner repo ->
+    GitHub.createIssue token owner repo $ mkNewIssue title login milestone
 
 {- | Assign the user to the given 'Issue'.
 
@@ -250,16 +244,24 @@ fetchIssue iNum = withOwnerRepo (\t o r -> issue' t o r iNum) >>= \case
     Left err -> errorMessage (show err) >> exitFailure
     Right issue -> pure issue
 
+{- | From the given 'Milestone' type try to get the milestone ID
+-}
+getMilestoneId :: Maybe Milestone -> IO (Maybe (Id G.Milestone))
+getMilestoneId = \case
+    Just (MilestoneId mId) -> pure $ Just $ mkId (Proxy @G.Milestone) mId
+    Just CurrentMilestone  -> fetchCurrentMilestoneId
+    Nothing                -> pure Nothing
+
 {- | Fetches all open milestones. Then figure out the current one and return its
 ID as 'Int'.
 
 If it could not fetch, or there is no open milestones then prints a warning
 message and returns 'Nothing'.
 -}
-fetchCurrentMilestoneId :: IO (Maybe Int)
+fetchCurrentMilestoneId :: IO (Maybe (Id G.Milestone))
 fetchCurrentMilestoneId = withOwnerRepo milestones' >>= \case
     Left err -> Nothing <$ warningMessage ("Could not fetch the milestones\n    " <> show err)
-    Right ms -> case sortWith Down $ map (untagId . milestoneNumber) $ toList ms of
+    Right ms -> case sortWith Down $ map milestoneNumber $ toList ms of
         []  -> warningMessage "There are no open milestones for this project" >> pure Nothing
         m:_ -> pure $ Just m
 
@@ -268,11 +270,11 @@ mkIssueId :: Int -> Id Issue
 mkIssueId = mkId $ Proxy @Issue
 
 -- | Create new issue with title and assignee.
-mkNewIssue :: Text -> Text -> NewIssue
-mkNewIssue title login = NewIssue
+mkNewIssue :: Text -> Text -> Maybe (Id G.Milestone) -> NewIssue
+mkNewIssue title login milestone = NewIssue
     { newIssueTitle     = title
     , newIssueBody      = Nothing
     , newIssueAssignees = V.singleton $ makeName @User login
-    , newIssueMilestone = Nothing
+    , newIssueMilestone = milestone
     , newIssueLabels    = Nothing
     }

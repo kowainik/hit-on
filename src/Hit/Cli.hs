@@ -170,6 +170,7 @@ newP = do
        <> help "Create new issue in addition to branch and assign it to you"
     noIssueOrBranch <- optional issueNumOrBranchOpt
     noMe <- meP
+    noMilestone <- milestoneP
     pure $ New NewOptions{..}
 
 renameP :: Parser HitCommand
