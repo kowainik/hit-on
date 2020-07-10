@@ -44,8 +44,8 @@ jobs:
         cabal build --enable-tests --enable-benchmarks
 
     - name: Test
-      run: |
-        cabal test
+      if: matrix.os != 'macOS-latest'
+      run: cabal test
 
   hlint:
     name: hlint
