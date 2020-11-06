@@ -68,8 +68,8 @@ If the current branch is the main one, it just creates a new branch as in 'runNe
 runRename :: Text -> IO ()
 runRename issueOrName = do
     curBranch <- getCurrentBranch
-    defBranch <- getMainBranch
-    if curBranch == defBranch
+    mainBranch <- getMainBranch
+    if curBranch == mainBranch
     then runNew $ newOptionsWithName issueOrName
     else do
         newBranch <- mkBranchName False Nothing issueOrName
