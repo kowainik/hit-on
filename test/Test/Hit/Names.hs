@@ -58,5 +58,5 @@ commitMessagesSpec = describe "Commit messages naming" $ do
 mainBranchSpec :: Spec
 mainBranchSpec = describe "Main branch of the repo" $ do
     branch <- runIO getMainBranch
-    it "should be named 'master'" $
-        branch `shouldBe` "master"
+    it "should be named 'main'" $
+        branch `shouldBe` "main"
