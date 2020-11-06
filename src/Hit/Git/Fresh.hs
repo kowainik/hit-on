@@ -23,7 +23,7 @@ import Hit.Prompt (Answer (..), arrow, prompt, yesOrNoText)
 
 -- | @hit fresh@ command.
 runFresh :: Maybe Text -> IO ()
-runFresh (mBranch) = do
+runFresh mBranch = do
     branch <- branchOrMain mBranch
     "git" ["fetch", "origin", branch]
     isRebase <- (True <$ "git" ["rebase", "origin/" <> branch]) $? pure False
