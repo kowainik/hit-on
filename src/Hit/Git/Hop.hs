@@ -15,11 +15,12 @@ module Hit.Git.Hop
 
 import Shellmet ()
 
-import Hit.Git.Common (nameOrMaster)
+import Hit.Git.Common (branchOrMain)
 
 
 -- | @hit hop@ command.
 runHop :: Maybe Text -> IO ()
-runHop (nameOrMaster -> branch) = do
+runHop mBranch = do
+    branch <- branchOrMain mBranch
     "git" ["checkout",  branch]
     "git" ["pull", "--rebase", "--prune"]

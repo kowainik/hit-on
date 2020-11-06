@@ -30,7 +30,7 @@ import Shellmet (($?))
 
 import Hit.Core (Milestone, NewOptions (..), newOptionsWithName)
 import Hit.Formatting (stripRfc)
-import Hit.Git.Common (getCurrentBranch, getUsername)
+import Hit.Git.Common (getCurrentBranch, getMainBranch, getUsername)
 import Hit.Issue (assignIssue, createIssue, fetchIssue, getAllIssues, getMilestoneId, meToUsername,
                   mkIssueId, printIssues)
 
@@ -60,15 +60,16 @@ runNew NewOptions{..} = do
 
 {- | @hit rename@ command.
 
-Renames the current (non-master) branch to the given name or issue with the
+Renames the current (non-main) branch to the given name or issue with the
 username prefix.
 
-If the current branch is master, it just creates a new branch as in 'runNew'.
+If the current branch is the main one, it just creates a new branch as in 'runNew'.
 -}
 runRename :: Text -> IO ()
 runRename issueOrName = do
     curBranch <- getCurrentBranch
-    if curBranch == "master"
+    defBranch <- getMainBranch
+    if curBranch == defBranch
     then runNew $ newOptionsWithName issueOrName
     else do
         newBranch <- mkBranchName False Nothing issueOrName

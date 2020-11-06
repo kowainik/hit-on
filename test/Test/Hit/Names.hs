@@ -3,16 +3,18 @@ module Test.Hit.Names
     ) where
 
 import GitHub (IssueNumber (..))
-import Test.Hspec (Expectation, Spec, describe, it, shouldBe)
+import Test.Hspec (Expectation, Spec, describe, it, runIO, shouldBe)
 
 import Hit.Git.Branch (assignAndDisplayBranchDescription, mkBranchDescription)
 import Hit.Git.Commit (toCommitMessage)
+import Hit.Git.Common (getMainBranch)
 
 
 namesSpec :: Spec
 namesSpec = describe "Names for branches and commit messages" $ do
     branchNamesSpec
     commitMessagesSpec
+    mainBranchSpec
 
 branchNamesSpec :: Spec
 branchNamesSpec = describe "Branch naming" $ do
@@ -52,3 +54,9 @@ commitMessagesSpec = describe "Commit messages naming" $ do
         toCommitMessage False "Commit message" (Just 42) `shouldBe` "Commit message"
     it "without issue" $
         toCommitMessage True "Commit message" Nothing `shouldBe` "Commit message"
+
+mainBranchSpec :: Spec
+mainBranchSpec = describe "Main branch of the repo" $ do
+    branch <- runIO getMainBranch
+    it "should be named 'master'" $
+        branch `shouldBe` "master"

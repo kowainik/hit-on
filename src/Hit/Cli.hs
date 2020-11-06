@@ -143,7 +143,7 @@ hitP = subparser
    <> com "issue"    issueP    "Show the information about the issue"
    <> com "push"     pushP     "Push the current branch"
    <> com "sync"     syncP     "Sync local branch with its remote"
-   <> com "resolve"  resolveP  "Switch to master, sync and delete the branch"
+   <> com "resolve"  resolveP  "Switch to the main branch, sync and delete the branch"
    <> com "clear"    clearP    "Remove all local changes permanently"
    <> com "current"  currentP  "Show info about current branch and issue (if applicable)"
    <> com "status"   statusP   "Show current branch and beautiful stats with COMMIT_HASH (by default HEAD)"
