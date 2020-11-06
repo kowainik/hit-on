@@ -15,13 +15,14 @@ module Hit.Git.Resolve
 
 import Shellmet ()
 
-import Hit.Git.Common (getCurrentBranch, nameOrMaster)
+import Hit.Git.Common (branchOrMain, getCurrentBranch)
 import Hit.Git.Hop (runHop)
 
 
 -- | @hit resolve@ command.
 runResolve :: Maybe Text -> IO ()
-runResolve (nameOrMaster -> master)= do
+runResolve mBranch = do
+    branchToHop <- branchOrMain mBranch
     curBranch <- getCurrentBranch
-    runHop $ Just master
-    when (curBranch /= master) $ "git" ["branch", "-D", curBranch]
+    runHop $ Just branchToHop
+    when (curBranch /= branchToHop) $ "git" ["branch", "-D", curBranch]

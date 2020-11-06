@@ -17,13 +17,14 @@ import Colourista (errorMessage, infoMessage, warningMessage)
 import Shellmet (($?))
 import System.IO (hFlush)
 
-import Hit.Git.Common (nameOrMaster)
+import Hit.Git.Common (branchOrMain)
 import Hit.Prompt (Answer (..), arrow, prompt, yesOrNoText)
 
 
 -- | @hit fresh@ command.
 runFresh :: Maybe Text -> IO ()
-runFresh (nameOrMaster -> branch) = do
+runFresh mBranch = do
+    branch <- branchOrMain mBranch
     "git" ["fetch", "origin", branch]
     isRebase <- (True <$ "git" ["rebase", "origin/" <> branch]) $? pure False
     unless isRebase $ do

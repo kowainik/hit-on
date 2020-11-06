@@ -142,7 +142,7 @@ git config --global user.login <your_login>
  | issue    | Show the information about the issue                                       |
  | push     | Push the current branch                                                    |
  | sync     | Sync local branch with its remote                                          |
- | resolve  | Switch to master, sync and delete the branch                               |
+ | resolve  | Switch to the main branch, sync and delete the branch                               |
  | clear    | Remove all local changes permanently                                       |
  | current  | Show info about current branch and issue (if applicable)                   |
  | status   | Show current branch and beautiful stats with COMMIT_HASH (by default HEAD) |
@@ -154,7 +154,7 @@ git config --global user.login <your_login>
 
 The best way to demonstrate the power of the `hit` tool on a day-to-day basis with our workflow is to go through the entire workflow step by step, solving an ordinary problem of the typical [`git`][git] user.
 
-> Here we assume that you work with `origin` remote with the main branch set to `master`.
+> Here we assume that you work with `origin` remote.
 
 ### hit clone
 
@@ -185,7 +185,7 @@ hit clone owner-name/project-name
 When you want to start working on a new issue, you usually want to make sure you're using the latest version of your project. As a `git` user you may use the following commands:
 
 ```shell
-git checkout master
+git checkout main
 git pull --rebase --prune
 ```
 
@@ -311,13 +311,13 @@ hit sync
 
 ### hit fresh
 
-While you were waiting for the second round of reviews, another pull request was merged to the `master` branch. Now you need to apply the new `master` changes to your local branch.
+While you were waiting for the second round of reviews, another pull request was merged to the `main` branch. Now you need to apply the new `main` changes to your local branch.
 
 With `git` you can do the following:
 
 ```shell
-git fetch origin master
-git rebase origin/master
+git fetch origin main
+git rebase origin/main
 ```
 
 Again, with `hit` you can do better:
@@ -368,7 +368,7 @@ Hooray, your PR just got merged! It's time to clean your local repository and st
 With `git` you would do the following:
 
 ```shell
-git checkout master
+git checkout main
 git pull --rebase --prune
 git branch -D my-login/42-short-desc
 ```

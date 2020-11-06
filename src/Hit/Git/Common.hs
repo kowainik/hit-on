@@ -10,9 +10,11 @@ Helper functions used by different Hit Commands.
 -}
 
 module Hit.Git.Common
-    ( nameOrMaster
+    ( branchOrMain
     , getUsername
+    , getMainBranch
     , getCurrentBranch
+    , whenOnMainBranch
     , issueFromBranch
     , withDeletedFiles
     , withUntrackedFiles
@@ -26,8 +28,11 @@ import Shellmet (($|))
 import qualified Data.Text as T
 
 
-nameOrMaster :: Maybe Text -> Text
-nameOrMaster = fromMaybe "master"
+-- | If no branch provided returns the main branch of the repo.
+branchOrMain :: Maybe Text -> IO Text
+branchOrMain = \case
+    Just branch -> pure branch
+    Nothing -> getMainBranch
 
 -- | Get current user name from the local global git config.
 getUsername :: IO Text
@@ -40,6 +45,20 @@ getUsername = do
 -- | Get the name of the current branch.
 getCurrentBranch :: IO Text
 getCurrentBranch = "git" $| ["rev-parse", "--abbrev-ref", "HEAD"]
+
+-- | Get the name of the default main branch.
+getMainBranch :: IO Text
+getMainBranch = do
+  br <- "git" $| ["rev-parse", "--abbrev-ref", "origin/HEAD"]
+  "basename" $| [br]
+
+-- | Run the action if the current branch is the main branch of the repo.
+whenOnMainBranch :: IO () -> IO ()
+whenOnMainBranch act = do
+    mainBranch <- getMainBranch
+    curBranch <- getCurrentBranch
+    when (mainBranch == curBranch) act
+
 
 {- | Extracts issue number from the branch in form like:
 

@@ -69,6 +69,9 @@ The changelog is available [on GitHub][2].
 * [#178](https://github.com/kowainik/hit-on/issues/178):
   Add ability to add newly created issues to the specified milestone with the
   `-m|--current-milestone` or `--milestone ID` during the `hit new` command.
+* [#201](https://github.com/kowainik/hit-on/issues/201):
+  Do not assume the main branch of the repo. Take in from the git command
+  instead.
 
 ### 0.1.0.0 — Aug 3, 2019
 
