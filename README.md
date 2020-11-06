@@ -397,6 +397,27 @@ hit log [COMMIT_HASH]
 
 [git]: https://git-scm.com/
 
+## Troubleshooting
+
+If you see
+
+```shell
+$ hit hop
+fatal: ambiguous argument 'origin/HEAD': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+hit: readCreateProcess: git "rev-parse" "--abbrev-ref" "origin/HEAD" (exit 128): failed
+  origin/master
+...skipping...
+```
+
+then you can run
+```shell
+$ git remote set-head origin -a
+```
+
+to synchronise with the remote, fetch and set `origin/HEAD` locally.
+
 ## Acknowledgement
 
 Icons made by [Freepik](http://www.freepik.com) from
