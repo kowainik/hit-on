@@ -43,10 +43,6 @@ jobs:
         cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
         cabal build --enable-tests --enable-benchmarks
 
-    - name: origin/HEAD
-      if: matrix.os != 'macOS-latest'
-      run: git remote set-head origin -a
-
     - name: Test
       if: matrix.os != 'macOS-latest'
       run: cabal test
