@@ -54,7 +54,7 @@ jobs:
           git remote -v
           git gc --aggressive
           git remote update --prune
-          git remote set-head -a
+          git remote set-head origin -a
     - name: Test
       if: matrix.os != 'macOS-latest'
       run: cabal test
