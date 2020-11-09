@@ -47,8 +47,13 @@ jobs:
     - name: origin/HEAD
       if: matrix.os != 'macOS-latest'
       run: |
-          git gc --auto
+          git gc
+          git fsck --full
+          git reflog expire --expire=0 --all
           git remote -v
+          git gc --aggressive
+          git remote update --prune
+          git remote set-head -a
     - name: Test
       if: matrix.os != 'macOS-latest'
       run: cabal test
