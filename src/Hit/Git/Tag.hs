@@ -25,5 +25,5 @@ runTag TagOptions{..} = case toAction of
         "git" ["tag", "-a", toName, "-m 'Tag for " <> toName <> " release'"]
         "git" ["push", "origin", "--tags"]
     DeleteTag -> do
-        "git" ["tag", "-d", toName]
-        "git" ["push", "--delete", "origin", toName]
+        "git" ["tag", "-d", toName]  -- delete tag locally
+        "git" ["push", "--delete", "origin", toName]  -- delete tag remotely
