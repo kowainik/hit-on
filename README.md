@@ -149,6 +149,7 @@ git config --global user.login <your_login>
  | diff     | Display beautiful diff with COMMIT_HASH (by default HEAD)                  |
  | clone    | Clone the repo. Use 'reponame' or 'username/reponame' formats              |
  | log      | Outputs the log of the current commit or COMMIT_HASH                       |
+ | tag      | Create or delete the specified tag TAG_NAME                                |
 
 ## Usage
 

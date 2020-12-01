@@ -20,6 +20,9 @@ module Hit.Core
       -- * @hit new@
     , NewOptions (..)
     , newOptionsWithName
+
+    , TagOptions (..)
+    , TagAction (..)
     ) where
 
 
@@ -80,3 +83,16 @@ newOptionsWithName issueOrBranch = NewOptions
     , noIssueOrBranch = Just issueOrBranch
     , noMilestone = Nothing
     }
+
+
+-- | @tag@ command arguments
+data TagOptions = TagOptions
+    { toName   :: !Text
+    , toAction :: !TagAction
+    } deriving stock (Show)
+
+-- | Possible user Actions with tags.
+data TagAction
+    = CreateTag
+    | DeleteTag
+    deriving stock (Show)

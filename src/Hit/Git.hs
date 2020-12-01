@@ -33,6 +33,7 @@ module Hit.Git
     , runFork
     , runLog
     , runMilestones
+    , runTag
 
     , getUsername
     ) where
@@ -56,5 +57,6 @@ import Hit.Git.Resolve (runResolve)
 import Hit.Git.Stash (runStash, runUnstash)
 import Hit.Git.Status (runStatus)
 import Hit.Git.Sync (runSync)
+import Hit.Git.Tag (runTag)
 import Hit.Git.Uncommit (runUncommit)
 import Hit.Git.Wip (runWip)
