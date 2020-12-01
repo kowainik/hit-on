@@ -3,7 +3,7 @@
 `hit-on` uses [PVP Versioning][1].
 The changelog is available [on GitHub][2].
 
-### Unreleased: 0.2.0.0
+### Unreleased: 1.0.0.0
 
 * [#150](https://github.com/kowainik/hit-on/issues/150):
   Add `--include-untracked` option to `hit stash` command.
@@ -72,6 +72,8 @@ The changelog is available [on GitHub][2].
 * [#201](https://github.com/kowainik/hit-on/issues/201):
   Do not assume the main branch of the repo. Take in from the git command
   instead.
+* [#194](https://github.com/kowainik/hit-on/issues/194):
+  Add `hit tag` command with `--delete` option.
 
 ### 0.1.0.0 — Aug 3, 2019
 

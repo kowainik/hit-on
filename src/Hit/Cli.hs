@@ -25,10 +25,10 @@ import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, au
                             switch)
 
 import Hit.Core (CommitOptions (..), ForceFlag (..), IssueOptions (..), Milestone (..),
-                 NewOptions (..), defaultIssueOptions)
+                 NewOptions (..), TagAction (..), TagOptions (..), defaultIssueOptions)
 import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFork,
                 runFresh, runHop, runLog, runMilestones, runNew, runPr, runPush, runRename,
-                runResolve, runStatus, runSync, runUncommit, runWip)
+                runResolve, runStatus, runSync, runTag, runUncommit, runWip)
 import Hit.Git.Stash (runStash, runStashClear, runStashDiff, runStashList, runUnstash)
 import Hit.Issue (runIssue)
 import Hit.Prompt (arrow)
@@ -67,6 +67,7 @@ hit = execParser cliParser >>= \case
     Log commit -> runLog commit
     Milestones -> runMilestones
     Pr isDraft -> runPr isDraft
+    Tag tagOptions -> runTag tagOptions
 
 ----------------------------------------------------------------------------
 -- Parsers
@@ -107,6 +108,7 @@ data HitCommand
     | Milestones
     | Pr
         !Bool  -- ^ Create a draft PR?
+    | Tag !TagOptions
 
 -- | Subcommands for the @git stash@ command
 data StashCmd
@@ -151,6 +153,7 @@ hitP = subparser
    <> com "clone"    cloneP    "Clone the repo. Use 'reponame' or 'username/reponame' formats"
    <> com "fork"     forkP     "Fork the repo. Use 'username/reponame' formats"
    <> com "log"      logP      "Display the log of the current commit or COMMIT_HASH"
+   <> com "tag"      tagP      "Create/delete and push the specified tag"
    <> com "milestones" milestonesP "Show the list of open milestones for the project"
   where
     com :: String -> Parser HitCommand -> String -> Mod CommandFields HitCommand
@@ -332,6 +335,19 @@ milestoneP = optional (curMilestone <|> milestoneId)
         <> help "Specify the project's Milestone ID"
         <> metavar "MILESTONE_ID"
         )
+
+tagP :: Parser HitCommand
+tagP = do
+    toName <- strArgument (metavar "TAG_NAME" <> help "Specify the tag name")
+    toAction <- tagActionP
+    pure $ Tag TagOptions{..}
+
+-- | Parse flag of create/delete tag (@--delete@ option).
+tagActionP :: Parser TagAction
+tagActionP = flag CreateTag DeleteTag
+    $  long "delete"
+    <> short 'd'
+    <> help "Delete tag"
 
 -- | Show the version of the tool.
 versionP :: Parser (a -> a)

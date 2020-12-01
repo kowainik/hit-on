@@ -83,6 +83,7 @@ library
                            Hit.Git.Stash
                            Hit.Git.Status
                            Hit.Git.Sync
+                           Hit.Git.Tag
                            Hit.Git.Uncommit
                            Hit.Git.Wip
                          Hit.GitHub
