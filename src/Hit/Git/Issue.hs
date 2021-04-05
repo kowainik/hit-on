@@ -1,73 +1,62 @@
 {- |
-Module                  : Hit.Issue
-Copyright               : (c) 2019-2020 Kowainik
+Module                  : Hit.GitHub.Issue
+Copyright               : (c) 2021 Kowainik
 SPDX-License-Identifier : MPL-2.0
 Maintainer              : Kowainik <xrom.xkov@gmail.com>
 Stability               : Stable
 Portability             : Portable
 
-This module contains functions to work with issues withing GitHub API.
+Issue-related queries and data types.
 -}
 
-module Hit.Issue
-    ( -- * For CLI commands
-      runIssue
-    , createIssue
-    , assignIssue
-    , fetchIssue
-
-      -- * Issues helpers
-    , getAllIssues
-    , printIssues
-
-      -- * Internal helpers
-    , meToUsername
-    , mkIssueId
-    , getIssueTitle
-    , showIssueName
-      -- ** Milestones
-    , getMilestoneId
+module Hit.Git.Issue
+    ( runIssue
     ) where
 
 import Colourista (blue, blueBg, bold, errorMessage, formatWith, green, red, reset, skipMessage,
                    successMessage, warningMessage)
-import Data.Vector (Vector)
-import GitHub (Error (..), Id, Issue (..), IssueLabel (..), IssueState (..), Name, SimpleUser (..),
-               User, getUrl, milestoneNumber, mkId, unIssueNumber, untagName)
-import GitHub.Data.Options (stateOpen)
-import GitHub.Endpoints.Issues (EditIssue (..), NewIssue (..), editOfIssue, issue', issuesForRepo')
-import GitHub.Endpoints.Issues.Milestones (milestones')
+import Data.Aeson (Array, FromJSON (..), withObject, (.:))
+import Data.Aeson.Types (Parser)
+import Prolens (set)
 
-import Hit.Core (IssueOptions (..), Milestone (..))
+import Hit.Core (IssueOptions (..), Milestone (..), Owner (..), Repo (..))
+import Hit.Error (renderHitError)
 import Hit.Git.Common (getUsername)
-import Hit.GitHub (makeName, withAuthOwnerRepo, withOwnerRepo)
+import Hit.GitHub.Auth (withAuthOwnerRepo)
+import Hit.GitHub.Issue (Issue (..), ShortIssue (..), issueToShort, queryIssue, queryIssueList)
 import Hit.Prompt (arrow)
 
 import qualified Hit.Formatting as Fmt
 
-import qualified Data.Text as T
-import qualified Data.Vector as V
-import qualified GitHub as G
-import qualified GitHub.Endpoints.Issues as GitHub
+import qualified Data.Text as Text
+import qualified GitHub as GH
 
-
-----------------------------------------------------------------------------
--- CLI for issues
-----------------------------------------------------------------------------
 
 -- | Run the @issue@ command.
 runIssue :: IssueOptions -> IO ()
 runIssue IssueOptions{..} = case ioIssueNumber of
-    Just num -> getIssue $ mkIssueId num
+    Just num -> getIssue num
     Nothing  -> meToUsername ioMe >>= printFilteredIssues ioMilestone
 
-{- | If requested, get the username.
+----------------------------------------------------------------------------
+-- Single issue processing
+----------------------------------------------------------------------------
+
+-- | Get the 'Issue' by given issue number and pretty print it fully to terminal.
+getIssue :: Int -> IO ()
+getIssue num = fetchIssue num >>= putTextLn . showIssueFull
+
+{- | Fetch 'Issue' by number. If no issue found then print error and
+exit with failure.
 -}
-meToUsername :: Bool -> IO (Maybe Text)
-meToUsername isMe =
-    if isMe
-    then Just <$> getUsername
-    else pure Nothing
+fetchIssue :: Int -> IO Issue
+fetchIssue iNum = withAuthOwnerRepo (\t o r -> queryIssue t o r iNum) >>= \case
+    Left err    -> errorMessage (renderHitError err) >> exitFailure
+    Right issue -> pure issue
+
+----------------------------------------------------------------------------
+-- Multiple list processing
+----------------------------------------------------------------------------
 
 {- | Outputs the list of the open issues for the current project
 with applied filters.
@@ -80,107 +69,39 @@ printFilteredIssues
     -> IO ()
 printFilteredIssues milestone me = getAllIssues milestone me >>= printIssues
 
-{- | Outputs the list of the given issues for the current project.
--}
-printIssues :: Vector Issue -> IO ()
-printIssues issues = let maxLen = Fmt.maxLenOn showIssueNumber issues in
-    if V.null issues
-    then skipMessage "There are no open issues satisfying the provided filters"
-    else for_ issues $ \i -> do
-        let thisLen = T.length $ showIssueNumber i
-            padSize = maxLen - thisLen
-        putTextLn $ showIssueName blue padSize i
-
 {- | Get the list of the opened issues for the current project
 filtered out by the given input:
+
   * Only current user's issues?
   * Only issues from the current/specified milestone?
 -}
 getAllIssues
     :: Maybe Milestone  -- ^ Project Milestone
     -> Maybe Text  -- ^ User name of the assignee
-    -> IO (Vector Issue)
-getAllIssues milestone me = withOwnerRepo (\t o r -> issuesForRepo' t o r stateOpen) >>= \case
-    Left err -> errorMessage (show err) >> exitFailure
+    -> IO [ShortIssue]
+getAllIssues milestone me = withAuthOwnerRepo queryIssueList >>= \case
+    Left err -> errorMessage (renderHitError err) >> exitFailure
     Right is -> do
         milestoneId <- getMilestoneId milestone
         pure $ filterIssues milestoneId is
   where
-    filterIssues :: Maybe (Id G.Milestone) -> Vector Issue -> Vector Issue
-    filterIssues milestoneId = V.filter
-        (\i ->
-            isNotPR i
-            && my i
-            && i `isInMilestone` milestoneId
-        )
+    filterIssues :: Maybe (Id G.Milestone) -> [Issue] -> [Issue]
+    filterIssues milestoneId =
+        filter (\i -> my i && i `isInMilestone` milestoneId)
 
     my :: Issue -> Bool
     my issue = case me of
         Just (makeName -> username) -> username `isAssignedToIssue` issue
         Nothing                     -> True
 
-    isNotPR :: Issue -> Bool
-    isNotPR Issue{..} = isNothing issuePullRequest
-
     isInMilestone :: Issue -> Maybe (Id G.Milestone) -> Bool
     isInMilestone Issue{..} = \case
         Just milestoneId -> (milestoneNumber <$> issueMilestone) == Just milestoneId
-        Nothing  -> True
+        Nothing          -> True
 
--- | Show issue number with alignment and its name.
-showIssueName :: Text -> Int -> Issue -> Text
-showIssueName colorCode padSize i@Issue{..} =
-    arrow <> colorCode <> " [#" <> showIssueNumber i <> "] " <> padding <> reset <> issueTitle
-  where
-    padding :: Text
-    padding = T.replicate padSize " "
-
--- | Show the issue number.
-showIssueNumber :: Issue -> Text
-showIssueNumber = show . unIssueNumber . issueNumber
-
--- | Get the 'Issue' by given issue number and pretty print it fully to terminal.
-getIssue :: Id Issue -> IO ()
-getIssue num = fetchIssue num >>= putTextLn . showIssueFull
-
--- | Show full information about the issue.
-showIssueFull :: Issue -> Text
-showIssueFull i@Issue{..} = T.intercalate "\n" $
-       showIssueName (statusToCode issueState) 0 i
-     : [ highlight "    Assignees: " <> assignees | not $ null issueAssignees]
-    ++ [ highlight "    Labels: " <> labels | not $ null issueLabels]
-    ++ [ highlight "    URL: " <> getUrl url | Just url <- [issueHtmlUrl]]
-    ++ [ indentDesc desc | Just (T.strip -> desc) <- [issueBody], desc /= ""]
-  where
-    statusToCode :: IssueState -> Text
-    statusToCode = \case
-        StateOpen -> blue
-        StateClosed -> red
-
-    indentDesc :: Text -> Text
-    indentDesc = unlines
-        . map ("    " <> )
-        . (highlight "Description:" :)
-        . lines
-
-    assignees :: Text
-    assignees = T.intercalate ", "
-        $ map (untagName . simpleUserLogin)
-        $ toList issueAssignees
-
-    labels :: Text
-    labels = T.intercalate " "
-        $ map (putLabel . untagName . labelName)
-        $ toList issueLabels
-
-    putLabel :: Text -> Text
-    putLabel = formatWith [blueBg]
-
-    highlight :: Text -> Text
-    highlight = formatWith [bold, green]
 
 -- | Create an 'Issue' by given title 'Text'
--- QUESTION: should we create 'Login' newtype to add more type-safety here?
+-- TODO: separate query to create issue in Hit.GitHub.Issue
 createIssue :: Text -> Text -> Maybe (Id G.Milestone) -> IO (Either Error Issue)
 createIssue title login milestone = withAuthOwnerRepo $ \token owner repo ->
     GitHub.createIssue token owner repo $ mkNewIssue title login milestone
@@ -195,6 +116,7 @@ This function can fail assignment due to the following reasons:
 The function should inform user about corresponding 'Error' in each case and
 continue working.
 -}
+-- TODO: separate query to assign to issue in Hit.GitHub.Issue
 assignIssue :: Issue -> Text -> IO ()
 assignIssue issue username = do
     res <- withAuthOwnerRepo $ \token owner repo -> do
@@ -229,23 +151,76 @@ isAssignedToIssue assignee = V.elem assignee .
     V.map simpleUserLogin . issueAssignees
 
 ----------------------------------------------------------------------------
+-- Issue formatting
+----------------------------------------------------------------------------
+
+{- | Outputs the list of the given issues for the current project.
+-}
+printIssues :: [ShortIssue] -> IO ()
+printIssues issues = let maxLen = Fmt.maxLenOn showIssueNumber issues in
+    if null issues
+    then skipMessage "There are no open issues satisfying the provided filters"
+    else for_ issues $ \issue@ShortIssue{..} -> do
+        let thisLen = Text.length $ show shortIssueNumber
+            padSize = maxLen - thisLen
+        putTextLn $ showShortIssue blue padSize issue
+
+-- | Show issue number with alignment and its name.
+showShortIssue :: Text -> Int -> ShortIssue -> Text
+showShortIssue colorCode padSize ShortIssue{..} = mconcat
+    [ arrow
+    , colorCode
+    , " [#" <> show shortIssueNumber <> "] "
+    , spaces padSize
+    , reset
+    , shortIssueTitle
+    ]
+
+-- | Show full information about the issue.
+showIssue :: Issue -> Text
+showIssue i@Issue{..} = T.intercalate "\n" $
+       showShortIssue (statusToCode issueState) 0 (showShortIssue $ issueToShort i)
+     : [ highlight "    Assignees: " <> assignees | not $ null issueAssignees]
+    ++ [ highlight "    Labels: " <> labels | not $ null issueLabels]
+    ++ [ highlight "    URL: " <> getUrl url | Just url <- [issueHtmlUrl]]
+    ++ [ indentDesc desc | Just (T.strip -> desc) <- [issueBody], desc /= ""]
+  where
+    statusToCode :: GH.IssueState -> Text
+    statusToCode = \case
+        IssueOpen   -> blue
+        IssueClosed -> red
+
+    indentDesc :: Text -> Text
+    indentDesc = unlines
+        . map ("    " <> )
+        . (highlight "Description:" :)
+        . lines
+
+    assignees :: Text
+    assignees = T.intercalate ", " $ map (untagName . simpleUserLogin) issueAssignees
+
+    labels :: Text
+    labels = T.intercalate " " $ map (putLabel . untagName . labelName) issueLabels
+
+    putLabel :: Text -> Text
+    putLabel = formatWith [blueBg]
+
+    highlight :: Text -> Text
+    highlight = formatWith [bold, green]
+
+----------------------------------------------------------------------------
 -- Helper functions
 ----------------------------------------------------------------------------
 
 -- | Fetch only issue title.
-getIssueTitle :: Id Issue -> IO Text
+-- TODO: separate GraphQL query to fetch only title
+getIssueTitle :: Int -> IO Text
 getIssueTitle num = issueTitle <$> fetchIssue num
 
-{- | Fetch 'Issue' by 'Id'. If no issue found then print error and
-exit with failure.
--}
-fetchIssue :: Id Issue -> IO Issue
-fetchIssue iNum = withOwnerRepo (\t o r -> issue' t o r iNum) >>= \case
-    Left err -> errorMessage (show err) >> exitFailure
-    Right issue -> pure issue
 
 {- | From the given 'Milestone' type try to get the milestone ID
 -}
+-- TODO: query to fetch the latest milestone in Hit.GitHub.Milestone
 getMilestoneId :: Maybe Milestone -> IO (Maybe (Id G.Milestone))
 getMilestoneId = \case
     Just (MilestoneId mId) -> pure $ Just $ mkId (Proxy @G.Milestone) mId
@@ -264,10 +239,6 @@ fetchCurrentMilestoneId = withOwnerRepo milestones' >>= \case
     Right ms -> case sortWith Down $ map milestoneNumber $ toList ms of
         []  -> warningMessage "There are no open milestones for this project" >> pure Nothing
         m:_ -> pure $ Just m
-
--- | Smart constructor for @'Id' 'Issue'@.
-mkIssueId :: Int -> Id Issue
-mkIssueId = mkId $ Proxy @Issue
 
 -- | Create new issue with title and assignee.
 mkNewIssue :: Text -> Text -> Maybe (Id G.Milestone) -> NewIssue

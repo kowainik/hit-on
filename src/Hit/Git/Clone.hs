@@ -47,6 +47,7 @@ runClone txt = do
 
 {- |
 -}
+-- TODO: rewrite to 'hub'
 runFork :: Text -> IO ()
 runFork name = getGitHubToken >>= \case
     Nothing -> errorMessage "Can not get GITHUB_TOKEN" >> exitFailure

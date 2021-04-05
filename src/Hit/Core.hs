@@ -10,7 +10,11 @@ This module contains core data types used in the package.
 -}
 
 module Hit.Core
-    ( ForceFlag (..)
+    ( -- * Wrapper types
+      Owner (..)
+    , Repo (..)
+
+    , ForceFlag (..)
     , CommitOptions (..)
       -- * @hit issue@
     , IssueOptions (..)
@@ -25,6 +29,13 @@ module Hit.Core
     , TagAction (..)
     ) where
 
+newtype Owner = Owner
+    { unOwner :: Text
+    }
+
+newtype Repo = Repo
+    { unRepo :: Text
+    }
 
 {- | Data type to represent the type of @push@ or @sync@: force-push
 (force-reset) or not.

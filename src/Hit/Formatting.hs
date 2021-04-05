@@ -12,6 +12,7 @@ Common functions to format output in a certain way,
 module Hit.Formatting
     ( maxLenOn
     , stripRfc
+    , spaces
     ) where
 
 import qualified Data.Text as T
@@ -31,3 +32,9 @@ maxLenOn f = foldl' (\acc a -> max acc $ T.length $ f a) 0
 -}
 stripRfc :: Text -> Text
 stripRfc x = fromMaybe x $ T.stripPrefix "[RFC] " x
+
+{- | Generate @n@ spaces (useful for padding).
+-}
+spaces :: Int -> Text
+spaces 0 = ""
+spaces n = stimes n " "

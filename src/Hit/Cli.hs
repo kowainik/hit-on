@@ -27,10 +27,9 @@ import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, au
 import Hit.Core (CommitOptions (..), ForceFlag (..), IssueOptions (..), Milestone (..),
                  NewOptions (..), TagAction (..), TagOptions (..), defaultIssueOptions)
 import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFork,
-                runFresh, runHop, runLog, runMilestones, runNew, runPr, runPush, runRename,
-                runResolve, runStatus, runSync, runTag, runUncommit, runWip)
+                runFresh, runHop, runIssue, runLog, runMilestones, runNew, runPr, runPush,
+                runRename, runResolve, runStatus, runSync, runTag, runUncommit, runWip)
 import Hit.Git.Stash (runStash, runStashClear, runStashDiff, runStashList, runUnstash)
-import Hit.Issue (runIssue)
 import Hit.Prompt (arrow)
 
 import qualified Data.Text as T

@@ -12,6 +12,7 @@ Helper functions used by different Hit Commands.
 module Hit.Git.Common
     ( branchOrMain
     , getUsername
+    , meToUsername
     , getMainBranch
     , getCurrentBranch
     , whenOnMainBranch
@@ -32,7 +33,15 @@ import qualified Data.Text as T
 branchOrMain :: Maybe Text -> IO Text
 branchOrMain = \case
     Just branch -> pure branch
-    Nothing -> getMainBranch
+    Nothing     -> getMainBranch
+
+{- | If requested, get the username.
+-}
+meToUsername :: Bool -> IO (Maybe Text)
+meToUsername isMe =
+    if isMe
+    then Just <$> getUsername
+    else pure Nothing
 
 -- | Get current user name from the local global git config.
 getUsername :: IO Text

@@ -1,0 +1,6 @@
+packages: .
+
+source-repository-package
+    type: git
+    location: https://github.com/kowainik/github-grapqhl.git
+    tag: 5ffa6fc31631bc0e2f9b5b071e340cb49002c009
