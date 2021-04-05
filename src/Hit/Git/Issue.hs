@@ -239,13 +239,3 @@ fetchCurrentMilestoneId = withOwnerRepo milestones' >>= \case
     Right ms -> case sortWith Down $ map milestoneNumber $ toList ms of
         []  -> warningMessage "There are no open milestones for this project" >> pure Nothing
         m:_ -> pure $ Just m
-
--- | Create new issue with title and assignee.
-mkNewIssue :: Text -> Text -> Maybe (Id G.Milestone) -> NewIssue
-mkNewIssue title login milestone = NewIssue
-    { newIssueTitle     = title
-    , newIssueBody      = Nothing
-    , newIssueAssignees = V.singleton $ makeName @User login
-    , newIssueMilestone = milestone
-    , newIssueLabels    = Nothing
-    }

@@ -10,7 +10,8 @@ Repository-related queries and data types.
 -}
 
 module Hit.GitHub.Repository
-    ( RepositoryNodes (..)
+    ( RepositoryField (..)
+    , RepositoryNodes (..)
     ) where
 
 import Data.Aeson (FromJSON (..), withObject, (.:))
@@ -43,3 +44,28 @@ instance
         items <- repository .: itemName
         nodes <- items .: "nodes"
         RepositoryNode <$> mapM parseJSON nodes
+
+{- | Helper type to parse a given field of the top-level @repository@ query.
+
+The JSON usually has the following shape:
+
+@
+{
+  "data": {
+    "repository": {
+      "<name>": {
+            ...
+@
+-}
+newtype RepositoryField (name :: Symbol) a = RepositoryField
+    { unRepositoryField :: [a]
+    }
+
+instance
+    (KnownSymbol name, FromJSON a, Typeable a)
+    => FromJSON (RepositoryField name a)
+  where
+    parseJSON = withObject ("RepositoryField " <> typeName @a) $ \o -> do
+        repository <- o .: "repository"
+        let fieldName = symbolVal (Proxy @name)
+        RepositoryField <$> (repository .: fieldName)

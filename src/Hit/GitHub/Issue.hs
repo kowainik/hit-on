@@ -16,6 +16,9 @@ module Hit.GitHub.Issue
     , ShortIssue (..)
     , queryIssueList
     , issueToShort
+
+    , IssueNumber (..)
+    , mutationCreateNewIssue
     ) where
 
 import Data.Aeson (Array, FromJSON (..), withObject, (.:))
@@ -23,10 +26,8 @@ import Data.Aeson.Types (Parser)
 import Prolens (set)
 
 import Hit.Core (IssueOptions (..), Milestone (..), Owner (..), Repo (..))
-import Hit.Error (renderHitError)
 import Hit.Git.Common (getUsername)
-import Hit.GitHub.RepositoryNode (RepositoryNode (..))
-import Hit.Prompt (arrow)
+import Hit.GitHub.Repository (RepositoryField (..), RepositoryNode (..))
 
 import qualified Hit.Formatting as Fmt
 
@@ -53,22 +54,19 @@ data Issue = Issue
 instance FromJSON Issue
   where
     parseJSON = withObject "Issue" $ \o -> do
-        repository <- o .: "repository"
-        i <- repository .: "issue"
-
-        issueTitle       <- i .: "title"
-        author           <- i .: "author"
+        issueTitle       <- o .: "title"
+        author           <- o .: "author"
         issueAuthorLogin <- author .: "login"
-        issueBody        <- i .: "body"
-        issueNumber      <- i .: "number"
-        issueUrl         <- i .: "url"
-        issueState       <- i .: "state"
+        issueBody        <- o .: "body"
+        issueNumber      <- o .: "number"
+        issueUrl         <- o .: "url"
+        issueState       <- o .: "state"
 
-        labels           <- i .: "labels"
+        labels           <- o .: "labels"
         labelNodes       <- labels .: "nodes"
         issueLabels      <- parseLabels labelNodes
 
-        assignees        <- i .: "assignees"
+        assignees        <- o .: "assignees"
         assigneesNodes   <- assignees .: "nodes"
         issueAssignees   <- parseAssignees assigneesNodes
 
@@ -122,9 +120,12 @@ issueQuery (Owner owner) (Repo repo) issueNumber = GH.repository
 {- | Queries a single issue by number.
 -}
 queryIssue :: GH.GitHubToken -> Owner -> Repo -> Int -> IO Issue
-queryIssue token owner repo issueNumber = GH.queryGitHub
-    token
-    (GH.repositoryToAst $ issueQuery owner repo issueNumber)
+queryIssue token owner repo issueNumber =
+    unRepositoryField <$>
+    GH.queryGitHub
+        @(RepositoryField "issue" Issue)
+        token
+        (GH.repositoryToAst $ issueQuery owner repo issueNumber)
 
 ----------------------------------------------------------------------------
 -- Small issue type
@@ -202,6 +203,56 @@ queryIssueList token owner repo =
         @(RepositoryNodes "issues" ShortIssue)
         token
         (GH.repositoryToAst $ issueListQuery owner repo)
+
+----------------------------------------------------------------------------
+-- Create new issue
+----------------------------------------------------------------------------
+
+{- | Data type to parse only issue number.
+-}
+newtype IssueNumber = IssueNumber
+    { unIssueNumber :: Int
+    }
+
+instance FromJSON IssueNumber
+  where
+    parseJSON = withObject "IssueNumber" $ \o ->
+        IssueNumber <$> (o .: "number")
+
+{- | Query to create issue and return its number.
+-}
+createIssueMutation
+    :: GH.RepositoryId
+    -> Text  -- ^ Issue title
+    -> Maybe GH.MilestoneId
+    -> GH.CreateIssue
+createIssueMutation repoId issueTitle milestoneId = GH.CreateIssue
+    ( GH.defCreateIssueInput
+    & set GH.repositoryIdL repoId
+    & set GH.titleL issueTitle
+    & setMilestone
+    )
+    [ GH.IssueNumber
+    ]
+  where
+    setMilestone :: GH.CreateIssueInput fields -> GH.CreateIssueInput fields
+    setMilestone = case milestoneId of
+        Nothing  -> id
+        Just mId -> set GH.milestoneIdL mId
+
+mutationCreateNewIssue
+    :: GH.GitHubToken
+    -> Owner
+    -> Repo
+    -> Text
+    -> Maybe Milestone
+    -> IO IssueNumber
+mutationCreateNewIssue token owner repo issueTitle _mMilestone = do
+    repositoryId <- GH.queryRepositoryId token owner repo
+    unRepositoryField <$>
+    GH.mutationGitHub
+        token
+        (GH.createIssueToAst $ createIssueMutation repositoryId issueTitle Nothing)
 
 ----------------------------------------------------------------------------
 -- Internals

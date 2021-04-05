@@ -23,4 +23,4 @@ renderHitError = \case
     NoGitHubTokenEnv ->
         "The environment variable GITHUB_TOKEN is not set"
     InvalidOwnerRepo ->
-        "Cannot not parse the 'owner' and 'repo' names from the owner/repo format"
+        "Can't parse the 'owner' and 'repo' names from the 'owner/repo' format"

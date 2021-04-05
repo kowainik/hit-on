@@ -16,6 +16,7 @@ module Hit.GitHub.Milestone
 import Prolens (set)
 
 import Hit.Core (Owner (..), Repo (..))
+import Hit.GitHub.Repository (RepositoryNodes (..))
 
 import qualified GitHub as GH
 
@@ -72,3 +73,13 @@ milestonesQuery (Owner owner) (Repo repo) = GH.repository
                (one GH.TotalCount)
            ]
         )
+
+{- | Queries the latest 100 issues of the repository.
+-}
+queryMilestoneList :: GH.GitHubToken -> Owner -> Repo -> IO [Milestone]
+queryMilestoneList token owner repo =
+    unRepositoryNodes <$>
+    GH.queryGitHub
+        @(RepositoryNodes "milestones" Milestone)
+        token
+        (GH.repositoryToAst $ milestonesQuery owner repo)
