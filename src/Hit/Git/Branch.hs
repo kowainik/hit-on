@@ -24,15 +24,12 @@ module Hit.Git.Branch
 import Data.Char (isAlphaNum, isDigit, isSpace)
 
 import Colourista (errorMessage, infoMessage, successMessage, warningMessage)
-import GitHub (Issue (issueHtmlUrl, issueNumber, issueTitle), IssueNumber (..), getUrl,
-               unIssueNumber)
 import Shellmet (($?))
 
 import Hit.Core (Milestone, NewOptions (..), newOptionsWithName)
 import Hit.Formatting (stripRfc)
 import Hit.Git.Common (getCurrentBranch, getMainBranch, getUsername)
-import Hit.Issue (assignIssue, createIssue, fetchIssue, getAllIssues, getMilestoneId, meToUsername,
-                  mkIssueId, printIssues)
+import Hit.GitHub.Issue (mutationCreateNewIssue)
 
 import qualified Data.Text as T
 import qualified Data.Vector as V
@@ -185,3 +182,47 @@ assignAndDisplayBranchDescription doAssign username = \case
 showIssueLink :: Issue -> IO ()
 showIssueLink issue = whenJust (issueHtmlUrl issue) $ \url ->
     infoMessage $ "  Issue link: " <> getUrl url
+
+-- | Create an 'Issue' by given title 'Text'
+createIssue :: Text -> Maybe MilestoneNumber -> IO (Either Error Issue)
+createIssue title milestone = withAuthOwnerRepo $ \token owner repo ->
+    GitHub.createIssue token owner repo $ mkNewIssue title login milestone
+
+{- | Assign the user to the given 'Issue'.
+
+This function can fail assignment due to the following reasons:
+
+ * Auth token fetch failure
+ * Assignment query to GutHub failure
+
+The function should inform user about corresponding 'Error' in each case and
+continue working.
+-}
+-- TODO: separate query to assign to issue in Hit.GitHub.Issue
+assignIssue :: Issue -> Text -> IO ()
+assignIssue issue username = do
+    res <- withAuthOwnerRepo $ \token owner repo -> do
+        let assignee :: Name User
+            assignee = makeName @User username
+        let curAssignees :: V.Vector (Name User)
+            curAssignees = V.map simpleUserLogin $ issueAssignees issue
+
+        if assignee `isAssignedToIssue` issue
+        then pure $ Right (issue, True)
+        else do
+            -- TODO: this is hack to cheat on GitHub library, as it
+            -- doesn't use the correct id in query.
+            let issId = mkIssueId (unIssueNumber $ issueNumber issue)
+            (, False) <<$>> GitHub.editIssue token owner repo issId editOfIssue
+                { editIssueAssignees = Just $ V.cons assignee curAssignees
+                }
+
+    case res of
+        Right (iss, isAlreadyAssigned) ->
+            if isAlreadyAssigned
+            then pass
+            else successMessage $ "You were assigned to the issue #" <>
+                showIssueNumber iss
+        Left err  -> do
+            errorMessage "Can not assign you to the issue."
+            putTextLn $ "    " <> show err

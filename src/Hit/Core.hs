@@ -20,7 +20,7 @@ module Hit.Core
     , IssueOptions (..)
     , defaultIssueOptions
       -- * Milestones
-    , Milestone (..)
+    , MilestoneOption (..)
       -- * @hit new@
     , NewOptions (..)
     , newOptionsWithName
@@ -66,10 +66,10 @@ data IssueOptions = IssueOptions
     , ioMilestone   :: !(Maybe Milestone)
     }
 
--- | Internal representation of the GutHub Milestone in CLI.
-data Milestone
+-- | Internal representation of the GutHub Milestone Number in CLI.
+data MilestoneOption
     = CurrentMilestone
-    | MilestoneId !Int
+    | MilestoneNum !Int
     deriving stock (Show)
 
 defaultIssueOptions :: IssueOptions

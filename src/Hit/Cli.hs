@@ -318,21 +318,21 @@ forceFlagP = flag Simple Force
 issueNumP :: Parser Int
 issueNumP = argument auto $ metavar "ISSUE_NUMBER"
 
-milestoneP :: Parser (Maybe Milestone)
-milestoneP = optional (curMilestone <|> milestoneId)
+milestoneP :: Parser (Maybe MilestoneOption)
+milestoneP = optional (curMilestoneP <|> milestoneNumP)
   where
-    curMilestone :: Parser Milestone
-    curMilestone = flag' CurrentMilestone $ mconcat
+    curMilestoneP :: Parser MilestoneOption
+    curMilestoneP = flag' CurrentMilestone $ mconcat
         [ long "current-milestone"
         , short 'm'
         , help "Use the Project's current Milestone"
         ]
 
-    milestoneId :: Parser Milestone
-    milestoneId = MilestoneId <$> option auto
+    milestoneNumP :: Parser MilestoneOption
+    milestoneNumP = MilestoneNum <$> option auto
         ( long "milestone"
-        <> help "Specify the project's Milestone ID"
-        <> metavar "MILESTONE_ID"
+        <> help "Specify the project's Milestone Number"
+        <> metavar "INT"
         )
 
 tagP :: Parser HitCommand

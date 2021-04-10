@@ -10,7 +10,11 @@ Milestone-related queries and data types.
 -}
 
 module Hit.GitHub.Milestone
-    ( Milestone (..)
+    ( MilestoneNumber
+    , queryLatestMilestoneNumber
+
+    , Milestone (..)
+    , queryMilestoneList
     ) where
 
 import Prolens (set)
@@ -20,10 +24,61 @@ import Hit.GitHub.Repository (RepositoryNodes (..))
 
 import qualified GitHub as GH
 
+----------------------------------------------------------------------------
+-- Milestone number
+----------------------------------------------------------------------------
+
+newtype MilestoneNumber = MilestoneNumber
+    { unMilestoneNumber :: Int
+    } deriving newtype (FromJSON)
+
+newtype LatestMilestone = LatestMilestone
+    { unLatestMilestone :: MilestoneNumber
+    }
+
+instance FromJSON LatestMilestone
+  where
+    parseJSON = withObject "LatestMilestone" $ \o ->
+        LatestMilestone <$> (o .: "number")
+
+latestMilestoneQuery :: Owner -> Repo -> GH.Repository
+latestMilestoneQuery (Owner owner) (Repo repo) = GH.repository
+    ( GH.defRepositoryArgs
+    & set GH.ownerL owner
+    & set GH.nameL  repo
+    )
+    $ one
+    $ GH.milestones
+        ( GH.defMilestonesArgs
+        & set GH.lastL 1
+        & set GH.orderL
+            ( Just $ GH.defOrder
+            & set GH.fieldL GH.MNumber
+            & set GH.directionL GH.Desc
+            )
+        )
+        (one $ GH.nodes $ one MilestoneNumber)
+
+{- | Query the number of the latest milestone.
+-}
+queryLatestMilestoneNumber :: GH.GitHubToken -> Owner -> Repo -> IO (Maybe MilestoneNumber)
+queryLatestMilestoneNumber token owner repo =
+    RepositoryNodes milestones <- GH.queryGitHub
+        @(RepositoryNodes "milestones" LatestMilestone)
+        token
+        (GH.repositoryToAst $ latestMilestoneQuery owner repo)
+
+    pure $ case milestones of
+        [] -> Nothing
+        m:_ -> Just $ unLatestMilestone m
+
+----------------------------------------------------------------------------
+-- Full milestone
+----------------------------------------------------------------------------
 
 data Milestone = Milestone
     { milestoneId                 :: Text
-    , milestoneNumber             :: Int
+    , milestoneNumber             :: MilestoneNumber
     , milestoneTitle              :: Text
     , milestoneProgressPercentage :: Double
     , milestoneTotalIssues        :: Int

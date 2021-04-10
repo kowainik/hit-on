@@ -19,11 +19,12 @@ import Data.Aeson (Array, FromJSON (..), withObject, (.:))
 import Data.Aeson.Types (Parser)
 import Prolens (set)
 
-import Hit.Core (IssueOptions (..), Milestone (..), Owner (..), Repo (..))
+import Hit.Core (IssueOptions (..), MilestoneOption (..), Owner (..), Repo (..))
 import Hit.Error (renderHitError)
 import Hit.Git.Common (getUsername)
 import Hit.GitHub.Auth (withAuthOwnerRepo)
 import Hit.GitHub.Issue (Issue (..), ShortIssue (..), issueToShort, queryIssue, queryIssueList)
+import Hit.GitHub.Milestone (MilestoneNumber (..), queryLatestMilestoneNumber)
 import Hit.Prompt (arrow)
 
 import qualified Hit.Formatting as Fmt
@@ -64,7 +65,7 @@ with applied filters.
 See 'getAllIssues' to find out more about filtering.
 -}
 printFilteredIssues
-    :: Maybe Milestone  -- ^ Project Milestone
+    :: Maybe MilestoneOption  -- ^ Project Milestone
     -> Maybe Text  -- ^ User name of the assignee
     -> IO ()
 printFilteredIssues milestone me = getAllIssues milestone me >>= printIssues
@@ -76,79 +77,28 @@ filtered out by the given input:
   * Only issues from the current/specified milestone?
 -}
 getAllIssues
-    :: Maybe Milestone  -- ^ Project Milestone
+    :: Maybe MilestoneOption  -- ^ Project Milestone
     -> Maybe Text  -- ^ User name of the assignee
     -> IO [ShortIssue]
-getAllIssues milestone me = withAuthOwnerRepo queryIssueList >>= \case
+getAllIssues milestoneOpt me = withAuthOwnerRepo queryIssueList >>= \case
     Left err -> errorMessage (renderHitError err) >> exitFailure
-    Right is -> do
-        milestoneId <- getMilestoneId milestone
-        pure $ filterIssues milestoneId is
+    Right issues -> do
+        milestoneNum <- getMilestoneNumber milestoneOpt
+        pure $ filterIssues milestoneNumber issues
   where
-    filterIssues :: Maybe (Id G.Milestone) -> [Issue] -> [Issue]
-    filterIssues milestoneId =
-        filter (\i -> my i && i `isInMilestone` milestoneId)
+    filterIssues :: Maybe MilestoneNumber -> [ShortIssue] -> [ShortIssue]
+    filterIssues milestoneNumber =
+        filter (\i -> my i && i `isInMilestone` milestoneNumber)
 
-    my :: Issue -> Bool
+    my :: ShortIssue -> Bool
     my issue = case me of
-        Just (makeName -> username) -> username `isAssignedToIssue` issue
-        Nothing                     -> True
+        Just username -> elem username (shortIssueAssignees issue)
+        Nothing       -> True
 
-    isInMilestone :: Issue -> Maybe (Id G.Milestone) -> Bool
-    isInMilestone Issue{..} = \case
-        Just milestoneId -> (milestoneNumber <$> issueMilestone) == Just milestoneId
-        Nothing          -> True
-
-
--- | Create an 'Issue' by given title 'Text'
--- TODO: separate query to create issue in Hit.GitHub.Issue
-createIssue :: Text -> Text -> Maybe (Id G.Milestone) -> IO (Either Error Issue)
-createIssue title login milestone = withAuthOwnerRepo $ \token owner repo ->
-    GitHub.createIssue token owner repo $ mkNewIssue title login milestone
-
-{- | Assign the user to the given 'Issue'.
-
-This function can fail assignment due to the following reasons:
-
- * Auth token fetch failure
- * Assignment query to GutHub failure
-
-The function should inform user about corresponding 'Error' in each case and
-continue working.
--}
--- TODO: separate query to assign to issue in Hit.GitHub.Issue
-assignIssue :: Issue -> Text -> IO ()
-assignIssue issue username = do
-    res <- withAuthOwnerRepo $ \token owner repo -> do
-        let assignee :: Name User
-            assignee = makeName @User username
-        let curAssignees :: V.Vector (Name User)
-            curAssignees = V.map simpleUserLogin $ issueAssignees issue
-
-        if assignee `isAssignedToIssue` issue
-        then pure $ Right (issue, True)
-        else do
-            -- TODO: this is hack to cheat on GitHub library, as it
-            -- doesn't use the correct id in query.
-            let issId = mkIssueId (unIssueNumber $ issueNumber issue)
-            (, False) <<$>> GitHub.editIssue token owner repo issId editOfIssue
-                { editIssueAssignees = Just $ V.cons assignee curAssignees
-                }
-
-    case res of
-        Right (iss, isAlreadyAssigned) ->
-            if isAlreadyAssigned
-            then pass
-            else successMessage $ "You were assigned to the issue #" <>
-                showIssueNumber iss
-        Left err  -> do
-            errorMessage "Can not assign you to the issue."
-            putTextLn $ "    " <> show err
-
--- | Is the user assigned to the given 'Issue'?
-isAssignedToIssue :: Name User -> Issue -> Bool
-isAssignedToIssue assignee = V.elem assignee .
-    V.map simpleUserLogin . issueAssignees
+    isInMilestone :: ShortIssue -> Maybe MilestoneNumber -> Bool
+    isInMilestone ShortIssue{..} = \case
+        Just milestoneNum -> shortIssueMilestoneNumber == Just milestoneNum
+        Nothing           -> True
 
 ----------------------------------------------------------------------------
 -- Issue formatting
@@ -217,15 +167,14 @@ showIssue i@Issue{..} = T.intercalate "\n" $
 getIssueTitle :: Int -> IO Text
 getIssueTitle num = issueTitle <$> fetchIssue num
 
-
-{- | From the given 'Milestone' type try to get the milestone ID
+{- | From the given 'MilestoneOption' type try to get the milestone
+number.
 -}
--- TODO: query to fetch the latest milestone in Hit.GitHub.Milestone
-getMilestoneId :: Maybe Milestone -> IO (Maybe (Id G.Milestone))
-getMilestoneId = \case
-    Just (MilestoneId mId) -> pure $ Just $ mkId (Proxy @G.Milestone) mId
-    Just CurrentMilestone  -> fetchCurrentMilestoneId
-    Nothing                -> pure Nothing
+getMilestoneNumber :: Maybe MilestoneOption -> IO (Maybe MilestoneNumber)
+getMilestoneNumber = \case
+    Just (MilestoneNum mNum) -> pure $ Just $ MilestoneNumber mNum
+    Just CurrentMilestone    -> fetchCurrentMilestoneId
+    Nothing                  -> pure Nothing
 
 {- | Fetches all open milestones. Then figure out the current one and return its
 ID as 'Int'.
@@ -233,9 +182,9 @@ ID as 'Int'.
 If it could not fetch, or there is no open milestones then prints a warning
 message and returns 'Nothing'.
 -}
-fetchCurrentMilestoneId :: IO (Maybe (Id G.Milestone))
-fetchCurrentMilestoneId = withOwnerRepo milestones' >>= \case
+fetchCurrentMilestoneId :: IO (Maybe MilestoneNumber)
+fetchCurrentMilestoneId = withAuthOwnerRepo queryLatestMilestoneNumber >>= \case
     Left err -> Nothing <$ warningMessage ("Could not fetch the milestones\n    " <> show err)
-    Right ms -> case sortWith Down $ map milestoneNumber $ toList ms of
-        []  -> warningMessage "There are no open milestones for this project" >> pure Nothing
-        m:_ -> pure $ Just m
+    Right ms -> case ms of
+        Nothing -> Nothing <$ warningMessage "There are no open milestones for this project"
+        Just m  -> pure $ Just m

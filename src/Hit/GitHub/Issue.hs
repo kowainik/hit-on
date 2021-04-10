@@ -21,13 +21,14 @@ module Hit.GitHub.Issue
     , mutationCreateNewIssue
     ) where
 
-import Data.Aeson (Array, FromJSON (..), withObject, (.:))
+import Data.Aeson (Array, FromJSON (..), withObject, (.:), (.:?))
 import Data.Aeson.Types (Parser)
 import Prolens (set)
 
 import Hit.Core (IssueOptions (..), Milestone (..), Owner (..), Repo (..))
 import Hit.Git.Common (getUsername)
 import Hit.GitHub.Repository (RepositoryField (..), RepositoryNode (..))
+import Hit.GitHub.Milestone (MilestoneNumber)
 
 import qualified Hit.Formatting as Fmt
 
@@ -138,6 +139,7 @@ data ShortIssue = ShortIssue
     , shortIssueTitle       :: Text
     , shortIssueAuthorLogin :: Text
     , shortIssueAssignees   :: [Text]
+    , shortIssueMilestoneNumber :: Maybe MilestoneNumber
     }
 
 instance FromJSON ShortIssue
@@ -152,8 +154,10 @@ instance FromJSON ShortIssue
         assigneesNodes      <- assignees .: "nodes"
         shortIssueAssignees <- parseAssignees assigneesNodes
 
+        milestone           <- o .: "milestone"
+        shortIssueMilestoneNumber <- milestone .:? "number"
+
         pure ShortIssue{..}
-      where
 
 issueToShort :: Issue -> ShortIssue
 issueToShort Issue{..} = ShortIssue
@@ -191,6 +195,7 @@ issueListQuery (Owner owner) (Repo repo) = GH.repository
              & set GH.lastL 5
              )
              (GH.nodes $ one GH.UserLogin)
+           , GH.IssueMilestone $ one GH.MilestoneNumber
            ]
         )
 
