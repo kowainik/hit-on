@@ -55,6 +55,14 @@ fetchIssue iNum = withAuthOwnerRepo (\t o r -> queryIssue t o r iNum) >>= \case
     Left err    -> errorMessage (renderHitError err) >> exitFailure
     Right issue -> pure issue
 
+{- | Fetch 'IssueTitle' by number. If no issue found then print error and
+exit with failure.
+-}
+fetchIssueTitle :: Int -> IO Text
+fetchIssueTitle iNum = withAuthOwnerRepo (\t o r -> queryIssueTitle t o r iNum) >>= \case
+    Left err         -> errorMessage (renderHitError err) >> exitFailure
+    Right issueTitle -> pure $ unIssueTitle issueTittle
+
 ----------------------------------------------------------------------------
 -- Multiple list processing
 ----------------------------------------------------------------------------
@@ -161,11 +169,6 @@ showIssue i@Issue{..} = T.intercalate "\n" $
 ----------------------------------------------------------------------------
 -- Helper functions
 ----------------------------------------------------------------------------
-
--- | Fetch only issue title.
--- TODO: separate GraphQL query to fetch only title
-getIssueTitle :: Int -> IO Text
-getIssueTitle num = issueTitle <$> fetchIssue num
 
 {- | From the given 'MilestoneOption' type try to get the milestone
 number.

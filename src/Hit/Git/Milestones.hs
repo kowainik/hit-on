@@ -18,7 +18,7 @@ import Colourista.Short (b)
 import GitHub (Milestone (..), untagId)
 import GitHub.Endpoints.Issues.Milestones (milestones')
 
-import Hit.GitHub (withOwnerRepo)
+import Hit.GitHub (Milestone (..), queryMilestoneList, withAuthOwnerRepo)
 import Hit.Prompt (arrow)
 
 import qualified Data.Text as T
@@ -30,13 +30,10 @@ Fetches all open milestones sorted by ID. The more recent ID would be shown the
 first.
 -}
 runMilestones :: IO ()
-runMilestones = withOwnerRepo milestones' >>= \case
-    Left err -> do
-        errorMessage ("Could not fetch the milestones\n    " <> show err)
-        exitFailure
-    Right ms -> for_ (sortWith (Down . untagId . milestoneNumber) $ toList ms) $ \m ->
-
-        putTextLn $ arrow <> prettyMilestone m
+runMilestones = do
+    milestones <- fetchMilestones
+    for_ milestones $ \milestone ->
+        putTextLn $ arrow <> prettyMilestone milestone
 
 prettyMilestone :: Milestone -> Text
 prettyMilestone Milestone{..} =
@@ -47,3 +44,8 @@ prettyMilestone Milestone{..} =
          Just ""   -> ""
          Just desc -> "\n      " <> desc
          Nothing   -> ""
+
+fetchMilestones :: IO [Milestone]
+fetchMilestones = withAuthOwnerRepo queryMilestoneList >>= \case
+    Left err -> errorMessage (renderHitError err) >> exitFailure
+    Right ms -> pure ms

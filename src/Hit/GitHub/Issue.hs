@@ -17,6 +17,9 @@ module Hit.GitHub.Issue
     , queryIssueList
     , issueToShort
 
+    , IssueTitle (..)
+    , queryIssueTitle
+
     , IssueNumber (..)
     , mutationCreateNewIssue
     ) where
@@ -208,6 +211,36 @@ queryIssueList token owner repo =
         @(RepositoryNodes "issues" ShortIssue)
         token
         (GH.repositoryToAst $ issueListQuery owner repo)
+
+----------------------------------------------------------------------------
+-- Get only issue title
+----------------------------------------------------------------------------
+
+newtype IssueTitle = IssueTitle
+    { unIssueTitle :: Text
+    } deriving newtype (FromJSON)
+
+issueTitleQuery :: Owner -> Repo -> Int -> GH.Repository
+issueTitleQuery (Owner owner) (Repo repo) issueNumber = GH.repository
+    ( GH.defRepositoryArgs
+    & set GH.ownerL owner
+    & set GH.nameL  repo
+    )
+    $ one
+    $ GH.issue
+        ( GH.defIssueArgs
+        & set GH.numberL issueNumber
+        )
+        (one GH.title)
+
+{- | Queries 'IssueTitle' by number.
+-}
+queryIssueTitle :: GH.GitHubToken -> Owner -> Repo -> Int -> IO IssueTitle
+queryIssueTitle token owner repo issueNumber =
+    GH.unNest @'[ "repository", "issue", "title" ] <$>
+    GH.queryGitHub
+        token
+        (GH.repositoryToAst $ issueTitleQuery owner repo issueNumber)
 
 ----------------------------------------------------------------------------
 -- Create new issue

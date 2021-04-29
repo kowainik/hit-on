@@ -12,7 +12,9 @@ This module contains helper functions to work with GitHub API.
 module Hit.GitHub
     ( module Hit.GitHub.Auth
     , module Hit.GitHub.Issue
+    , module Hit.GitHub.Milestone
     ) where
 
 import Hit.GitHub.Auth
 import Hit.GitHub.Issue
+import Hit.GitHub.Milestone
