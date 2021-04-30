@@ -15,8 +15,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        cabal: ["3.0"]
-        ghc: ["8.8.4"]
+        cabal: ["3.4"]
+        ghc: ["8.10.4"]
 
     steps:
     - uses: actions/checkout@v2
@@ -53,8 +53,11 @@ jobs:
           git gc --aggressive
           git remote update --prune
           git remote set-head origin -a
+
     - name: Test
       if: matrix.os != 'macOS-latest'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: cabal test
 
   hlint:
