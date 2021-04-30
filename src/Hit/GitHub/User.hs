@@ -22,17 +22,21 @@ import qualified GitHub as GH
 
 
 -- TODO: move to @github-graphql@
-queryMyId :: GH.GitHubToken -> IO GH.UserId
+queryMyId :: GH.GitHubToken -> IO (Either GH.GitHubError GH.UserId)
 queryMyId token =
-    fmap (GH.unNested @'[ "viewer" ])
+    GH.unNest @'[ "viewer" ]
     $ GH.queryGitHub token
     $ GH.viewerToAst
     $ GH.Viewer
     $ one GH.UserId
 
-assignUserToIssue :: GH.GitHubToken -> GH.UserId -> GH.IssueId -> IO IssueNumber
+assignUserToIssue
+    :: GH.GitHubToken
+    -> GH.UserId
+    -> GH.IssueId
+    -> IO (Either GH.GitHubError IssueNumber)
 assignUserToIssue token userId issueId =
-    fmap (GH.unNested @'[ "number" ])
+    GH.unNest @'[ "number" ]
     $ GH.mutationGitHub token
     $ GH.addAssigneesToAssignableToAst
     $ GH.AddAssigneesToAssignable issueId [userId]

@@ -21,7 +21,7 @@ import Hit.Git.Branch (runNew)
 import Hit.Git.Commit (runCommit)
 import Hit.Git.Common (getCurrentBranch, getUsername, issueFromBranch, whenOnMainBranch)
 import Hit.Git.Issue (fetchIssue)
-import Hit.GitHub (Issue (..), queryPullRequests, withAuthOwnerRepo)
+import Hit.GitHub (Issue (..), PrTitle (..), queryPullRequests, withAuthOwnerRepo)
 import Hit.Hub (withHub)
 
 import qualified Data.Text as Text
@@ -47,8 +47,9 @@ runPr isDraft = do
             putTextLn $ "    " <> renderHitError err
             exitFailure
         Right prs -> case prs of
-            _ : _ -> do
-                errorMessage "PR for the current branch already exists"
+            PrTitle title : _ -> do
+                errorMessage $
+                    "PR for the current branch already exists with the name: " <> title
                 exitFailure
             [] -> do
                 runCommit CommitOptions

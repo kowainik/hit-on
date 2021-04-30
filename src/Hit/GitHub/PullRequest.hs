@@ -12,9 +12,11 @@ PullRequest-related queries and data types.
 -}
 
 module Hit.GitHub.PullRequest
-    ( queryPullRequests
+    ( PrTitle (..)
+    , queryPullRequests
     ) where
 
+import Data.Aeson (FromJSON (..), withObject, (.:))
 import Prolens (set)
 
 import Hit.Core (Owner (..), Repo (..))
@@ -37,9 +39,24 @@ pullRequestsQuery (Owner owner) (Repo repo) branch = GH.repository
         )
         (one $ GH.nodes $ one GH.title)
 
-queryPullRequests :: GH.GitHubToken -> Owner -> Repo -> Text -> IO [Text]
+queryPullRequests
+    :: GH.GitHubToken
+    -> Owner
+    -> Repo
+    -> Text
+    -> IO (Either GH.GitHubError [PrTitle])
 queryPullRequests token owner repo branch =
-    GH.unNested @'[ "repository", "pullRequests", "nodes", "title" ] <$>
+    GH.unNest @'[ "repository", "pullRequests", "nodes" ] $
     GH.queryGitHub
         token
         (GH.repositoryToAst $ pullRequestsQuery owner repo branch)
+
+newtype PrTitle = PrTitle
+    { unPriTitle :: Text
+    } deriving stock (Show)
+      deriving newtype (Eq)
+
+instance FromJSON PrTitle
+  where
+    parseJSON = withObject "PrTitle" $ \o ->
+        PrTitle <$> (o .: "title")

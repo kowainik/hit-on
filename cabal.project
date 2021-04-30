@@ -3,4 +3,4 @@ packages: .
 source-repository-package
     type: git
     location: git@github.com:kowainik/github-graphql.git
-    tag: fad9692bce2795643f4ef4bb0a7052ca43d07719
+    tag: bda3e6baceb1bdfd156afa851fc1d6f5e653771b

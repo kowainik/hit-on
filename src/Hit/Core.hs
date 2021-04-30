@@ -47,7 +47,8 @@ newtype Repo = Repo
 -}
 newtype IssueNumber = IssueNumber
     { unIssueNumber :: Int
-    } deriving newtype (FromJSON)
+    } deriving stock (Show)
+      deriving newtype (Eq, FromJSON)
 
 {- | Data type to represent the type of @push@ or @sync@: force-push
 (force-reset) or not.

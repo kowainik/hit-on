@@ -27,6 +27,7 @@ common common-options
 
   mixins:              base hiding (Prelude)
                      , relude (Relude as Prelude
+                              , Relude.Extra.Bifunctor
                               , Relude.Extra.Enum
                               )
 
@@ -115,6 +116,7 @@ library
                      , github-graphql ^>= 0.0
                      , gitrev ^>= 1.3
                      , optparse-applicative ^>= 0.15
+                     , pretty-simple ^>= 4.0
                      , process ^>= 1.6
                      , prolens ^>= 0.0
                      , shellmet ^>= 0.0.3.0
@@ -134,12 +136,20 @@ test-suite hit-on-test
   import:              common-options
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-  main-is:             Main.hs
-  other-modules:       Test.Hit.Names
+  main-is:             Spec.hs
+  other-modules:       Test.Hit.Data
+                       Test.Hit.Names
+                       Test.Hit.Parse
+                       Test.Hit.GitHub
+                         Test.Hit.GitHub.Issue
+                         Test.Hit.GitHub.Milestone
+                         Test.Hit.GitHub.PullRequest
+                         Test.Hit.GitHub.User
 
-  build-depends:       text
+  build-depends:       github-graphql
                      , hspec ^>= 2.7.1
                      , hit-on
+                     , text
 
   ghc-options:        -threaded
                       -rtsopts

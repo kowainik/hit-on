@@ -14,9 +14,15 @@ module Hit.Error
     , renderHitError
     ) where
 
+import Text.Pretty.Simple (pShow)
+
+import qualified GitHub as GH
+
+
 data HitError
     = NoGitHubTokenEnv
     | InvalidOwnerRepo
+    | GitHubApiError GH.GitHubError
 
 renderHitError :: HitError -> Text
 renderHitError = \case
@@ -24,3 +30,5 @@ renderHitError = \case
         "The environment variable GITHUB_TOKEN is not set"
     InvalidOwnerRepo ->
         "Can't parse the 'owner' and 'repo' names from the 'owner/repo' format"
+    GitHubApiError err ->
+        "Error calling GitHub API:\n\n" <> toStrict (pShow err)

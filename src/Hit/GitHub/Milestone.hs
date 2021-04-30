@@ -57,25 +57,33 @@ latestMilestoneQuery (Owner owner) (Repo repo) = GH.repository
     $ GH.milestones
         ( GH.defMilestonesArgs
         & set GH.lastL 1
+        & set GH.statesL (one GH.open)
         & set GH.orderL
             ( Just $ GH.defMilestoneOrder
             & set GH.fieldL GH.MNumber
-            & set GH.directionL GH.Desc
+            & set GH.directionL GH.Asc
             )
         )
         (one $ GH.nodes $ one GH.MilestoneNumber)
 
 {- | Query the number of the latest milestone.
 -}
-queryLatestMilestoneNumber :: GH.GitHubToken -> Owner -> Repo -> IO (Maybe MilestoneNumber)
+queryLatestMilestoneNumber
+    :: GH.GitHubToken
+    -> Owner
+    -> Repo
+    -> IO (Either GH.GitHubError (Maybe MilestoneNumber))
 queryLatestMilestoneNumber token owner repo = do
-    milestones <-
-        GH.unNested @'[ "repository", "milestones", "nodes" ] <$>
+    eMilestones <-
+        GH.unNest @'[ "repository", "milestones", "nodes" ] $
         GH.queryGitHub
             token
             (GH.repositoryToAst $ latestMilestoneQuery owner repo)
 
-    pure $ case milestones of
+    pure $ second getMilestoneNumber eMilestones
+  where
+    getMilestoneNumber :: [LatestMilestone] -> Maybe MilestoneNumber
+    getMilestoneNumber = \case
         []  -> Nothing
         m:_ -> Just $ unLatestMilestone m
 
@@ -117,6 +125,7 @@ milestonesQuery (Owner owner) (Repo repo) = GH.repository
     $ GH.milestones
         ( GH.defMilestonesArgs
         & set GH.lastL 100
+        & set GH.statesL (one GH.open)
         & set GH.orderL
             ( Just $ GH.defMilestoneOrder
             & set GH.fieldL GH.MCreatedAt
@@ -127,8 +136,9 @@ milestonesQuery (Owner owner) (Repo repo) = GH.repository
         $ GH.nodes
         $    GH.MilestoneId
         :| [ GH.MilestoneNumber
-           , GH.MilestoneProgressPercentage
            , GH.MilestoneTitle
+           , GH.MilestoneDescription
+           , GH.MilestoneProgressPercentage
            , GH.MilestoneIssues $ GH.Issues
                ( GH.defIssuesArgs
                & set GH.lastL 1000
@@ -140,9 +150,13 @@ milestonesQuery (Owner owner) (Repo repo) = GH.repository
 
 {- | Queries the latest 100 issues of the repository.
 -}
-queryMilestoneList :: GH.GitHubToken -> Owner -> Repo -> IO [Milestone]
+queryMilestoneList
+    :: GH.GitHubToken
+    -> Owner
+    -> Repo
+    -> IO (Either GH.GitHubError [Milestone])
 queryMilestoneList token owner repo =
-    GH.unNested @'[ "repository", "milestones", "nodes" ] <$>
+    GH.unNest @'[ "repository", "milestones", "nodes" ] $
     GH.queryGitHub
         token
         (GH.repositoryToAst $ milestonesQuery owner repo)
@@ -153,6 +167,6 @@ queryMilestoneId
     -> Owner
     -> Repo
     -> MilestoneNumber
-    -> IO GH.MilestoneId
+    -> IO (Either GH.GitHubError GH.MilestoneId)
 queryMilestoneId token (Owner owner) (Repo repo) (MilestoneNumber number) =
     GH.queryMilestoneId token owner repo number

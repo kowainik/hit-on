@@ -15,6 +15,7 @@ module Hit.Git.Milestones
 
 import Colourista (blue, cyan, errorMessage, formatWith, italic, yellow)
 import Colourista.Short (b)
+import Text.Printf (printf)
 
 import Hit.Error (renderHitError)
 import Hit.GitHub (Milestone (..), MilestoneNumber (..), queryMilestoneList, withAuthOwnerRepo)
@@ -46,7 +47,7 @@ prettyMilestone Milestone{..} = mconcat
         , ")"
         ]
     , "  "
-    , formatWith [cyan] $ show milestoneProgressPercentage <> "%"
+    , formatWith [cyan] $ prettyDouble milestoneProgressPercentage
     , case Text.strip milestoneDescription of
          ""   -> ""
          desc -> "\n      " <> desc
@@ -54,9 +55,17 @@ prettyMilestone Milestone{..} = mconcat
   where
     milestoneOpenIssues :: Int
     milestoneOpenIssues = round
-        $ fromIntegral milestoneTotalIssues * milestoneProgressPercentage
+        $ (fromIntegral milestoneTotalIssues * milestoneProgressPercentage) / 100
 
 fetchMilestones :: IO [Milestone]
 fetchMilestones = withAuthOwnerRepo queryMilestoneList >>= \case
     Left err -> errorMessage (renderHitError err) >> exitFailure
     Right ms -> pure ms
+
+{- | Show double prettily with only 2 digits after dot.
+-}
+prettyDouble :: Double -> Text
+prettyDouble x =
+    if fromIntegral (floor x :: Int) == x  -- display without decimal part
+    then toText (printf "%.0f" x :: String) <> "%"
+    else toText (printf "%.2f" x :: String) <> "%"

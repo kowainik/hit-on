@@ -26,7 +26,7 @@ module Hit.GitHub.Issue
     , mutationCreateNewIssue
     ) where
 
-import Data.Aeson (Array, FromJSON (..), withObject, (.:), (.:?))
+import Data.Aeson (Array, FromJSON (..), Object, Value (..), withObject, (.:))
 import Data.Aeson.Types (Parser)
 import Prolens (set)
 
@@ -52,7 +52,7 @@ data Issue = Issue
     , issueLabels          :: [Text]
     , issueAssignees       :: [Text]
     , issueMilestoneNumber :: Maybe MilestoneNumber
-    }
+    } deriving stock (Show, Eq)
 
 instance FromJSON Issue
   where
@@ -74,8 +74,7 @@ instance FromJSON Issue
         assigneesNodes   <- assignees .: "nodes"
         issueAssignees   <- parseAssignees assigneesNodes
 
-        milestone        <- o .: "milestone"
-        issueMilestoneNumber <- milestone .:? "number"
+        issueMilestoneNumber <- parseMilestoneNumber o
 
         pure Issue{..}
       where
@@ -95,8 +94,9 @@ issueQuery (Owner owner) (Repo repo) (IssueNumber issueNumber) = GH.repository
         ( GH.defIssueArgs
         & set GH.numberL issueNumber
         )
-        (    GH.title
-        :| [ GH.author $ one GH.login
+        (    GH.IssueId
+        :| [ GH.title
+           , GH.author $ one GH.login
            , GH.IssueBody
            , GH.IssueNumber
            , GH.IssueUrl
@@ -119,9 +119,14 @@ issueQuery (Owner owner) (Repo repo) (IssueNumber issueNumber) = GH.repository
 
 {- | Queries a single issue by number.
 -}
-queryIssue :: GH.GitHubToken -> Owner -> Repo -> IssueNumber -> IO Issue
+queryIssue
+    :: GH.GitHubToken
+    -> Owner
+    -> Repo
+    -> IssueNumber
+    -> IO (Either GH.GitHubError Issue)
 queryIssue token owner repo issueNumber =
-    GH.unNested @'[ "repository", "issue" ] <$>
+    GH.unNest @'[ "repository", "issue" ] $
     GH.queryGitHub
         token
         (GH.repositoryToAst $ issueQuery owner repo issueNumber)
@@ -138,7 +143,7 @@ data ShortIssue = ShortIssue
     , shortIssueAuthorLogin     :: Text
     , shortIssueAssignees       :: [Text]
     , shortIssueMilestoneNumber :: Maybe MilestoneNumber
-    }
+    } deriving stock (Show, Eq)
 
 instance FromJSON ShortIssue
   where
@@ -152,8 +157,7 @@ instance FromJSON ShortIssue
         assigneesNodes      <- assignees .: "nodes"
         shortIssueAssignees <- parseAssignees assigneesNodes
 
-        milestone           <- o .: "milestone"
-        shortIssueMilestoneNumber <- milestone .:? "number"
+        shortIssueMilestoneNumber <- parseMilestoneNumber o
 
         pure ShortIssue{..}
 
@@ -190,19 +194,23 @@ issueListQuery (Owner owner) (Repo repo) = GH.repository
            , GH.IssueNumber
            , GH.IssueAssignees
              $ GH.Assignees
-             ( GH.defAssigneesArgs
-             & set GH.lastL 5
-             )
-             (GH.nodes $ one GH.UserLogin)
+                 ( GH.defAssigneesArgs
+                 & set GH.lastL 5
+                 )
+                 (GH.nodes $ one GH.UserLogin)
            , GH.IssueMilestone $ one GH.MilestoneNumber
            ]
         )
 
 {- | Queries the latest 100 issues of the repository.
 -}
-queryIssueList :: GH.GitHubToken -> Owner -> Repo -> IO [ShortIssue]
+queryIssueList
+    :: GH.GitHubToken
+    -> Owner
+    -> Repo
+    -> IO (Either GH.GitHubError [ShortIssue])
 queryIssueList token owner repo =
-    GH.unNested @'[ "repository", "issues", "nodes" ] <$>
+    GH.unNest @'[ "repository", "issues", "nodes" ] $
     GH.queryGitHub
         token
         (GH.repositoryToAst $ issueListQuery owner repo)
@@ -213,7 +221,8 @@ queryIssueList token owner repo =
 
 newtype IssueTitle = IssueTitle
     { unIssueTitle :: Text
-    } deriving newtype (FromJSON)
+    } deriving stock (Show)
+      deriving newtype (Eq, FromJSON)
 
 issueTitleQuery :: Owner -> Repo -> IssueNumber -> GH.Repository
 issueTitleQuery (Owner owner) (Repo repo) (IssueNumber issueNumber) = GH.repository
@@ -230,9 +239,14 @@ issueTitleQuery (Owner owner) (Repo repo) (IssueNumber issueNumber) = GH.reposit
 
 {- | Queries 'IssueTitle' by number.
 -}
-queryIssueTitle :: GH.GitHubToken -> Owner -> Repo -> IssueNumber -> IO IssueTitle
+queryIssueTitle
+    :: GH.GitHubToken
+    -> Owner
+    -> Repo
+    -> IssueNumber
+    -> IO (Either GH.GitHubError IssueTitle)
 queryIssueTitle token owner repo issueNumber =
-    GH.unNested @'[ "repository", "issue", "title" ] <$>
+    GH.unNest @'[ "repository", "issue", "title" ] $
     GH.queryGitHub
         token
         (GH.repositoryToAst $ issueTitleQuery owner repo issueNumber)
@@ -278,13 +292,13 @@ mutationCreateNewIssue
     -> Repo
     -> Text
     -> Maybe GH.MilestoneId
-    -> IO CreatedIssue
-mutationCreateNewIssue token (Owner owner) (Repo repo) issueTitle milestoneId = do
-    repositoryId <- GH.queryRepositoryId token owner repo
-
-    GH.unNested @'[ "repository", "issue" ] <$> GH.mutationGitHub
-        token
-        (GH.createIssueToAst $ createIssueMutation repositoryId issueTitle milestoneId)
+    -> IO (Either GH.GitHubError CreatedIssue)
+mutationCreateNewIssue token (Owner owner) (Repo repo) issueTitle milestoneId =
+    GH.queryRepositoryId token owner repo >>= \case
+        Left err -> pure $ Left err
+        Right repositoryId -> GH.unNest @'[ "repository", "issue" ] $ GH.mutationGitHub
+            token
+            (GH.createIssueToAst $ createIssueMutation repositoryId issueTitle milestoneId)
 
 ----------------------------------------------------------------------------
 -- Internals
@@ -292,3 +306,12 @@ mutationCreateNewIssue token (Owner owner) (Repo repo) issueTitle milestoneId = 
 
 parseAssignees :: Array -> Parser [Text]
 parseAssignees = mapM (withObject "Assignee" $ \o -> o .: "login") . toList
+
+parseMilestoneNumber :: Object -> Parser (Maybe MilestoneNumber)
+parseMilestoneNumber obj = do
+    -- special parsing of milestone because it can be 'null'
+    milestoneVal <- obj .: "milestone"
+    case milestoneVal of
+        Null             -> pure Nothing
+        Object milestone -> milestone .: "number"
+        _                -> fail "Expected 'null' or object with 'number' key"

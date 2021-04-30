@@ -21,9 +21,9 @@ module Hit.Git.Branch
     , mkBranchDescription
     ) where
 
-import Data.Char (isAlphaNum, isDigit, isSpace)
-
 import Colourista (errorMessage, infoMessage, successMessage, warningMessage)
+import Data.Char (isAlphaNum, isDigit, isSpace)
+import Relude.Extra.Bifunctor (secondF)
 import Shellmet (($?))
 
 import Hit.Core (IssueNumber (..), MilestoneOption, NewOptions (..), newOptionsWithName)
@@ -196,9 +196,16 @@ showIssueLink url = infoMessage $ "  Issue link: " <> url
 createIssue :: Text -> Maybe MilestoneOption -> IO (Either HitError CreatedIssue)
 createIssue title milestoneOpt = withAuthOwnerRepo $ \token owner repo -> do
     -- TODO: optimize to 2 calls instead of 3
+    -- Also, it's so awkward to work with 'IO (Either ...)', but there's no better way...
     milestoneNumber <- getMilestoneNumber milestoneOpt
-    milestoneId     <- traverse (queryMilestoneId token owner repo) milestoneNumber
-    mutationCreateNewIssue token owner repo title milestoneId
+
+    eMilestoneId <- case milestoneNumber of
+        Nothing  -> pure $ Right Nothing
+        Just mId -> secondF Just $ queryMilestoneId token owner repo mId
+
+    case eMilestoneId of
+        Left err          -> pure $ Left err
+        Right milestoneId -> mutationCreateNewIssue token owner repo title milestoneId
 
 {- | Assign the user to the given 'Issue'.
 
@@ -214,8 +221,8 @@ assignToIssue :: Issue -> Text -> IO ()
 assignToIssue Issue{..} username = do
     res <- withAuthOwnerRepo $ \token _owner _repo ->
         if username `elem` issueAssignees
-            then pure (issueNumber, True)
-            else (, False) <$> addAssignee token issueId
+            then pure $ Right (issueNumber, True)
+            else secondF (, False) (addAssignee token issueId)
 
     case res of
         Right (iss, isAlreadyAssigned) ->
@@ -226,7 +233,7 @@ assignToIssue Issue{..} username = do
             errorMessage "Can not assign you to the issue."
             putTextLn $ "    " <> renderHitError err
 
-addAssignee :: GH.GitHubToken -> GH.IssueId -> IO IssueNumber
-addAssignee token issueId = do
-    myId <- queryMyId token
-    assignUserToIssue token myId issueId
+addAssignee :: GH.GitHubToken -> GH.IssueId -> IO (Either GH.GitHubError IssueNumber)
+addAssignee token issueId = queryMyId token >>= \case
+    Left err   -> pure $ Left err
+    Right myId -> assignUserToIssue token myId issueId

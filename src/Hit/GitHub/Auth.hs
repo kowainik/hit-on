@@ -11,9 +11,11 @@ Functions to perform authenticated GitHub API requests.
 
 module Hit.GitHub.Auth
     ( withAuthOwnerRepo
+    , getGitHubToken
     , parseOwnerRepo
     ) where
 
+import Relude.Extra.Bifunctor (firstF)
 import Shellmet (($|))
 
 import Hit.Core (Owner (..), Repo (..))
@@ -28,13 +30,16 @@ import qualified GitHub as GH
 All actions to query GraphQL GitHub API require authentication token.
 -}
 withAuthOwnerRepo
-    :: (GH.GitHubToken -> Owner -> Repo -> IO a)
+    :: (GH.GitHubToken -> Owner -> Repo -> IO (Either GH.GitHubError a))
     -> IO (Either HitError a)
-withAuthOwnerRepo action = GH.getGitHubToken "GITHUB_TOKEN" >>= \case
+withAuthOwnerRepo action = getGitHubToken >>= \case
     Nothing    -> pure $ Left NoGitHubTokenEnv
     Just token -> getOwnerRepo >>= \case
         Nothing            -> pure $ Left InvalidOwnerRepo
-        Just (owner, repo) -> Right <$> action token owner repo
+        Just (owner, repo) -> firstF GitHubApiError (action token owner repo)
+
+getGitHubToken :: IO (Maybe GH.GitHubToken)
+getGitHubToken = GH.getGitHubToken "GITHUB_TOKEN"
 
 ----------------------------------------------------------------------------
 -- Fetch and parse name and repo from URL
