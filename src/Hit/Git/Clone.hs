@@ -15,14 +15,12 @@ module Hit.Git.Clone
     ) where
 
 import Colourista (errorMessage, infoMessage, successMessage)
-import GitHub.Endpoints.Repos (forkExistingRepo')
 import Shellmet ()
 import System.Directory (setCurrentDirectory)
 
 import Hit.Git.Common (getUsername)
-import Hit.GitHub (getGitHubToken, makeName)
 
-import qualified Data.Text as T
+import qualified Data.Text as Text
 
 
 {- | @hit clone@ command receives the name of the repo in the following
@@ -47,32 +45,26 @@ runClone txt = do
 
 {- |
 -}
--- TODO: rewrite to 'hub'
 runFork :: Text -> IO ()
-runFork name = getGitHubToken >>= \case
-    Nothing -> errorMessage "Can not get GITHUB_TOKEN" >> exitFailure
-    Just auth -> do
-        (owner, repo) <- parseOwnerRepo name
-        forkExistingRepo' auth (makeName owner) (makeName repo) Nothing >>= \case
-            Left err -> do
-                errorMessage $ "Can not fork the repository: " <> name
-                errorMessage $ show err
-                exitFailure
-            Right _ -> do
-                successMessage $ " '" <> name <> "' repository is forked for your account at GitHub"
-                usr <- getUsername
-                infoMessage $ " Link: https://github.com/" <> usr <> "/" <> repo
+runFork name = do
+    runClone name
+    (_owner, repo) <- parseOwnerRepo name
 
-                runClone repo
-                -- Step up into the folder and Add the upstream remote
-                setCurrentDirectory $ toString repo
-                "git" ["remote", "add", "upstream", "git@github.com:" <> name <> ".git"]
-                successMessage "'upstream' remote is added for the repository"
+    -- Step up into the folder to fork and add the upstream remote
+    setCurrentDirectory $ toString repo
+    "hub" ["fork"]
+    successMessage $ " '" <> name <> "' repository is forked for your account at GitHub"
+
+    "git" ["remote", "add", "upstream", "git@github.com:" <> name <> ".git"]
+    successMessage "'upstream' remote is added for the repository"
+
+    usr <- getUsername
+    infoMessage $ " Link: https://github.com/" <> usr <> "/" <> repo
 
 parseOwnerRepo :: Text -> IO (Text, Text)
-parseOwnerRepo name = case T.splitOn "/" name of
+parseOwnerRepo name = case Text.splitOn "/" name of
     [reponame] -> getUsername >>= \u -> pure (u, reponame)
     [username, reponame] -> pure (username, reponame)
-    _ -> do
+    _other -> do
         errorMessage ("Incorrect name: " <> name <> ". Use 'repo' or 'user/repo' formats")
         exitFailure

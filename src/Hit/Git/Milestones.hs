@@ -13,15 +13,14 @@ module Hit.Git.Milestones
     ( runMilestones
     ) where
 
-import Colourista (blue, errorMessage, formatWith, italic, yellow)
+import Colourista (blue, cyan, errorMessage, formatWith, italic, yellow)
 import Colourista.Short (b)
-import GitHub (Milestone (..), untagId)
-import GitHub.Endpoints.Issues.Milestones (milestones')
 
-import Hit.GitHub (Milestone (..), queryMilestoneList, withAuthOwnerRepo)
+import Hit.Error (renderHitError)
+import Hit.GitHub (Milestone (..), MilestoneNumber (..), queryMilestoneList, withAuthOwnerRepo)
 import Hit.Prompt (arrow)
 
-import qualified Data.Text as T
+import qualified Data.Text as Text
 
 
 {- | @hit milestones@ command.
@@ -36,14 +35,26 @@ runMilestones = do
         putTextLn $ arrow <> prettyMilestone milestone
 
 prettyMilestone :: Milestone -> Text
-prettyMilestone Milestone{..} =
-    formatWith [blue] (" [#" <> show (untagId milestoneNumber) <> "] ")
-    <> b milestoneTitle
-    <> formatWith [yellow, italic] ("  (" <> show milestoneOpenIssues <> "/" <> show (milestoneOpenIssues + milestoneClosedIssues) <> ")")
-    <> case T.strip <$> milestoneDescription of
-         Just ""   -> ""
-         Just desc -> "\n      " <> desc
-         Nothing   -> ""
+prettyMilestone Milestone{..} = mconcat
+    [ formatWith [blue] $ " [#" <> show (unMilestoneNumber milestoneNumber) <> "] "
+    , b milestoneTitle
+    , formatWith [yellow, italic] $ mconcat
+        [ "  ("
+        , show milestoneOpenIssues
+        , "/"
+        , show milestoneTotalIssues
+        , ")"
+        ]
+    , "  "
+    , formatWith [cyan] $ show milestoneProgressPercentage <> "%"
+    , case Text.strip milestoneDescription of
+         ""   -> ""
+         desc -> "\n      " <> desc
+    ]
+  where
+    milestoneOpenIssues :: Int
+    milestoneOpenIssues = round
+        $ fromIntegral milestoneTotalIssues * milestoneProgressPercentage
 
 fetchMilestones :: IO [Milestone]
 fetchMilestones = withAuthOwnerRepo queryMilestoneList >>= \case

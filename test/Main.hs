@@ -1,18 +1,19 @@
 module Main (main) where
 
-import GitHub.Data.Name (Name (..))
 import Test.Hspec (describe, hspec, it, shouldBe)
 
-import Hit.GitHub (parseOwnerRepo)
+import Hit.Core (Owner (..), Repo (..))
+import Hit.GitHub.Auth (parseOwnerRepo)
 import Test.Hit.Names (namesSpec)
 
 
 main :: IO ()
 main = hspec $ do
     namesSpec
+
     describe "parseOwnerRepo" $ do
-        let expectedOwnerName = N "kowainik"
-        let expectedRepoName = N "hit-on"
+        let expectedOwnerName = Owner "kowainik"
+        let expectedRepoName = Repo "hit-on"
         let expectedCredentials = Just (expectedOwnerName, expectedRepoName)
         it "Parses a GitHub repo link (SSH) and gives use the Owner Name and Repo Name separately" $ do
             parseOwnerRepo "git@github.com:kowainik/hit-on.git" `shouldBe` expectedCredentials

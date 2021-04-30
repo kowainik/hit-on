@@ -13,6 +13,7 @@ module Hit.Core
     ( -- * Wrapper types
       Owner (..)
     , Repo (..)
+    , IssueNumber (..)
 
     , ForceFlag (..)
     , CommitOptions (..)
@@ -29,13 +30,24 @@ module Hit.Core
     , TagAction (..)
     ) where
 
+import Data.Aeson (FromJSON)
+
+
 newtype Owner = Owner
     { unOwner :: Text
-    }
+    } deriving stock (Show)
+      deriving newtype (Eq)
 
 newtype Repo = Repo
     { unRepo :: Text
-    }
+    } deriving stock (Show)
+      deriving newtype (Eq)
+
+{- | Safe wrapper for issue number.
+-}
+newtype IssueNumber = IssueNumber
+    { unIssueNumber :: Int
+    } deriving newtype (FromJSON)
 
 {- | Data type to represent the type of @push@ or @sync@: force-push
 (force-reset) or not.
@@ -61,9 +73,9 @@ data CommitOptions = CommitOptions
 
 -- | Options of the @hit issue@ command.
 data IssueOptions = IssueOptions
-    { ioIssueNumber :: !(Maybe Int)
+    { ioIssueNumber :: !(Maybe IssueNumber)
     , ioMe          :: !Bool
-    , ioMilestone   :: !(Maybe Milestone)
+    , ioMilestone   :: !(Maybe MilestoneOption)
     }
 
 -- | Internal representation of the GutHub Milestone Number in CLI.
@@ -84,7 +96,7 @@ data NewOptions = NewOptions
     { noCreateIssue   :: !Bool  -- ^ Should create issue as well?
     , noIssueOrBranch :: !(Maybe Text)  -- ^ Issue or branch name
     , noMe            :: !Bool  -- ^ Branch from __my__ issues?
-    , noMilestone     :: !(Maybe Milestone)  -- ^ When creating a new issue, add to any milestone?
+    , noMilestone     :: !(Maybe MilestoneOption)  -- ^ When creating a new issue, add to any milestone?
     }
 
 newOptionsWithName :: Text -> NewOptions

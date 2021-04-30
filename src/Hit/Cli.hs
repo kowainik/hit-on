@@ -24,8 +24,9 @@ import Options.Applicative (CommandFields, Mod, Parser, ParserInfo, argument, au
                             metavar, option, progDesc, short, strArgument, strOption, subparser,
                             switch)
 
-import Hit.Core (CommitOptions (..), ForceFlag (..), IssueOptions (..), Milestone (..),
-                 NewOptions (..), TagAction (..), TagOptions (..), defaultIssueOptions)
+import Hit.Core (CommitOptions (..), ForceFlag (..), IssueNumber (..), IssueOptions (..),
+                 MilestoneOption (..), NewOptions (..), TagAction (..), TagOptions (..),
+                 defaultIssueOptions)
 import Hit.Git (runAmend, runClear, runClone, runCommit, runCurrent, runDiff, runFix, runFork,
                 runFresh, runHop, runIssue, runLog, runMilestones, runNew, runPr, runPush,
                 runRename, runResolve, runStatus, runSync, runTag, runUncommit, runWip)
@@ -315,8 +316,8 @@ forceFlagP = flag Simple Force
     <> help "Execute forcefully"
 
 -- | Parse issue number as an argument.
-issueNumP :: Parser Int
-issueNumP = argument auto $ metavar "ISSUE_NUMBER"
+issueNumP :: Parser IssueNumber
+issueNumP = fmap IssueNumber $ argument auto $ metavar "ISSUE_NUMBER"
 
 milestoneP :: Parser (Maybe MilestoneOption)
 milestoneP = optional (curMilestoneP <|> milestoneNumP)

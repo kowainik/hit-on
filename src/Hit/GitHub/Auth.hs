@@ -11,11 +11,12 @@ Functions to perform authenticated GitHub API requests.
 
 module Hit.GitHub.Auth
     ( withAuthOwnerRepo
+    , parseOwnerRepo
     ) where
 
 import Shellmet (($|))
 
-import Hit.Core (Owner, Repo)
+import Hit.Core (Owner (..), Repo (..))
 import Hit.Error (HitError (..))
 
 import qualified Data.Text as Text
@@ -33,19 +34,7 @@ withAuthOwnerRepo action = GH.getGitHubToken "GITHUB_TOKEN" >>= \case
     Nothing    -> pure $ Left NoGitHubTokenEnv
     Just token -> getOwnerRepo >>= \case
         Nothing            -> pure $ Left InvalidOwnerRepo
-        Just (owner, repo) -> action token owner repo
-
--- withOwnerRepo
---     :: (Maybe Auth -> Name Owner -> Name Repo -> IO (Either Error a))
---     -> IO (Either Error a)
--- withOwnerRepo action = getOwnerRepo >>= \case
---     Just (owner, repo) -> do
---         token <- getGitHubToken
---         action token owner repo
---     Nothing -> do
---         let errorText = "Cannot get the owner/repo names"
---         errorMessage errorText
---         pure $ Left $ ParseError errorText
+        Just (owner, repo) -> Right <$> action token owner repo
 
 ----------------------------------------------------------------------------
 -- Fetch and parse name and repo from URL
@@ -96,4 +85,4 @@ parseOwnerRepo url =
         guard (owner /= "" && repo /= "") $> (Owner owner, Repo repo)
 
     stripGitSuffix :: Text -> Maybe Text
-    stripGitSuffix x = whenNothing (T.stripSuffix ".git" x) (Just x)
+    stripGitSuffix x = whenNothing (Text.stripSuffix ".git" x) (Just x)

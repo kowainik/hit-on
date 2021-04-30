@@ -26,13 +26,16 @@ import Data.Char (isAlphaNum, isDigit, isSpace)
 import Colourista (errorMessage, infoMessage, successMessage, warningMessage)
 import Shellmet (($?))
 
-import Hit.Core (Milestone, NewOptions (..), newOptionsWithName)
+import Hit.Core (IssueNumber (..), MilestoneOption, NewOptions (..), newOptionsWithName)
+import Hit.Error (HitError, renderHitError)
 import Hit.Formatting (stripRfc)
-import Hit.Git.Common (getCurrentBranch, getMainBranch, getUsername)
-import Hit.GitHub.Issue (mutationCreateNewIssue)
+import Hit.Git.Common (getCurrentBranch, getMainBranch, getUsername, meToUsername)
+import Hit.Git.Issue (fetchIssue, getAllIssues, getMilestoneNumber, printIssues, showIssueNumber)
+import Hit.GitHub (CreatedIssue (..), Issue (..), ShortIssue (..), assignUserToIssue,
+                   mutationCreateNewIssue, queryMilestoneId, queryMyId, withAuthOwnerRepo)
 
-import qualified Data.Text as T
-import qualified Data.Vector as V
+import qualified Data.Text as Text
+import qualified GitHub as GH
 
 
 -- | @hit new@ command.
@@ -41,17 +44,20 @@ runNew NewOptions{..} = do
     issueOrBranch <- case noIssueOrBranch of
         Just issueOrBranch -> pure issueOrBranch
         Nothing -> if noMe
-            then meToUsername noMe >>= getAllIssues Nothing >>= \is -> case length is of
-                 0 -> warningMessage "There is no issues assign to you at the moment" >> exitFailure
-                 1 -> pure $ show $ unIssueNumber $ issueNumber $ V.head is
-                 _n  -> do
-                     infoMessage "Here is the list of the issues assigned to you:" >> printIssues is
+            then meToUsername noMe >>= getAllIssues Nothing >>= \case
+                 [] -> do
+                     warningMessage "There is no issues assign to you at the moment"
                      exitFailure
-
+                 [issue] -> pure $ show $ unIssueNumber $ shortIssueNumber issue
+                 issues -> do
+                     infoMessage "Here is the list of the issues assigned to you:"
+                     printIssues issues
+                     exitFailure
             else do
                 errorMessage "You should specify either the issue number, or branch name"
                 errorMessage "Or you can use '--me' option to create a branch of issue assign to you."
                 exitFailure
+
     branchName <- mkBranchName noCreateIssue noMilestone issueOrBranch
     "git" ["checkout", "-b", branchName]
 
@@ -92,31 +98,33 @@ The issue title is taken from the corresponding issue and escaped.
 -}
 mkBranchName
     :: Bool  -- ^ if the new issue should be created
-    -> Maybe Milestone  -- ^ Add the new issue to the milestone?
+    -> Maybe MilestoneOption  -- ^ Add the new issue to the milestone?
     -> Text  -- ^ user input: issue number or text
     -> IO Text
-mkBranchName doCreateIssue milestone issueOrName = do
+mkBranchName doCreateIssue milestoneOpt issueOrName = do
+    maybeIssue <- if doCreateIssue then tryCreateNewIssue else pure Nothing
+
+    let branchDescription = mkBranchDescription
+            (createdIssueNumber <$> maybeIssue)
+            issueOrName
+
     login <- getUsername
-    maybeIssue <- if doCreateIssue then tryCreateNewIssue login else pure Nothing
-    let branchDescription = mkBranchDescription maybeIssue issueOrName
     title <- assignAndDisplayBranchDescription True login branchDescription
     pure $ login <> "/" <> title
   where
-    tryCreateNewIssue :: Text -> IO (Maybe IssueNumber)
-    tryCreateNewIssue login = do
+    tryCreateNewIssue :: IO (Maybe CreatedIssue)
+    tryCreateNewIssue = do
         infoMessage $ "Creating issue with title: '" <> issueOrName <> "'"
-        milestoneId <- getMilestoneId milestone
-        createIssue issueOrName login milestoneId >>= \case
+        createIssue issueOrName milestoneOpt >>= \case
             Left err -> do
                 errorMessage "Error creating issue under 'hit new' command!"
-                putTextLn $ show err
+                putTextLn $ renderHitError err
                 pure Nothing
             Right issue -> do
-                let issueNum = issueNumber issue
                 successMessage $ "Successfully created issue number #"
-                    <> show (unIssueNumber issueNum)
-                showIssueLink issue
-                pure $ Just issueNum
+                    <> show (unIssueNumber $ createdIssueNumber issue)
+                showIssueLink $ createdIssueUrl issue
+                pure $ Just issue
 
 
 {- | This data type represents all cases on how to create short branch
@@ -127,16 +135,16 @@ name description. During 'hit new' command there can be several cases:
 3. 'FromText': if not issue number is provided, we just create raw text.
 -}
 data BranchDescription
-    = FromNewIssue Int Text
-    | FromIssueNumber Int
+    = FromNewIssue IssueNumber Text
+    | FromIssueNumber IssueNumber
     | FromText Text
 
 
 -- | Create 'BranchTitle' from possible issue and issue number or text.
 mkBranchDescription :: Maybe IssueNumber -> Text -> BranchDescription
-mkBranchDescription (Just issueNum) title = FromNewIssue (unIssueNumber issueNum) title
+mkBranchDescription (Just issueNum) title = FromNewIssue issueNum title
 mkBranchDescription Nothing issueOrName = case readMaybe @Int $ toString issueOrName of
-    Just issueNum -> FromIssueNumber issueNum
+    Just issueNum -> FromIssueNumber $ IssueNumber issueNum
     Nothing       -> FromText issueOrName
 
 {- | Assigns the user to the issue if applicable (in the current design, if the
@@ -157,36 +165,40 @@ assignAndDisplayBranchDescription doAssign username = \case
     FromText text -> pure $ mkShortDesc text
     FromNewIssue issueNum issueTitle -> pure $ nameWithNumber issueNum issueTitle
     FromIssueNumber issueNum -> do
-        issue <- fetchIssue $ mkIssueId issueNum
+        -- TODO: fetch less: only ID, assignees, title and number
+        issue <- fetchIssue issueNum
         when doAssign $ do
-            assignIssue issue username
-            showIssueLink issue
-        pure $ nameWithNumber issueNum $ issueTitle issue
+            assignToIssue issue username
+            showIssueLink $ issueUrl issue
+        pure $ nameWithNumber issueNum (issueTitle issue)
   where
-    nameWithNumber :: Int -> Text -> Text
-    nameWithNumber issueNum issueTitle =
+    nameWithNumber :: IssueNumber -> Text -> Text
+    nameWithNumber (IssueNumber issueNum) issueTitle =
         show issueNum <> "-" <> mkShortDesc issueTitle
 
     mkShortDesc :: Text -> Text
     mkShortDesc =
-          T.intercalate "-"
+          Text.intercalate "-"
         . take 5
         . words
-        . T.filter (\c -> isAlphaNum c
-                       || isDigit c
-                       || isSpace c
-                       || c `elem` ("_-/" :: String)
-                   )
+        . Text.filter
+            (\c -> isAlphaNum c
+                || isDigit c
+                || isSpace c
+                || c `elem` ("_-/" :: String)
+            )
         . stripRfc
 
-showIssueLink :: Issue -> IO ()
-showIssueLink issue = whenJust (issueHtmlUrl issue) $ \url ->
-    infoMessage $ "  Issue link: " <> getUrl url
+showIssueLink :: Text -> IO ()
+showIssueLink url = infoMessage $ "  Issue link: " <> url
 
 -- | Create an 'Issue' by given title 'Text'
-createIssue :: Text -> Maybe MilestoneNumber -> IO (Either Error Issue)
-createIssue title milestone = withAuthOwnerRepo $ \token owner repo ->
-    GitHub.createIssue token owner repo $ mkNewIssue title login milestone
+createIssue :: Text -> Maybe MilestoneOption -> IO (Either HitError CreatedIssue)
+createIssue title milestoneOpt = withAuthOwnerRepo $ \token owner repo -> do
+    -- TODO: optimize to 2 calls instead of 3
+    milestoneNumber <- getMilestoneNumber milestoneOpt
+    milestoneId     <- traverse (queryMilestoneId token owner repo) milestoneNumber
+    mutationCreateNewIssue token owner repo title milestoneId
 
 {- | Assign the user to the given 'Issue'.
 
@@ -198,31 +210,23 @@ This function can fail assignment due to the following reasons:
 The function should inform user about corresponding 'Error' in each case and
 continue working.
 -}
--- TODO: separate query to assign to issue in Hit.GitHub.Issue
-assignIssue :: Issue -> Text -> IO ()
-assignIssue issue username = do
-    res <- withAuthOwnerRepo $ \token owner repo -> do
-        let assignee :: Name User
-            assignee = makeName @User username
-        let curAssignees :: V.Vector (Name User)
-            curAssignees = V.map simpleUserLogin $ issueAssignees issue
-
-        if assignee `isAssignedToIssue` issue
-        then pure $ Right (issue, True)
-        else do
-            -- TODO: this is hack to cheat on GitHub library, as it
-            -- doesn't use the correct id in query.
-            let issId = mkIssueId (unIssueNumber $ issueNumber issue)
-            (, False) <<$>> GitHub.editIssue token owner repo issId editOfIssue
-                { editIssueAssignees = Just $ V.cons assignee curAssignees
-                }
+assignToIssue :: Issue -> Text -> IO ()
+assignToIssue Issue{..} username = do
+    res <- withAuthOwnerRepo $ \token _owner _repo ->
+        if username `elem` issueAssignees
+            then pure (issueNumber, True)
+            else (, False) <$> addAssignee token issueId
 
     case res of
         Right (iss, isAlreadyAssigned) ->
             if isAlreadyAssigned
             then pass
-            else successMessage $ "You were assigned to the issue #" <>
-                showIssueNumber iss
+            else successMessage $ "You were assigned to the issue #" <> showIssueNumber iss
         Left err  -> do
             errorMessage "Can not assign you to the issue."
-            putTextLn $ "    " <> show err
+            putTextLn $ "    " <> renderHitError err
+
+addAssignee :: GH.GitHubToken -> GH.IssueId -> IO IssueNumber
+addAssignee token issueId = do
+    myId <- queryMyId token
+    assignUserToIssue token myId issueId

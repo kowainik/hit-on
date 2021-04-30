@@ -19,11 +19,11 @@ module Hit.Git.Commit
 import Colourista (errorMessage)
 import Shellmet ()
 
-import Hit.Core (CommitOptions (..), ForceFlag (..))
+import Hit.Core (CommitOptions (..), ForceFlag (..), IssueNumber (..))
 import Hit.Formatting (stripRfc)
 import Hit.Git.Common (getCurrentBranch, issueFromBranch)
+import Hit.Git.Issue (fetchIssueTitle)
 import Hit.Git.Push (runPush)
-import Hit.Issue (getIssueTitle, mkIssueId)
 
 import qualified Data.Text as T
 
@@ -45,26 +45,26 @@ runCommit CommitOptions{..} = case coName of
                 errorMessage "Commit message cannot be empty: can not be taken from the context"
                 exitFailure
             Just n -> do
-                title <- getIssueTitle (mkIssueId n)
+                title <- fetchIssueTitle n
                 commitCmds title issueNum
   where
-    commitCmds :: Text -> Maybe Int -> IO ()
+    commitCmds :: Text -> Maybe IssueNumber -> IO ()
     commitCmds msg issueNum = do
         "git" ["add", "."]
         "git" ["commit", "-m", toCommitMessage hasIssue msg issueNum]
         when (coPush || coIsForcePush == Force) $ runPush coIsForcePush
 
-    getCurrentIssue :: IO (Maybe Int)
+    getCurrentIssue :: IO (Maybe IssueNumber)
     getCurrentIssue = issueFromBranch <$> getCurrentBranch
 
     hasIssue :: Bool
     hasIssue = not coNoIssueNumber
 
-toCommitMessage :: Bool -> Text -> Maybe Int -> Text
+toCommitMessage :: Bool -> Text -> Maybe IssueNumber -> Text
 toCommitMessage hasIssue (stripRfc -> msg) issueNum
     | not hasIssue = msg
     | otherwise = case issueNum of
         Nothing -> msg
-        Just n  ->
+        Just (IssueNumber n) ->
             let issue = "#" <> show n
             in "[" <> issue <> "] " <> msg <> "\n\nResolves " <> issue

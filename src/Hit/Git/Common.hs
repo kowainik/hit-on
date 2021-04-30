@@ -26,6 +26,8 @@ import Control.Exception (bracket)
 import Data.Char (isDigit)
 import Shellmet (($|))
 
+import Hit.Core (IssueNumber (..))
+
 import qualified Data.Text as T
 
 
@@ -75,9 +77,10 @@ whenOnMainBranch act = do
 kowainik/<n>-short-description
 @
 -}
-issueFromBranch :: Text -> Maybe Int
+issueFromBranch :: Text -> Maybe IssueNumber
 issueFromBranch =
-      readMaybe
+    fmap IssueNumber
+    . readMaybe
     . toString
     . T.takeWhile isDigit
     . T.drop 1

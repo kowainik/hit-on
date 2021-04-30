@@ -11,26 +11,32 @@ Issue-related queries and data types.
 
 module Hit.Git.Issue
     ( runIssue
+
+      -- * Helpers
+    , fetchIssue
+    , fetchIssueTitle
+    , getAllIssues
+    , getMilestoneNumber
+    , printIssues
+    , showIssueNumber
     ) where
 
 import Colourista (blue, blueBg, bold, errorMessage, formatWith, green, red, reset, skipMessage,
-                   successMessage, warningMessage)
-import Data.Aeson (Array, FromJSON (..), withObject, (.:))
-import Data.Aeson.Types (Parser)
-import Prolens (set)
+                   warningMessage)
 
-import Hit.Core (IssueOptions (..), MilestoneOption (..), Owner (..), Repo (..))
+import Hit.Core (IssueNumber (..), IssueOptions (..), MilestoneOption (..))
 import Hit.Error (renderHitError)
-import Hit.Git.Common (getUsername)
+import Hit.Git.Common (meToUsername)
 import Hit.GitHub.Auth (withAuthOwnerRepo)
-import Hit.GitHub.Issue (Issue (..), ShortIssue (..), issueToShort, queryIssue, queryIssueList)
+import Hit.GitHub.Issue (Issue (..), IssueTitle (..), ShortIssue (..), issueToShort, queryIssue,
+                         queryIssueList, queryIssueTitle)
 import Hit.GitHub.Milestone (MilestoneNumber (..), queryLatestMilestoneNumber)
 import Hit.Prompt (arrow)
 
-import qualified Hit.Formatting as Fmt
-
 import qualified Data.Text as Text
 import qualified GitHub as GH
+
+import qualified Hit.Formatting as Fmt
 
 
 -- | Run the @issue@ command.
@@ -44,13 +50,13 @@ runIssue IssueOptions{..} = case ioIssueNumber of
 ----------------------------------------------------------------------------
 
 -- | Get the 'Issue' by given issue number and pretty print it fully to terminal.
-getIssue :: Int -> IO ()
-getIssue num = fetchIssue num >>= putTextLn . showIssueFull
+getIssue :: IssueNumber -> IO ()
+getIssue num = fetchIssue num >>= putTextLn . showIssue
 
 {- | Fetch 'Issue' by number. If no issue found then print error and
 exit with failure.
 -}
-fetchIssue :: Int -> IO Issue
+fetchIssue :: IssueNumber -> IO Issue
 fetchIssue iNum = withAuthOwnerRepo (\t o r -> queryIssue t o r iNum) >>= \case
     Left err    -> errorMessage (renderHitError err) >> exitFailure
     Right issue -> pure issue
@@ -58,10 +64,11 @@ fetchIssue iNum = withAuthOwnerRepo (\t o r -> queryIssue t o r iNum) >>= \case
 {- | Fetch 'IssueTitle' by number. If no issue found then print error and
 exit with failure.
 -}
-fetchIssueTitle :: Int -> IO Text
+-- TODO: reduce duplication with 'fetchIssue'
+fetchIssueTitle :: IssueNumber -> IO Text
 fetchIssueTitle iNum = withAuthOwnerRepo (\t o r -> queryIssueTitle t o r iNum) >>= \case
     Left err         -> errorMessage (renderHitError err) >> exitFailure
-    Right issueTitle -> pure $ unIssueTitle issueTittle
+    Right issueTitle -> pure $ unIssueTitle issueTitle
 
 ----------------------------------------------------------------------------
 -- Multiple list processing
@@ -92,7 +99,7 @@ getAllIssues milestoneOpt me = withAuthOwnerRepo queryIssueList >>= \case
     Left err -> errorMessage (renderHitError err) >> exitFailure
     Right issues -> do
         milestoneNum <- getMilestoneNumber milestoneOpt
-        pure $ filterIssues milestoneNumber issues
+        pure $ filterIssues milestoneNum issues
   where
     filterIssues :: Maybe MilestoneNumber -> [ShortIssue] -> [ShortIssue]
     filterIssues milestoneNumber =
@@ -115,38 +122,41 @@ getAllIssues milestoneOpt me = withAuthOwnerRepo queryIssueList >>= \case
 {- | Outputs the list of the given issues for the current project.
 -}
 printIssues :: [ShortIssue] -> IO ()
-printIssues issues = let maxLen = Fmt.maxLenOn showIssueNumber issues in
+printIssues issues = let maxLen = Fmt.maxLenOn (showIssueNumber . shortIssueNumber) issues in
     if null issues
     then skipMessage "There are no open issues satisfying the provided filters"
     else for_ issues $ \issue@ShortIssue{..} -> do
-        let thisLen = Text.length $ show shortIssueNumber
+        let thisLen = Text.length $ show $ unIssueNumber shortIssueNumber
             padSize = maxLen - thisLen
         putTextLn $ showShortIssue blue padSize issue
+
+showIssueNumber :: IssueNumber -> Text
+showIssueNumber (IssueNumber issueNumber) = " [#" <> show issueNumber <> "] "
 
 -- | Show issue number with alignment and its name.
 showShortIssue :: Text -> Int -> ShortIssue -> Text
 showShortIssue colorCode padSize ShortIssue{..} = mconcat
     [ arrow
     , colorCode
-    , " [#" <> show shortIssueNumber <> "] "
-    , spaces padSize
+    , showIssueNumber shortIssueNumber
+    , Fmt.spaces padSize
     , reset
     , shortIssueTitle
     ]
 
 -- | Show full information about the issue.
 showIssue :: Issue -> Text
-showIssue i@Issue{..} = T.intercalate "\n" $
-       showShortIssue (statusToCode issueState) 0 (showShortIssue $ issueToShort i)
+showIssue i@Issue{..} = Text.intercalate "\n" $
+       showShortIssue (statusToCode issueState) 0 (issueToShort i)
      : [ highlight "    Assignees: " <> assignees | not $ null issueAssignees]
     ++ [ highlight "    Labels: " <> labels | not $ null issueLabels]
-    ++ [ highlight "    URL: " <> getUrl url | Just url <- [issueHtmlUrl]]
-    ++ [ indentDesc desc | Just (T.strip -> desc) <- [issueBody], desc /= ""]
+    ++ [ highlight "    URL: " <> issueUrl]
+    ++ [ indentDesc desc | desc <- [Text.strip issueBody], desc /= ""]
   where
     statusToCode :: GH.IssueState -> Text
     statusToCode = \case
-        IssueOpen   -> blue
-        IssueClosed -> red
+        GH.IssueOpen   -> blue
+        GH.IssueClosed -> red
 
     indentDesc :: Text -> Text
     indentDesc = unlines
@@ -155,10 +165,10 @@ showIssue i@Issue{..} = T.intercalate "\n" $
         . lines
 
     assignees :: Text
-    assignees = T.intercalate ", " $ map (untagName . simpleUserLogin) issueAssignees
+    assignees = Text.intercalate ", " issueAssignees
 
     labels :: Text
-    labels = T.intercalate " " $ map (putLabel . untagName . labelName) issueLabels
+    labels = Text.intercalate " " $ map putLabel issueLabels
 
     putLabel :: Text -> Text
     putLabel = formatWith [blueBg]
@@ -176,18 +186,19 @@ number.
 getMilestoneNumber :: Maybe MilestoneOption -> IO (Maybe MilestoneNumber)
 getMilestoneNumber = \case
     Just (MilestoneNum mNum) -> pure $ Just $ MilestoneNumber mNum
-    Just CurrentMilestone    -> fetchCurrentMilestoneId
+    Just CurrentMilestone    -> fetchCurrentMilestoneNumber
     Nothing                  -> pure Nothing
 
-{- | Fetches all open milestones. Then figure out the current one and return its
-ID as 'Int'.
+{- | Fetches the latest milestone number.
 
 If it could not fetch, or there is no open milestones then prints a warning
 message and returns 'Nothing'.
 -}
-fetchCurrentMilestoneId :: IO (Maybe MilestoneNumber)
-fetchCurrentMilestoneId = withAuthOwnerRepo queryLatestMilestoneNumber >>= \case
-    Left err -> Nothing <$ warningMessage ("Could not fetch the milestones\n    " <> show err)
+fetchCurrentMilestoneNumber :: IO (Maybe MilestoneNumber)
+fetchCurrentMilestoneNumber = withAuthOwnerRepo queryLatestMilestoneNumber >>= \case
+    Left err -> Nothing
+        <$ warningMessage ("Could not fetch the milestones\n    "
+        <> renderHitError err)
     Right ms -> case ms of
         Nothing -> Nothing <$ warningMessage "There are no open milestones for this project"
         Just m  -> pure $ Just m

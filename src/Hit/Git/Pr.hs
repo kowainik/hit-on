@@ -14,22 +14,17 @@ module Hit.Git.Pr
     ) where
 
 import Colourista (errorMessage)
-import GitHub (Issue (..), IssueLabel (..), untagName)
-import GitHub.Data.Options (optionsHead)
-import GitHub.Data.Request (FetchCount (..))
-import GitHub.Endpoints.PullRequests (pullRequestsForR)
-import GitHub.Request (executeRequest)
 
 import Hit.Core (CommitOptions (..), ForceFlag (..), newOptionsWithName)
+import Hit.Error (renderHitError)
 import Hit.Git.Branch (runNew)
 import Hit.Git.Commit (runCommit)
 import Hit.Git.Common (getCurrentBranch, getUsername, issueFromBranch, whenOnMainBranch)
-import Hit.GitHub (withAuthOwnerRepo)
+import Hit.Git.Issue (fetchIssue)
+import Hit.GitHub (Issue (..), queryPullRequests, withAuthOwnerRepo)
 import Hit.Hub (withHub)
-import Hit.Issue (fetchIssue, mkIssueId)
 
-import qualified Data.Text as T
-import qualified Data.Vector as V
+import qualified Data.Text as Text
 
 
 {- | @hit pr@ command.
@@ -41,31 +36,39 @@ runPr :: Bool -> IO ()
 runPr isDraft = do
     whenOnMainBranch $ runNew $ newOptionsWithName "patch"
     curBranch <- getCurrentBranch
-    -- check if the open PR with head @owner:branch_name@ already exist
-    res <- withAuthOwnerRepo $ \auth owner repo -> do
-        let headPrMod = optionsHead $ untagName owner <> ":" <> curBranch
-        executeRequest auth (pullRequestsForR owner repo headPrMod FetchAll)
+
+    -- check if the open PR with head @branch_name@ already exist
+    res <- withAuthOwnerRepo $ \token owner repo -> do
+        queryPullRequests token owner repo curBranch
+
     case res of
         Left err -> do
             errorMessage "Can not get information about current PRs"
-            putTextLn $ "    " <> show err
+            putTextLn $ "    " <> renderHitError err
             exitFailure
-        Right prs ->
-            if not $ V.null prs
-            then errorMessage "PR for the current branch already exists" >> exitFailure
-            else do
+        Right prs -> case prs of
+            _ : _ -> do
+                errorMessage "PR for the current branch already exists"
+                exitFailure
+            [] -> do
                 runCommit CommitOptions
                     { coName          = Nothing
                     , coNoIssueNumber = False
                     , coPush          = True
                     , coIsForcePush   = Simple
                     }
-                user <- getUsername
+
+                -- either [] or singletonlist with comma-separated labels string
                 labels <- case issueFromBranch curBranch of
-                    Just n -> pure . Just . T.intercalate "," . map (untagName . labelName) .
-                        toList . issueLabels
-                            <$> fetchIssue (mkIssueId n)
                     Nothing -> pure []
-                withHub $ ["pull-request", "--no-edit", "--assign", user, "--browse"]
-                    <> ["--draft" | isDraft]
-                    <> [args | Just ls <- labels, args <- ["--labels", ls] ]
+                    Just n ->
+                        one
+                        . Text.intercalate ","
+                        . issueLabels
+                        <$> fetchIssue n  -- TODO: fetch less, we need only labels
+
+                user <- getUsername
+                withHub
+                    $  [ "pull-request", "--no-edit", "--assign", user, "--browse" ]
+                    <> [ "--draft" | isDraft ]
+                    <> memptyIfTrue (null labels) ("--labels" : labels)

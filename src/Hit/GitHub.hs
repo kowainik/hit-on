@@ -13,8 +13,12 @@ module Hit.GitHub
     ( module Hit.GitHub.Auth
     , module Hit.GitHub.Issue
     , module Hit.GitHub.Milestone
+    , module Hit.GitHub.PullRequest
+    , module Hit.GitHub.User
     ) where
 
 import Hit.GitHub.Auth
 import Hit.GitHub.Issue
 import Hit.GitHub.Milestone
+import Hit.GitHub.PullRequest
+import Hit.GitHub.User

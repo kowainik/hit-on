@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+
 {- |
 Module                  : Hit.GitHub.Milestone
 Copyright               : (c) 2021 Kowainik
@@ -10,17 +12,20 @@ Milestone-related queries and data types.
 -}
 
 module Hit.GitHub.Milestone
-    ( MilestoneNumber
+    ( MilestoneNumber (..)
     , queryLatestMilestoneNumber
 
     , Milestone (..)
     , queryMilestoneList
+
+    , queryMilestoneId
     ) where
 
+import Data.Aeson (FromJSON (..), withObject, (.:))
 import Prolens (set)
+import Relude.Extra.Enum (universeNonEmpty)
 
 import Hit.Core (Owner (..), Repo (..))
-import Hit.GitHub.Repository (RepositoryNodes (..))
 
 import qualified GitHub as GH
 
@@ -30,7 +35,8 @@ import qualified GitHub as GH
 
 newtype MilestoneNumber = MilestoneNumber
     { unMilestoneNumber :: Int
-    } deriving newtype (FromJSON)
+    } deriving stock (Show)
+      deriving newtype (Eq, FromJSON)
 
 newtype LatestMilestone = LatestMilestone
     { unLatestMilestone :: MilestoneNumber
@@ -52,24 +58,25 @@ latestMilestoneQuery (Owner owner) (Repo repo) = GH.repository
         ( GH.defMilestonesArgs
         & set GH.lastL 1
         & set GH.orderL
-            ( Just $ GH.defOrder
+            ( Just $ GH.defMilestoneOrder
             & set GH.fieldL GH.MNumber
             & set GH.directionL GH.Desc
             )
         )
-        (one $ GH.nodes $ one MilestoneNumber)
+        (one $ GH.nodes $ one GH.MilestoneNumber)
 
 {- | Query the number of the latest milestone.
 -}
 queryLatestMilestoneNumber :: GH.GitHubToken -> Owner -> Repo -> IO (Maybe MilestoneNumber)
-queryLatestMilestoneNumber token owner repo =
-    RepositoryNodes milestones <- GH.queryGitHub
-        @(RepositoryNodes "milestones" LatestMilestone)
-        token
-        (GH.repositoryToAst $ latestMilestoneQuery owner repo)
+queryLatestMilestoneNumber token owner repo = do
+    milestones <-
+        GH.unNested @'[ "repository", "milestones", "nodes" ] <$>
+        GH.queryGitHub
+            token
+            (GH.repositoryToAst $ latestMilestoneQuery owner repo)
 
     pure $ case milestones of
-        [] -> Nothing
+        []  -> Nothing
         m:_ -> Just $ unLatestMilestone m
 
 ----------------------------------------------------------------------------
@@ -80,6 +87,7 @@ data Milestone = Milestone
     { milestoneId                 :: Text
     , milestoneNumber             :: MilestoneNumber
     , milestoneTitle              :: Text
+    , milestoneDescription        :: Text
     , milestoneProgressPercentage :: Double
     , milestoneTotalIssues        :: Int
     } deriving stock (Show, Eq)
@@ -90,6 +98,7 @@ instance FromJSON Milestone
         milestoneId    <- o .: "id"
         milestoneNumber <- o .: "number"
         milestoneTitle  <- o .: "title"
+        milestoneDescription  <- o .: "description"
 
         milestoneProgressPercentage <- o .: "progressPercentage"
 
@@ -109,8 +118,8 @@ milestonesQuery (Owner owner) (Repo repo) = GH.repository
         ( GH.defMilestonesArgs
         & set GH.lastL 100
         & set GH.orderL
-            ( Just $ GH.defOrder
-            & set GH.fieldL GH.CreatedAt
+            ( Just $ GH.defMilestoneOrder
+            & set GH.fieldL GH.MCreatedAt
             & set GH.directionL GH.Desc
             )
         )
@@ -133,8 +142,17 @@ milestonesQuery (Owner owner) (Repo repo) = GH.repository
 -}
 queryMilestoneList :: GH.GitHubToken -> Owner -> Repo -> IO [Milestone]
 queryMilestoneList token owner repo =
-    unRepositoryNodes <$>
+    GH.unNested @'[ "repository", "milestones", "nodes" ] <$>
     GH.queryGitHub
-        @(RepositoryNodes "milestones" Milestone)
         token
         (GH.repositoryToAst $ milestonesQuery owner repo)
+
+-- | Safer wrapper over @github-graphql@ API.
+queryMilestoneId
+    :: GH.GitHubToken
+    -> Owner
+    -> Repo
+    -> MilestoneNumber
+    -> IO GH.MilestoneId
+queryMilestoneId token (Owner owner) (Repo repo) (MilestoneNumber number) =
+    GH.queryMilestoneId token owner repo number

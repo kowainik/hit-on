@@ -2,9 +2,9 @@ module Test.Hit.Names
     ( namesSpec
     ) where
 
-import GitHub (IssueNumber (..))
 import Test.Hspec (Expectation, Spec, describe, it, runIO, shouldBe)
 
+import Hit.Core (IssueNumber (..))
 import Hit.Git.Branch (assignAndDisplayBranchDescription, mkBranchDescription)
 import Hit.Git.Commit (toCommitMessage)
 import Hit.Git.Common (getMainBranch)
@@ -49,9 +49,9 @@ branchNamesSpec = describe "Branch naming" $ do
 commitMessagesSpec :: Spec
 commitMessagesSpec = describe "Commit messages naming" $ do
     it "with issue and 'resolve' addition" $
-        toCommitMessage True "Commit message" (Just 42) `shouldBe` "[#42] Commit message\n\nResolves #42"
+        toCommitMessage True "Commit message" (Just $ IssueNumber 42) `shouldBe` "[#42] Commit message\n\nResolves #42"
     it "with issue and without 'resolve' addition" $
-        toCommitMessage False "Commit message" (Just 42) `shouldBe` "Commit message"
+        toCommitMessage False "Commit message" (Just $ IssueNumber 42) `shouldBe` "Commit message"
     it "without issue" $
         toCommitMessage True "Commit message" Nothing `shouldBe` "Commit message"
 

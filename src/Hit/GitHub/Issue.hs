@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+
 {- |
 Module                  : Hit.GitHub.Issue
 Copyright               : (c) 2021 Kowainik
@@ -20,7 +22,7 @@ module Hit.GitHub.Issue
     , IssueTitle (..)
     , queryIssueTitle
 
-    , IssueNumber (..)
+    , CreatedIssue (..)
     , mutationCreateNewIssue
     ) where
 
@@ -28,14 +30,9 @@ import Data.Aeson (Array, FromJSON (..), withObject, (.:), (.:?))
 import Data.Aeson.Types (Parser)
 import Prolens (set)
 
-import Hit.Core (IssueOptions (..), Milestone (..), Owner (..), Repo (..))
-import Hit.Git.Common (getUsername)
-import Hit.GitHub.Repository (RepositoryField (..), RepositoryNode (..))
+import Hit.Core (IssueNumber (..), Owner (..), Repo (..))
 import Hit.GitHub.Milestone (MilestoneNumber)
 
-import qualified Hit.Formatting as Fmt
-
-import qualified Data.Text as Text
 import qualified GitHub as GH
 
 ----------------------------------------------------------------------------
@@ -45,19 +42,22 @@ import qualified GitHub as GH
 {- | Issue with all information about it.
 -}
 data Issue = Issue
-    { issueTitle       :: Text
-    , issueAuthorLogin :: Text
-    , issueBody        :: Text
-    , issueNumber      :: Int
-    , issueUrl         :: Text
-    , issueState       :: GH.IssueState
-    , issueLabels      :: [Text]
-    , issueAssignees   :: [Text]
+    { issueId              :: GH.IssueId
+    , issueTitle           :: Text
+    , issueAuthorLogin     :: Text
+    , issueBody            :: Text
+    , issueNumber          :: IssueNumber
+    , issueUrl             :: Text
+    , issueState           :: GH.IssueState
+    , issueLabels          :: [Text]
+    , issueAssignees       :: [Text]
+    , issueMilestoneNumber :: Maybe MilestoneNumber
     }
 
 instance FromJSON Issue
   where
     parseJSON = withObject "Issue" $ \o -> do
+        issueId          <- o .: "id" <&> GH.Id
         issueTitle       <- o .: "title"
         author           <- o .: "author"
         issueAuthorLogin <- author .: "login"
@@ -74,6 +74,9 @@ instance FromJSON Issue
         assigneesNodes   <- assignees .: "nodes"
         issueAssignees   <- parseAssignees assigneesNodes
 
+        milestone        <- o .: "milestone"
+        issueMilestoneNumber <- milestone .:? "number"
+
         pure Issue{..}
       where
         parseLabels :: Array -> Parser [Text]
@@ -81,8 +84,8 @@ instance FromJSON Issue
 
 {- | Query for the specific issue with full details.
 -}
-issueQuery :: Owner -> Repo -> Int -> GH.Repository
-issueQuery (Owner owner) (Repo repo) issueNumber = GH.repository
+issueQuery :: Owner -> Repo -> IssueNumber -> GH.Repository
+issueQuery (Owner owner) (Repo repo) (IssueNumber issueNumber) = GH.repository
     ( GH.defRepositoryArgs
     & set GH.ownerL owner
     & set GH.nameL  repo
@@ -91,16 +94,8 @@ issueQuery (Owner owner) (Repo repo) issueNumber = GH.repository
     $ GH.issue
         ( GH.defIssueArgs
         & set GH.numberL issueNumber
-        & set GH.statesL (one GH.open)
-        & set GH.orderL
-            ( Just $ GH.defOrder
-            & set GH.fieldL GH.CreatedAt
-            & set GH.directionL GH.Asc
-            )
         )
-        ( one
-        $ GH.nodes
-        $  GH.title
+        (    GH.title
         :| [ GH.author $ one GH.login
            , GH.IssueBody
            , GH.IssueNumber
@@ -118,16 +113,16 @@ issueQuery (Owner owner) (Repo repo) issueNumber = GH.repository
              & set GH.lastL 5
              )
              (GH.nodes $ one GH.UserLogin)
+           , GH.IssueMilestone $ one GH.MilestoneNumber
            ]
         )
 
 {- | Queries a single issue by number.
 -}
-queryIssue :: GH.GitHubToken -> Owner -> Repo -> Int -> IO Issue
+queryIssue :: GH.GitHubToken -> Owner -> Repo -> IssueNumber -> IO Issue
 queryIssue token owner repo issueNumber =
-    unRepositoryField <$>
+    GH.unNested @'[ "repository", "issue" ] <$>
     GH.queryGitHub
-        @(RepositoryField "issue" Issue)
         token
         (GH.repositoryToAst $ issueQuery owner repo issueNumber)
 
@@ -138,10 +133,10 @@ queryIssue token owner repo issueNumber =
 {- | GitHub issue with only small amount of information about it.
 -}
 data ShortIssue = ShortIssue
-    { shortIssueNumber      :: Int
-    , shortIssueTitle       :: Text
-    , shortIssueAuthorLogin :: Text
-    , shortIssueAssignees   :: [Text]
+    { shortIssueNumber          :: IssueNumber
+    , shortIssueTitle           :: Text
+    , shortIssueAuthorLogin     :: Text
+    , shortIssueAssignees       :: [Text]
     , shortIssueMilestoneNumber :: Maybe MilestoneNumber
     }
 
@@ -164,10 +159,11 @@ instance FromJSON ShortIssue
 
 issueToShort :: Issue -> ShortIssue
 issueToShort Issue{..} = ShortIssue
-    { shortIssueNumber      = issueNumber
-    , shortIssueTitle       = issueTitle
-    , shortIssueAuthorLogin = issueAuthorLogin
-    , shortIssueAssignees   = issueAssignees
+    { shortIssueNumber          = issueNumber
+    , shortIssueTitle           = issueTitle
+    , shortIssueAuthorLogin     = issueAuthorLogin
+    , shortIssueAssignees       = issueAssignees
+    , shortIssueMilestoneNumber = issueMilestoneNumber
     }
 
 issueListQuery :: Owner -> Repo -> GH.Repository
@@ -182,7 +178,7 @@ issueListQuery (Owner owner) (Repo repo) = GH.repository
         & set GH.lastL 100
         & set GH.statesL (one GH.open)
         & set GH.orderL
-            ( Just $ GH.defOrder
+            ( Just $ GH.defIssueOrder
             & set GH.fieldL GH.CreatedAt
             & set GH.directionL GH.Asc
             )
@@ -206,9 +202,8 @@ issueListQuery (Owner owner) (Repo repo) = GH.repository
 -}
 queryIssueList :: GH.GitHubToken -> Owner -> Repo -> IO [ShortIssue]
 queryIssueList token owner repo =
-    unRepositoryNodes <$>
+    GH.unNested @'[ "repository", "issues", "nodes" ] <$>
     GH.queryGitHub
-        @(RepositoryNodes "issues" ShortIssue)
         token
         (GH.repositoryToAst $ issueListQuery owner repo)
 
@@ -220,8 +215,8 @@ newtype IssueTitle = IssueTitle
     { unIssueTitle :: Text
     } deriving newtype (FromJSON)
 
-issueTitleQuery :: Owner -> Repo -> Int -> GH.Repository
-issueTitleQuery (Owner owner) (Repo repo) issueNumber = GH.repository
+issueTitleQuery :: Owner -> Repo -> IssueNumber -> GH.Repository
+issueTitleQuery (Owner owner) (Repo repo) (IssueNumber issueNumber) = GH.repository
     ( GH.defRepositoryArgs
     & set GH.ownerL owner
     & set GH.nameL  repo
@@ -235,9 +230,9 @@ issueTitleQuery (Owner owner) (Repo repo) issueNumber = GH.repository
 
 {- | Queries 'IssueTitle' by number.
 -}
-queryIssueTitle :: GH.GitHubToken -> Owner -> Repo -> Int -> IO IssueTitle
+queryIssueTitle :: GH.GitHubToken -> Owner -> Repo -> IssueNumber -> IO IssueTitle
 queryIssueTitle token owner repo issueNumber =
-    GH.unNest @'[ "repository", "issue", "title" ] <$>
+    GH.unNested @'[ "repository", "issue", "title" ] <$>
     GH.queryGitHub
         token
         (GH.repositoryToAst $ issueTitleQuery owner repo issueNumber)
@@ -246,16 +241,19 @@ queryIssueTitle token owner repo issueNumber =
 -- Create new issue
 ----------------------------------------------------------------------------
 
-{- | Data type to parse only issue number.
+{- | Information about the issue after it's created.
 -}
-newtype IssueNumber = IssueNumber
-    { unIssueNumber :: Int
+data CreatedIssue = CreatedIssue
+    { createdIssueNumber :: IssueNumber
+    , createdIssueUrl    :: Text
     }
 
-instance FromJSON IssueNumber
+instance FromJSON CreatedIssue
   where
-    parseJSON = withObject "IssueNumber" $ \o ->
-        IssueNumber <$> (o .: "number")
+    parseJSON = withObject "CreatedIssue" $ \o -> do
+        createdIssueNumber <- o .: "number"
+        createdIssueUrl    <- o .: "url"
+        pure CreatedIssue{..}
 
 {- | Query to create issue and return its number.
 -}
@@ -268,29 +266,25 @@ createIssueMutation repoId issueTitle milestoneId = GH.CreateIssue
     ( GH.defCreateIssueInput
     & set GH.repositoryIdL repoId
     & set GH.titleL issueTitle
-    & setMilestone
+    & set GH.milestoneIdL milestoneId
     )
     [ GH.IssueNumber
+    , GH.IssueUrl
     ]
-  where
-    setMilestone :: GH.CreateIssueInput fields -> GH.CreateIssueInput fields
-    setMilestone = case milestoneId of
-        Nothing  -> id
-        Just mId -> set GH.milestoneIdL mId
 
 mutationCreateNewIssue
     :: GH.GitHubToken
     -> Owner
     -> Repo
     -> Text
-    -> Maybe Milestone
-    -> IO IssueNumber
-mutationCreateNewIssue token owner repo issueTitle _mMilestone = do
+    -> Maybe GH.MilestoneId
+    -> IO CreatedIssue
+mutationCreateNewIssue token (Owner owner) (Repo repo) issueTitle milestoneId = do
     repositoryId <- GH.queryRepositoryId token owner repo
-    unRepositoryField <$>
-    GH.mutationGitHub
+
+    GH.unNested @'[ "repository", "issue" ] <$> GH.mutationGitHub
         token
-        (GH.createIssueToAst $ createIssueMutation repositoryId issueTitle Nothing)
+        (GH.createIssueToAst $ createIssueMutation repositoryId issueTitle milestoneId)
 
 ----------------------------------------------------------------------------
 -- Internals
