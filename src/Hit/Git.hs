@@ -34,8 +34,7 @@ module Hit.Git
     , runLog
     , runMilestones
     , runTag
-
-    , getUsername
+    , runIssue
     ) where
 
 import Hit.Git.Amend (runAmend)
@@ -43,12 +42,12 @@ import Hit.Git.Branch (runNew, runRename)
 import Hit.Git.Clear (runClear)
 import Hit.Git.Clone (runClone, runFork)
 import Hit.Git.Commit (runCommit)
-import Hit.Git.Common (getUsername)
 import Hit.Git.Current (runCurrent)
 import Hit.Git.Diff (runDiff)
 import Hit.Git.Fix (runFix)
 import Hit.Git.Fresh (runFresh)
 import Hit.Git.Hop (runHop)
+import Hit.Git.Issue (runIssue)
 import Hit.Git.Log (runLog)
 import Hit.Git.Milestones (runMilestones)
 import Hit.Git.Pr (runPr)

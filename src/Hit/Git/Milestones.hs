@@ -13,15 +13,15 @@ module Hit.Git.Milestones
     ( runMilestones
     ) where
 
-import Colourista (blue, errorMessage, formatWith, italic, yellow)
+import Colourista (blue, cyan, errorMessage, formatWith, italic, yellow)
 import Colourista.Short (b)
-import GitHub (Milestone (..), untagId)
-import GitHub.Endpoints.Issues.Milestones (milestones')
+import Text.Printf (printf)
 
-import Hit.GitHub (withOwnerRepo)
+import Hit.Error (renderHitError)
+import Hit.GitHub (Milestone (..), MilestoneNumber (..), queryMilestoneList, withAuthOwnerRepo)
 import Hit.Prompt (arrow)
 
-import qualified Data.Text as T
+import qualified Data.Text as Text
 
 
 {- | @hit milestones@ command.
@@ -30,20 +30,42 @@ Fetches all open milestones sorted by ID. The more recent ID would be shown the
 first.
 -}
 runMilestones :: IO ()
-runMilestones = withOwnerRepo milestones' >>= \case
-    Left err -> do
-        errorMessage ("Could not fetch the milestones\n    " <> show err)
-        exitFailure
-    Right ms -> for_ (sortWith (Down . untagId . milestoneNumber) $ toList ms) $ \m ->
-
-        putTextLn $ arrow <> prettyMilestone m
+runMilestones = do
+    milestones <- fetchMilestones
+    for_ milestones $ \milestone ->
+        putTextLn $ arrow <> prettyMilestone milestone
 
 prettyMilestone :: Milestone -> Text
-prettyMilestone Milestone{..} =
-    formatWith [blue] (" [#" <> show (untagId milestoneNumber) <> "] ")
-    <> b milestoneTitle
-    <> formatWith [yellow, italic] ("  (" <> show milestoneOpenIssues <> "/" <> show (milestoneOpenIssues + milestoneClosedIssues) <> ")")
-    <> case T.strip <$> milestoneDescription of
-         Just ""   -> ""
-         Just desc -> "\n      " <> desc
-         Nothing   -> ""
+prettyMilestone Milestone{..} = mconcat
+    [ formatWith [blue] $ " [#" <> show (unMilestoneNumber milestoneNumber) <> "] "
+    , b milestoneTitle
+    , formatWith [yellow, italic] $ mconcat
+        [ "  ("
+        , show milestoneOpenIssues
+        , "/"
+        , show milestoneTotalIssues
+        , ")"
+        ]
+    , "  "
+    , formatWith [cyan] $ prettyDouble milestoneProgressPercentage
+    , case Text.strip milestoneDescription of
+         ""   -> ""
+         desc -> "\n      " <> desc
+    ]
+  where
+    milestoneOpenIssues :: Int
+    milestoneOpenIssues = round
+        $ (fromIntegral milestoneTotalIssues * milestoneProgressPercentage) / 100
+
+fetchMilestones :: IO [Milestone]
+fetchMilestones = withAuthOwnerRepo queryMilestoneList >>= \case
+    Left err -> errorMessage (renderHitError err) >> exitFailure
+    Right ms -> pure ms
+
+{- | Show double prettily with only 2 digits after dot.
+-}
+prettyDouble :: Double -> Text
+prettyDouble x =
+    if fromIntegral (floor x :: Int) == x  -- display without decimal part
+    then toText (printf "%.0f" x :: String) <> "%"
+    else toText (printf "%.2f" x :: String) <> "%"
