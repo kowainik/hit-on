@@ -84,7 +84,7 @@ jobs:
         run: echo "::set-env name=BINARY_PATH::./dist/hit${{ env.EXT }}"
 
       - name: Compress binary
-        uses: svenstaro/upx-action@2.0.1
+        uses: svenstaro/upx-action@2.1.0
         with:
           file: ${{ env.BINARY_PATH }}
 
